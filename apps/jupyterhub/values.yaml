@@ -324,14 +324,14 @@ proxy:
       enabled: false
       maxUnavailable:
       minAvailable: 1
-    extraPodSpec:
-      affinity:
-        nodeAffinity:
-          requiredDuringSchedulingIgnoredDuringExecution:
-            nodeSelectorTerms:
-              - matchExpressions:
-                - key: "node-role.kubernetes.io/processing"
-                  operator: Exists
+    extraPodSpec: {}
+      # affinity:
+      #   nodeAffinity:
+      #     requiredDuringSchedulingIgnoredDuringExecution:
+      #       nodeSelectorTerms:
+      #         - matchExpressions:
+      #           - key: "node-role.kubernetes.io/processing"
+      #             operator: Exists
   # traefik relates to the autohttps pod, which is responsible for TLS
   # termination when proxy.https.type=letsencrypt.
   traefik:
@@ -384,14 +384,14 @@ proxy:
       create: true
       name:
       annotations: {}
-    extraPodSpec:
-      affinity:
-        nodeAffinity:
-          requiredDuringSchedulingIgnoredDuringExecution:
-            nodeSelectorTerms:
-              - matchExpressions:
-                - key: "node-role.kubernetes.io/processing"
-                  operator: Exists
+    extraPodSpec: {}
+      # affinity:
+      #   nodeAffinity:
+      #     requiredDuringSchedulingIgnoredDuringExecution:
+      #       nodeSelectorTerms:
+      #         - matchExpressions:
+      #           - key: "node-role.kubernetes.io/processing"
+      #             operator: Exists
   secretSync:
     containerSecurityContext:
       runAsUser: 65534 # nobody user
@@ -640,14 +640,14 @@ scheduling:
       create: true
       name:
       annotations: {}
-    extraPodSpec:
-      affinity:
-        nodeAffinity:
-          requiredDuringSchedulingIgnoredDuringExecution:
-            nodeSelectorTerms:
-              - matchExpressions:
-                - key: "node-role.kubernetes.io/processing"
-                  operator: Exists
+    extraPodSpec: {}
+      # affinity:
+      #   nodeAffinity:
+      #     requiredDuringSchedulingIgnoredDuringExecution:
+      #       nodeSelectorTerms:
+      #         - matchExpressions:
+      #           - key: "node-role.kubernetes.io/processing"
+      #             operator: Exists
   podPriority:
     enabled: false
     globalDefault: false
