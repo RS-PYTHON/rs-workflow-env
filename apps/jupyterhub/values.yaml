@@ -198,7 +198,14 @@ hub:
     create: true
     name:
     annotations: {}
-  extraPodSpec: {}
+  extraPodSpec:
+    affinity:
+      nodeAffinity:
+        requiredDuringSchedulingIgnoredDuringExecution:
+          nodeSelectorTerms:
+            - matchExpressions:
+              - key: "node-role.kubernetes.io/processing"
+                operator: Exists
   resources:
     limits:
       cpu: 0.3
@@ -317,7 +324,14 @@ proxy:
       enabled: false
       maxUnavailable:
       minAvailable: 1
-    extraPodSpec: {}
+    extraPodSpec:
+      affinity:
+        nodeAffinity:
+          requiredDuringSchedulingIgnoredDuringExecution:
+            nodeSelectorTerms:
+              - matchExpressions:
+                - key: "node-role.kubernetes.io/processing"
+                  operator: Exists
   # traefik relates to the autohttps pod, which is responsible for TLS
   # termination when proxy.https.type=letsencrypt.
   traefik:
@@ -370,7 +384,14 @@ proxy:
       create: true
       name:
       annotations: {}
-    extraPodSpec: {}
+    extraPodSpec:
+      affinity:
+        nodeAffinity:
+          requiredDuringSchedulingIgnoredDuringExecution:
+            nodeSelectorTerms:
+              - matchExpressions:
+                - key: "node-role.kubernetes.io/processing"
+                  operator: Exists
   secretSync:
     containerSecurityContext:
       runAsUser: 65534 # nobody user
@@ -454,7 +475,7 @@ singleuser:
       {% raw %}{{"affinity":{{"nodeAffinity":{{"requiredDuringSchedulingIgnoredDuringExecution":{{"nodeSelectorTerms":[{{"matchExpressions":[{{"key":"node-role.kubernetes.io/processing","operator":"Exists"}}]}}]}}}}}}}}{% endraw %}
 
     WORKER_EXTRA_POD_CONFIG_STAGING: |
-      {% raw %}{{"affinity":{{"nodeAffinity":{{"requiredDuringSchedulingIgnoredDuringExecution":{{"nodeSelectorTerms":[{{"matchExpressions":[{{"key":"node-role.kubernetes.io/staging","operator":"Exists"}}]}}]}}}}}},"tolerations":[{{"key":"role","operator":"Equal","value":"access_csc","effect":"NoSchedule"}}]}}{% endraw %}
+      {% raw %}{{"affinity":{{"nodeAffinity":{{"requiredDuringSchedulingIgnoredDuringExecution":{{"nodeSelectorTerms":[{{"matchExpressions":[{{"key":"node-role.kubernetes.io/access_csc","operator":"Exists"}}]}}]}}}}}},"tolerations":[{{"key":"role","operator":"Equal","value":"access_csc","effect":"NoSchedule"}}]}}{% endraw %}
 
   lifecycleHooks: {}
   initContainers: []
@@ -619,7 +640,14 @@ scheduling:
       create: true
       name:
       annotations: {}
-    extraPodSpec: {}
+    extraPodSpec:
+      affinity:
+        nodeAffinity:
+          requiredDuringSchedulingIgnoredDuringExecution:
+            nodeSelectorTerms:
+              - matchExpressions:
+                - key: "node-role.kubernetes.io/processing"
+                  operator: Exists
   podPriority:
     enabled: false
     globalDefault: false

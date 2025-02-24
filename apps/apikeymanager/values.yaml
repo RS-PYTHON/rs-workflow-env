@@ -17,7 +17,7 @@ affinity:
     requiredDuringSchedulingIgnoredDuringExecution:
       nodeSelectorTerms:
         - matchExpressions:
-          - key: "node-role.kubernetes.io/infra"
+          - key: "node-role.kubernetes.io/processing"
             operator: Exists
 
 config:
