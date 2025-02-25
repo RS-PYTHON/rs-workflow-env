@@ -217,7 +217,7 @@ worker:
                         {
                           "matchExpressions": [
                             {
-                              "key": "node-role.kubernetes.io/access_csc",
+                              "key": "node-role.kubernetes.io/processing",
                               "operator": "Exists"
                             }
                           ]
@@ -265,7 +265,7 @@ worker:
       requiredDuringSchedulingIgnoredDuringExecution:
         nodeSelectorTerms:
           - matchExpressions:
-            - key: "node-role.kubernetes.io/access_csc"
+            - key: "node-role.kubernetes.io/processing"
               operator: Exists
 
   serverApiConfig:
