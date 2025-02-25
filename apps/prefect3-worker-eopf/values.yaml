@@ -269,11 +269,10 @@ worker:
               operator: Exists
 
   serverApiConfig:
-    apiUrl: http://prefect3-server.processing.svc.cluster.local:4200/api
+    apiUrl: http://prefect-server.processing.svc.cluster.local:4200/api
 
   # ref: https://kubernetes.io/docs/tasks/configure-pod-container/configure-liveness-readiness-startup-probes/
   livenessProbe:
     enabled: true
 
   replicaCount: {{ prefect3worker.eopf.number | default(2) }}
-  

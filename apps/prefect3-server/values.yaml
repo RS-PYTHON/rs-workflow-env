@@ -13,7 +13,7 @@
 # limitations under the License.
 
 # -- fully override common.names.fullname
-fullnameOverride: "prefect3-server"
+fullnameOverride: "prefect-server"
 
 server:
   image:
@@ -23,7 +23,7 @@ server:
 
   loggingLevel: WARNING
 
-  prefectApiUrl: https://prefect3.{{ platform_domain_name }}/api
+  prefectApiUrl: https://processing.{{ platform_domain_name }}/api
 
   prefectApiHost: 0.0.0.0
 
@@ -33,9 +33,9 @@ server:
     # -- set PREFECT_UI_ENABLED; enable the UI on the server
     enabled: true
     # -- sets PREFECT_UI_API_URL
-    #prefectUiApiUrl: "https://prefect3.{{ platform_domain_name }}/api"
+    #prefectUiApiUrl: "https://processing.{{ platform_domain_name }}/api"
     # -- sets PREFECT_UI_URL
-    #prefectUiUrl: "https://prefect3.{{ platform_domain_name }}"
+    #prefectUiUrl: "https://processing.{{ platform_domain_name }}"
     # -- sets PREFECT_UI_STATIC_DIRECTORY
     #prefectUiStaticDirectory: "/ui_build"
 
@@ -93,7 +93,7 @@ ingress:
   className: "nginx"
   #path must be /
   host:
-    hostname: prefect3.{{ platform_domain_name }}
+    hostname: processing.{{ platform_domain_name }}
     path: /
     pathType: Prefix
 
@@ -111,8 +111,8 @@ ingress:
 
   extraTls:
     - hosts:
-        - prefect3.{{ platform_domain_name }}
-      secretName: prefect3-{{ platform_domain_name | replace(".", "-") }}
+        - processing.{{ platform_domain_name }}
+      secretName: processing-{{ platform_domain_name | replace(".", "-") }}
 
 # Disable bundled postgresql
 postgresql:
