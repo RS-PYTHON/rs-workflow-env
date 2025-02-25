@@ -82,6 +82,11 @@ server:
           - matchExpressions:
             - key: "node-role.kubernetes.io/processing"
               operator: Exists
+  tolerations:
+    - key: role
+      operator: Equal
+      value: processing
+      effect: NoSchedule
 ## ServiceAccount configuration
 serviceAccount:
   # -- specifies whether a ServiceAccount should be created

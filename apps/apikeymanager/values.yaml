@@ -12,14 +12,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-affinity:  
-  nodeAffinity:
-    requiredDuringSchedulingIgnoredDuringExecution:
-      nodeSelectorTerms:
-        - matchExpressions:
-          - key: "node-role.kubernetes.io/processing"
-            operator: Exists
-
 config:
   # -- Allow CORS from (regexp)
   cors_origins_regex: ".*"
@@ -73,3 +65,17 @@ ingress:
    - secretName: apikeymanager-{{ platform_domain_name | replace(".", "-") }}
      hosts:
        - apikeymanager.{{ platform_domain_name }}
+
+affinity:  
+  nodeAffinity:
+    requiredDuringSchedulingIgnoredDuringExecution:
+      nodeSelectorTerms:
+        - matchExpressions:
+          - key: "node-role.kubernetes.io/processing"
+            operator: Exists
+
+tolerations:
+  - key: role
+    operator: Equal
+    value: processing
+    effect: NoSchedule

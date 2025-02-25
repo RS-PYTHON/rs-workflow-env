@@ -300,7 +300,11 @@ proxy:
     extraEnv: {}
     nodeSelector:
       node-role.kubernetes.io/processing: ""
-    tolerations: []
+    tolerations:
+      - key: role
+        operator: Equal
+        value: processing
+        effect: NoSchedule
     networkPolicy:
       enabled: true
       ingress: []
@@ -349,7 +353,11 @@ proxy:
     extraDynamicConfig: {}
     nodeSelector:
       node-role.kubernetes.io/processing: ""
-    tolerations: []
+    tolerations:
+      - key: role
+        operator: Equal
+        value: processing
+        effect: NoSchedule
     extraPorts: []
     networkPolicy:
       enabled: true
@@ -392,7 +400,11 @@ proxy:
 # pod, and its spawning of user pods such as jupyter-myusername.
 singleuser:
   podNameTemplate:
-  extraTolerations: []
+  extraTolerations:
+    - key: role
+      operator: Equal
+      value: processing
+      effect: NoSchedule
   nodeSelector:
     node-role.kubernetes.io/processing: ""
   extraNodeAffinity:
@@ -611,7 +623,11 @@ scheduling:
       pullSecrets: []
     nodeSelector:
       node-role.kubernetes.io/processing: ""
-    tolerations: []
+    tolerations:
+      - key: role
+        operator: Equal
+        value: processing
+        effect: NoSchedule
     labels: {}
     annotations: {}
     pdb:
@@ -686,7 +702,11 @@ prePuller:
     runAsUser: 65534 # nobody user
     runAsGroup: 65534 # nobody group
     allowPrivilegeEscalation: false
-  extraTolerations: []
+  extraTolerations:
+    - key: role
+      operator: Equal
+      value: processing
+      effect: NoSchedule
   # hook relates to the hook-image-awaiter Job and hook-image-puller DaemonSet
   hook:
     enabled: true
@@ -704,7 +724,11 @@ prePuller:
     podSchedulingWaitDuration: 10
     nodeSelector:
       node-role.kubernetes.io/processing: ""
-    tolerations: []
+    tolerations:
+      - key: role
+        operator: Equal
+        value: processing
+        effect: NoSchedule
     resources: {}
     serviceAccount:
       create: true

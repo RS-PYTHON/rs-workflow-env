@@ -226,6 +226,14 @@ worker:
                     }
                   }
                 },
+                "tolerations": [
+                  {
+                      "effect": "NoSchedule",
+                      "key": "role",
+                      "operator": "Equal",
+                      "value": "processing"
+                  }
+                ],
                 "template": {
                   "spec": {
                     "containers": [
@@ -267,6 +275,11 @@ worker:
           - matchExpressions:
             - key: "node-role.kubernetes.io/processing"
               operator: Exists
+  tolerations:
+    - key: role
+      operator: Equal
+      value: processing
+      effect: NoSchedule
 
   serverApiConfig:
     apiUrl: http://prefect-server.processing.svc.cluster.local:4200/api
