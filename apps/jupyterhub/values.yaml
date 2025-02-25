@@ -198,14 +198,7 @@ hub:
     create: true
     name:
     annotations: {}
-  extraPodSpec:
-    affinity:
-      nodeAffinity:
-        requiredDuringSchedulingIgnoredDuringExecution:
-          nodeSelectorTerms:
-            - matchExpressions:
-              - key: "node-role.kubernetes.io/processing"
-                operator: Exists
+  extraPodSpec: {}
   resources:
     limits:
       cpu: 0.3
@@ -305,7 +298,8 @@ proxy:
     defaultTarget:
     errorTarget:
     extraEnv: {}
-    nodeSelector: {}
+    nodeSelector:
+      node-role.kubernetes.io/processing: ""
     tolerations: []
     networkPolicy:
       enabled: true
@@ -325,13 +319,6 @@ proxy:
       maxUnavailable:
       minAvailable: 1
     extraPodSpec: {}
-      # affinity:
-      #   nodeAffinity:
-      #     requiredDuringSchedulingIgnoredDuringExecution:
-      #       nodeSelectorTerms:
-      #         - matchExpressions:
-      #           - key: "node-role.kubernetes.io/processing"
-      #             operator: Exists
   # traefik relates to the autohttps pod, which is responsible for TLS
   # termination when proxy.https.type=letsencrypt.
   traefik:
@@ -360,7 +347,8 @@ proxy:
     extraVolumeMounts: []
     extraStaticConfig: {}
     extraDynamicConfig: {}
-    nodeSelector: {}
+    nodeSelector:
+      node-role.kubernetes.io/processing: ""
     tolerations: []
     extraPorts: []
     networkPolicy:
@@ -385,13 +373,6 @@ proxy:
       name:
       annotations: {}
     extraPodSpec: {}
-      # affinity:
-      #   nodeAffinity:
-      #     requiredDuringSchedulingIgnoredDuringExecution:
-      #       nodeSelectorTerms:
-      #         - matchExpressions:
-      #           - key: "node-role.kubernetes.io/processing"
-      #             operator: Exists
   secretSync:
     containerSecurityContext:
       runAsUser: 65534 # nobody user
@@ -412,7 +393,8 @@ proxy:
 singleuser:
   podNameTemplate:
   extraTolerations: []
-  nodeSelector: {}
+  nodeSelector:
+    node-role.kubernetes.io/processing: ""
   extraNodeAffinity:
     required: []
     preferred: []
@@ -627,7 +609,8 @@ scheduling:
       tag: "v1.26.15" # ref: https://github.com/kubernetes/kubernetes/tree/master/CHANGELOG
       pullPolicy:
       pullSecrets: []
-    nodeSelector: {}
+    nodeSelector:
+      node-role.kubernetes.io/processing: ""
     tolerations: []
     labels: {}
     annotations: {}
@@ -641,13 +624,6 @@ scheduling:
       name:
       annotations: {}
     extraPodSpec: {}
-      # affinity:
-      #   nodeAffinity:
-      #     requiredDuringSchedulingIgnoredDuringExecution:
-      #       nodeSelectorTerms:
-      #         - matchExpressions:
-      #           - key: "node-role.kubernetes.io/processing"
-      #             operator: Exists
   podPriority:
     enabled: false
     globalDefault: false
@@ -686,7 +662,7 @@ scheduling:
         value: core
         effect: NoSchedule
     nodeAffinity:
-      matchNodePurpose: prefer
+      matchNodePurpose: ignore
   userPods:
     tolerations:
       - key: hub.jupyter.org/dedicated
@@ -698,7 +674,7 @@ scheduling:
         value: user
         effect: NoSchedule
     nodeAffinity:
-      matchNodePurpose: prefer
+      matchNodePurpose: ignore
 
 # prePuller relates to the hook|continuous-image-puller DaemonsSets
 prePuller:
@@ -726,7 +702,8 @@ prePuller:
       runAsGroup: 65534 # nobody group
       allowPrivilegeEscalation: false
     podSchedulingWaitDuration: 10
-    nodeSelector: {}
+    nodeSelector:
+      node-role.kubernetes.io/processing: ""
     tolerations: []
     resources: {}
     serviceAccount:
