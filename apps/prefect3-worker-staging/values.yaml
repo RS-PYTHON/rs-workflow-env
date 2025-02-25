@@ -226,6 +226,14 @@ worker:
                     }
                   }
                 },
+                "tolerations": [
+                  {
+                      "effect": "NoSchedule",
+                      "key": "role",
+                      "operator": "Equal",
+                      "value": "access_csc"
+                  }
+                ],
                 "template": {
                   "spec": {
                     "containers": [
@@ -267,6 +275,11 @@ worker:
           - matchExpressions:
             - key: "node-role.kubernetes.io/access_csc"
               operator: Exists
+  tolerations:
+    - key: role
+      operator: Equal
+      value: access_csc
+      effect: NoSchedule
 
   serverApiConfig:
     apiUrl: http://prefect3-server.processing.svc.cluster.local:4200/api
