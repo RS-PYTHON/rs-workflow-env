@@ -25,13 +25,13 @@ spec:
     name: Postgres-Prefect
     type: postgres
     access: proxy
-    url: {{ prefect.database.host }}
-    user: {{ prefect.database.username }}
+    url: {{ prefect3.database.host }}
+    user: {{ prefect3.database.username }}
     secureJsonData:
-      password: '{{ prefect.database.password }}'
+      password: '{{ prefect3.database.password }}'
     isDefault: false
     jsonData:
-      database: {{ prefect.database.name }}
+      database: {{ prefect3.database.name }}
       sslmode: require
       "tlsSkipVerify": true
       "timeInterval": "5s"
