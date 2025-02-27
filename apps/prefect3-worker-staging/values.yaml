@@ -241,7 +241,7 @@ worker:
                         "env": "{% raw %}{{ env }}{% endraw %}",
                         "args": "{% raw %}{{ command }}{% endraw %}",
                         "name": "prefect-job",
-                        "image": "ghcr.io/rs-python/prefect/rs-client-libraries/k8s:feat-rspy570-empty-dpr-processor",
+                        "image": "ghcr.io/rs-python/prefect/rs-client-libraries/k8s:latest",
                         "imagePullPolicy": "IfNotPresent"
                       }
                     ],
