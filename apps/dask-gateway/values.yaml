@@ -70,7 +70,7 @@ gateway:
             Float("cluster_max_memory", default=17179869184, min=1073741824, max=343597383680, label="Cluster max memory"),
             Integer("cluster_max_workers", 5, min=1, max=20, label="Cluster max workers"),
             String("cluster_name", default="MyDaskCluster", label="Cluster Name"),
-            Mapping("scheduler_extra_container_config", default={"imagePullPolicy": "Always"}, label="scheduler_extra_container_config"),
+            Mapping("scheduler_extra_container_config", default={"readinessProbe":{"failureThreshold":3,"httpGet":{"path":"/api/health","port":8788,"scheme":"HTTP"},"periodSeconds":5,"successThreshold":1,"timeoutSeconds":15}, "imagePullPolicy": "Always"}, label="scheduler_extra_container_config"),
             Mapping("scheduler_extra_pod_annotations", default={"usage":"unknown","access":"internal"}, label="Scheduler_extra_pod_annotations"),
             Mapping("scheduler_extra_pod_labels", default={"user":"unknown","team":"unknown","cluster_name":"MyDaskCluster"}, label="Scheduler_extra_pod_labels"),
             Mapping("environment", default={"S3_ENDPOINT":"{{ s3.endpoint }}","S3_REGION":"{{ s3.region }}","TEMPO_ENDPOINT":"http://grafana-tempo-distributor.logging.svc.cluster.local:4317"}, label="Environment variables"),
