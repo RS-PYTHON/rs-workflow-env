@@ -84,6 +84,8 @@ gateway:
       name: ghcr.io/dask/dask-gateway
       tag: "2024.1.0"
       pullPolicy:
+    imagePullSecrets:
+      - name: ghcr-k8s
     namespace: dask-gateway
     scheduler:
       extraPodConfig:
