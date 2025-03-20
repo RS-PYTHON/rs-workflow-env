@@ -38,11 +38,16 @@ hub:
   # Add initContainer to install itsdangerous without having to modify the image
   initContainers:
     - name: install-python-packages
-      image: python:3.9-slim
+      image: python:3.12-slim
       command: ["sh", "-c", "pip install --target /srv/jupyterhub/ itsdangerous"]
       volumeMounts:
         - name: shared-volume
           mountPath: /srv/jupyterhub
+      securityContext:
+        runAsUser: 1000
+        runAsNonRoot: true
+  extraEnv:
+    JUPYTERHUB_CRYPT_KEY: {{ jupyterhub.jupyterhub_crypt_key }}
   extraVolumes:
     - name: shared-volume
       emptyDir: {}
@@ -62,7 +67,7 @@ hub:
       username_claim: preferred_username
       userdata_params:
         state: state
-      # In order to use keycloak client's roles as authorization layer
+      auth_state_groups_key: oauth_user
       claim_groups_key: realm_access.roles
       allowed_groups:
         - RS-JUPYTER-USER
@@ -71,9 +76,9 @@ hub:
       scope:
         - openid
       enable_auth_state: true
-
+      manage_groups: true
     JupyterHub:
-      admin: true
+      admin_access: true
       authenticator_class: generic-oauth
   extraConfig:
     # After the user has logged in to JupyterHub, pass the authentication information
@@ -148,7 +153,7 @@ hub:
     password:
   image:
     name: quay.io/jupyterhub/k8s-hub
-    tag: "3.3.6"
+    tag: "4.1.0"
     pullPolicy:
     pullSecrets: []
   pdb:
@@ -278,7 +283,7 @@ proxy:
       # tag is automatically bumped to new patch versions by the
       # watch-dependencies.yaml workflow.
       #
-      tag: "4.6.1" # https://github.com/jupyterhub/configurable-http-proxy/tags
+      tag: "4.6.3" # https://github.com/jupyterhub/configurable-http-proxy/tags
       pullPolicy:
       pullSecrets: []
     extraCommandLineFlags: []
@@ -336,7 +341,7 @@ proxy:
       # tag is automatically bumped to new patch versions by the
       # watch-dependencies.yaml workflow.
       #
-      tag: "v2.11.0" # ref: https://hub.docker.com/_/traefik?tab=tags
+      tag: "v3.3.1" # ref: https://hub.docker.com/_/traefik?tab=tags
       pullPolicy:
       pullSecrets: []
     hsts:
@@ -388,7 +393,7 @@ proxy:
       allowPrivilegeEscalation: false
     image:
       name: quay.io/jupyterhub/k8s-secret-sync
-      tag: "3.3.6"
+      tag: "4.1.0"
       pullPolicy:
       pullSecrets: []
     resources: {}
@@ -419,7 +424,7 @@ singleuser:
   networkTools:
     image:
       name: quay.io/jupyterhub/k8s-network-tools
-      tag: "3.3.6"
+      tag: "4.1.0"
       pullPolicy:
       pullSecrets: []
     resources: {}
@@ -496,6 +501,8 @@ singleuser:
   image:
     name: ghcr.io/rs-python/rs-infra-core-jupyter
     tag: "latest"
+    #name: quay.io/jupyterhub/k8s-singleuser-sample
+    #tag: "4.1.0"
     pullPolicy: Always
     pullSecrets: []
     #  - name: {{ github.registrySecret.name }}
@@ -618,7 +625,7 @@ scheduling:
       # here. We aim to stay around 1 minor version behind the latest k8s
       # version.
       #
-      tag: "v1.26.15" # ref: https://github.com/kubernetes/kubernetes/tree/master/CHANGELOG
+      tag: "v1.30.8" # ref: https://github.com/kubernetes/kubernetes/tree/master/CHANGELOG
       pullPolicy:
       pullSecrets: []
     nodeSelector:
@@ -655,7 +662,7 @@ scheduling:
       #
       # If you update this, also update prePuller.pause.image.tag
       #
-      tag: "3.9"
+      tag: "3.10"
       pullPolicy:
       pullSecrets: []
     revisionHistoryLimit:
@@ -714,7 +721,7 @@ prePuller:
     # image and the configuration below relates to the hook-image-awaiter Job
     image:
       name: quay.io/jupyterhub/k8s-image-awaiter
-      tag: "3.3.6"
+      tag: "4.1.0"
       pullPolicy:
       pullSecrets: []
     containerSecurityContext:
@@ -750,7 +757,7 @@ prePuller:
       #
       # If you update this, also update scheduling.userPlaceholder.image.tag
       #
-      tag: "3.9"
+      tag: "3.10"
       pullPolicy:
       pullSecrets: []
 
