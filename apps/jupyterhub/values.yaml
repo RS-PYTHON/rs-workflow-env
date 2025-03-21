@@ -500,7 +500,7 @@ singleuser:
       storageAccessModes: [ReadWriteOnce]
   image:
     name: ghcr.io/rs-python/rs-infra-core-jupyter
-    tag: "latest"
+    tag: "feat-rspy625-update-jupyter"
     #name: quay.io/jupyterhub/k8s-singleuser-sample
     #tag: "4.1.0"
     pullPolicy: Always
