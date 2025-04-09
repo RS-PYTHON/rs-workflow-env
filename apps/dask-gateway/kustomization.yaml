@@ -23,8 +23,8 @@ helmCharts:
   version: 2024.1.0
   namespace: dask-gateway
   valuesFile: values.yaml
-  includeCRDs: true
-  
+  includeCRDs: false
+
 resources:
   - secret.yaml
   - ingress.yaml
