@@ -15,19 +15,16 @@
 # -- fully override common.names.fullname
 fullnameOverride: "prefect-server"
 
+global:
+  prefect:
+    image:
+      repository: prefecthq/prefect
+      prefectTag: 3.2.13-python3.11-kubernetes
+      pullPolicy: IfNotPresent
+
+    loggingLevel: WARNING
+
 server:
-  image:
-    repository: prefecthq/prefect
-    prefectTag: 3.1.4-python3.11-kubernetes
-    pullPolicy: IfNotPresent
-
-  loggingLevel: WARNING
-
-  prefectApiUrl: https://processing.{{ platform_domain_name }}/api
-
-  prefectApiHost: 0.0.0.0
-
-
   ## If you want to run the UI seperately from the server, you will need to set the UI-specific URLs below
   uiConfig:
     # -- set PREFECT_UI_ENABLED; enable the UI on the server
@@ -38,6 +35,7 @@ server:
     #prefectUiUrl: "https://processing.{{ platform_domain_name }}"
     # -- sets PREFECT_UI_STATIC_DIRECTORY
     #prefectUiStaticDirectory: "/ui_build"
+    prefectUiApiUrl: https://processing.{{ platform_domain_name }}/api
 
   env:
     - name: PREFECT_LOGGING_EXTRA_LOGGERS
