@@ -20,9 +20,9 @@ worker:
   clusterUid: "rspy"
   image:
     repository: prefecthq/prefect
-    prefectTag: 3.1.4-python3.11-kubernetes
+    prefectTag: 3.2.13-python3.11-kubernetes
     pullPolicy: IfNotPresent
-  apiConfig: server
+  apiConfig: selfHostedServer
   config:
     workPool: {{ prefect3worker.eopf.name }}
     limit: 10
@@ -71,7 +71,7 @@ worker:
                 ],
                 "title": "Image",
                 "examples": [
-                  "docker.io/prefecthq/prefect:3.1.4-python3.11-kubernetes"
+                  "docker.io/prefecthq/prefect:3.2.13-python3.11-kubernetes"
                 ],
                 "description": "The image reference of a container image to use for created jobs. If not set, the latest Prefect image will be used."
               },
@@ -281,7 +281,7 @@ worker:
       value: processing
       effect: NoSchedule
 
-  serverApiConfig:
+  selfHostedServerApiConfig:
     apiUrl: http://prefect-server.processing.svc.cluster.local:4200/api
 
   # ref: https://kubernetes.io/docs/tasks/configure-pod-container/configure-liveness-readiness-startup-probes/

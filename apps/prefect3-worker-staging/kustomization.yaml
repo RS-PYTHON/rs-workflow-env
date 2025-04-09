@@ -21,6 +21,6 @@ helmCharts:
 - name: prefect-worker
   repo: https://prefecthq.github.io/prefect-helm
   releaseName: "{{ app_name }}"
-  version: 2024.11.21014951
+  version: 2025.3.14203557
   namespace: processing
   valuesFile: values.yaml
