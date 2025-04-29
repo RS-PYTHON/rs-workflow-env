@@ -465,6 +465,8 @@ singleuser:
     S3_ENDPOINT: {{ s3.endpoint }}
     S3_REGION: {{ s3.region }}
     TEMPO_ENDPOINT: http://grafana-tempo-distributor.logging.svc.cluster.local:4317
+    OTEL_PYTHON_REQUESTS_TRACE_HEADERS: {{ jupyterhub.services.otel.trace_headers | quote }}
+    OTEL_PYTHON_REQUESTS_TRACE_BODY: {{ jupyterhub.services.otel.trace_body | quote }}
     WORKER_EXTRA_POD_CONFIG_EOPF: |
       {% raw %}{{"affinity":{{"nodeAffinity":{{"requiredDuringSchedulingIgnoredDuringExecution":{{"nodeSelectorTerms":[{{"matchExpressions":[{{"key":"node-role.kubernetes.io/processing","operator":"Exists"}}]}}]}}}}}}}}{% endraw %}
 
