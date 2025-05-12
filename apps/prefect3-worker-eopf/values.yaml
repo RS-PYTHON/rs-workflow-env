@@ -25,7 +25,7 @@ worker:
   apiConfig: selfHostedServer
   config:
     workPool: {{ prefect3worker.eopf.name }}
-    limit: 10
+    limit: 200
     baseJobTemplate:
       name: {{ prefect3worker.eopf.name }}-base-job-template
       configuration: |
