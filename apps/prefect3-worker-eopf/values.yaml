@@ -210,39 +210,49 @@ worker:
             "job_manifest": {
               "kind": "Job",
               "spec": {
-                "affinity": {
-                  "nodeAffinity": {
-                    "requiredDuringSchedulingIgnoredDuringExecution": {
-                      "nodeSelectorTerms": [
-                        {
-                          "matchExpressions": [
+                "template": {
+                  "spec": {
+                    "affinity": {
+                      "nodeAffinity": {
+                        "requiredDuringSchedulingIgnoredDuringExecution": {
+                          "nodeSelectorTerms": [
                             {
-                              "key": "node-role.kubernetes.io/processing",
-                              "operator": "Exists"
+                              "matchExpressions": [
+                                {
+                                  "key": "node-role.kubernetes.io/processing",
+                                  "operator": "Exists"
+                                }
+                              ]
                             }
                           ]
                         }
-                      ]
-                    }
-                  }
-                },
-                "tolerations": [
-                  {
-                      "effect": "NoSchedule",
-                      "key": "role",
-                      "operator": "Equal",
-                      "value": "processing"
-                  }
-                ],
-                "template": {
-                  "spec": {
+                      }
+                    },
+                    "tolerations": [
+                      {
+                          "effect": "NoSchedule",
+                          "key": "role",
+                          "operator": "Equal",
+                          "value": "processing"
+                      }
+                    ],
                     "containers": [
                       {
                         "env": "{% raw %}{{ env }}{% endraw %}",
                         "args": "{% raw %}{{ command }}{% endraw %}",
                         "name": "prefect-job",
                         "image": "ghcr.io/rs-python/prefect/rs-client-libraries/k8s:latest",
-                        "imagePullPolicy": "IfNotPresent"
+                        "imagePullPolicy": "IfNotPresent",
+                        "resources":{
+                          "requests": {
+                            "cpu": "150m",
+                            "memory": "256Mi"
+                            },
+                          "limits": {
+                            "cpu": "300m",
+                            "memory": "512Mi"
+                          }
+                        }
                       }
                     ],
                     "completions": 1,
@@ -268,7 +278,7 @@ worker:
           }
         }
 
-  affinity:         
+  affinity:
     nodeAffinity:
       requiredDuringSchedulingIgnoredDuringExecution:
         nodeSelectorTerms:
