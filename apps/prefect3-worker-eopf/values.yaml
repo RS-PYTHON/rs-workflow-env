@@ -219,7 +219,7 @@ worker:
                             {
                               "matchExpressions": [
                                 {
-                                  "key": "node-role.kubernetes.io/processing",
+                                  "key": "node-role.kubernetes.io/prefect_flow",
                                   "operator": "Exists"
                                 }
                               ]
@@ -233,7 +233,7 @@ worker:
                           "effect": "NoSchedule",
                           "key": "role",
                           "operator": "Equal",
-                          "value": "processing"
+                          "value": "prefect_flow"
                       }
                     ],
                     "containers": [
