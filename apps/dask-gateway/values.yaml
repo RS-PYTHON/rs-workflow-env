@@ -45,6 +45,8 @@ gateway:
 
         def option_handler(options):
             return {
+                "scheduler_core_limit": options.scheduler_core_limit,
+                "scheduler_memory_limit": "%fG" % options.scheduler_memory_limit,
                 "worker_cores": options.worker_cores,
                 "worker_memory": "%fG" % options.worker_memory,
                 "scheduler_core_limit": options.scheduler_core_limit,
@@ -64,6 +66,8 @@ gateway:
             }
 
         c.Backend.cluster_options = Options(
+            Float("scheduler_core_limit", 1, min=1, max=2, label="Scheduler Max Cores"),
+            Float("scheduler_memory_limit", 2, min=1, max=10, label="Scheduler Max Memory (GiB)"),
             Float("worker_cores", 1, min=1, max=8, label="Worker Cores"),
             Float("worker_memory", 4, min=1, max=32, label="Worker Memory (GiB)"),
             Float("scheduler_core_limit", 1, min=1, max=2, label="Scheduler Max Cores"),
@@ -88,6 +92,8 @@ gateway:
       name: ghcr.io/dask/dask-gateway
       tag: "2024.1.0"
       pullPolicy:
+    imagePullSecrets:
+      - name: ghcr-k8s
     namespace: dask-gateway
     scheduler:
       extraPodConfig:
