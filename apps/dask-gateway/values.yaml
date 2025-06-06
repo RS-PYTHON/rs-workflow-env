@@ -32,12 +32,12 @@ gateway:
       requiredDuringSchedulingIgnoredDuringExecution:
         nodeSelectorTerms:
           - matchExpressions:
-            - key: "node-role.kubernetes.io/processing"
+            - key: "node-role.kubernetes.io/rs_env"
               operator: Exists
   tolerations:
     - key: role
       operator: Equal
-      value: processing
+      value: rs_env
       effect: NoSchedule
   extraConfig:
     clusteroptions: |
@@ -96,12 +96,12 @@ gateway:
             requiredDuringSchedulingIgnoredDuringExecution:
               nodeSelectorTerms:
                 - matchExpressions:
-                  - key: "node-role.kubernetes.io/processing"
+                  - key: "node-role.kubernetes.io/rs_env"
                     operator: Exists
         tolerations:
           - key: role
             operator: Equal
-            value: processing
+            value: rs_env
             effect: NoSchedule
 
 controller:
@@ -115,12 +115,12 @@ controller:
       requiredDuringSchedulingIgnoredDuringExecution:
         nodeSelectorTerms:
           - matchExpressions:
-            - key: "node-role.kubernetes.io/processing"
+            - key: "node-role.kubernetes.io/rs_env"
               operator: Exists
   tolerations:
     - key: role
       operator: Equal
-      value: processing
+      value: rs_env
       effect: NoSchedule
 
 traefik:
@@ -138,10 +138,10 @@ traefik:
       requiredDuringSchedulingIgnoredDuringExecution:
         nodeSelectorTerms:
           - matchExpressions:
-            - key: "node-role.kubernetes.io/processing"
+            - key: "node-role.kubernetes.io/rs_env"
               operator: Exists
   tolerations:
     - key: role
       operator: Equal
-      value: processing
+      value: rs_env
       effect: NoSchedule
