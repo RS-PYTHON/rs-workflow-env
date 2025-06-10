@@ -13,6 +13,23 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/) 
 >- **Fixed** for any bug fixes.
 >- **Security** in case of vulnerabilities.
 
+## [0.2a14] - 2025-06-10
+
+### Added
+
+- rs-osam service
+- rs-catalog-staging-configmap for rs-osam
+
+### Changed
+
+- RSPY-672 : Split-dpr-processing-flow
+- Enable pre-commit
+- Enable CI/CD
+
+### Fixed
+
+- RSPY-689 : Fix Affinity and add limit/request (prefect worker)
+
 ## [0.2a13] - 2025-05-15
 
 ### Added
