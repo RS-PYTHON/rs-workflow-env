@@ -92,15 +92,15 @@ auth:
 provider:
   secret:
     # -- OVH End Point
-    ovh_endpoint: "rs_osam.provider.secret.ovh_endpoint"    
+    ovh_endpoint: "{{ rs_osam.provider.secret.ovh_endpoint }}"    
     # -- OVH Application Key
-    ovh_application_key: "rs_osam.provider.secret.ovh_application_key" 
+    ovh_application_key: "{{ rs_osam.provider.secret.ovh_application_key }}" 
     # -- OVH Application Secret
-    ovh_application_secret: "rs_osam.provider.secret.ovh_application_secret" 
+    ovh_application_secret: "{{ rs_osam.provider.secret.ovh_application_secret }}" 
     # -- OVH Consumer Key
-    ovh_consumer_key: "rs_osam.provider.secret.ovh_consumer_key" 
+    ovh_consumer_key: "{{ rs_osam.provider.secret.ovh_consumer_key }}" 
     # OVH Service (used in endpoint /cloud/project/<ovh_service>/user )
-    ovh_service: "rs_osam.provider.secret.ovh_service" 
+    ovh_service: "{{ rs_osam.provider.secret.ovh_service }}" 
 
 ingress:
   # -- Enabled/Disable ingress
