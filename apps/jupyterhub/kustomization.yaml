@@ -22,7 +22,7 @@ helmCharts:
   namespace: processing
   repo: https://hub.jupyter.org/helm-chart/
   releaseName: "{{ app_name }}"
-  version: 3.3.6
+  version: 4.1.0
   valuesFile: values.yaml
 
 resources:
