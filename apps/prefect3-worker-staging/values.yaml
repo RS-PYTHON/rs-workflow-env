@@ -283,12 +283,12 @@ worker:
       requiredDuringSchedulingIgnoredDuringExecution:
         nodeSelectorTerms:
           - matchExpressions:
-            - key: "node-role.kubernetes.io/access_csc"
+            - key: "node-role.kubernetes.io/rs_env"
               operator: Exists
   tolerations:
     - key: role
       operator: Equal
-      value: access_csc
+      value: rs_env
       effect: NoSchedule
 
   selfHostedServerApiConfig:

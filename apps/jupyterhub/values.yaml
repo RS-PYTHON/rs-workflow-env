@@ -299,11 +299,11 @@ proxy:
     errorTarget:
     extraEnv: {}
     nodeSelector:
-      node-role.kubernetes.io/processing: ""
+      node-role.kubernetes.io/rs_env: ""
     tolerations:
       - key: role
         operator: Equal
-        value: processing
+        value: rs_env
         effect: NoSchedule
     networkPolicy:
       enabled: true
@@ -352,11 +352,11 @@ proxy:
     extraStaticConfig: {}
     extraDynamicConfig: {}
     nodeSelector:
-      node-role.kubernetes.io/processing: ""
+      node-role.kubernetes.io/rs_env: ""
     tolerations:
       - key: role
         operator: Equal
-        value: processing
+        value: rs_env
         effect: NoSchedule
     extraPorts: []
     networkPolicy:
@@ -403,10 +403,10 @@ singleuser:
   extraTolerations:
     - key: role
       operator: Equal
-      value: processing
+      value: rs_env
       effect: NoSchedule
   nodeSelector:
-    node-role.kubernetes.io/processing: ""
+    node-role.kubernetes.io/rs_env: ""
   extraNodeAffinity:
     required: []
     preferred: []
@@ -466,7 +466,7 @@ singleuser:
     OTEL_PYTHON_REQUESTS_TRACE_HEADERS: "{{ jupyterhub.services.otel.trace_headers }}"
     OTEL_PYTHON_REQUESTS_TRACE_BODY: "{{ jupyterhub.services.otel.trace_body }}"
     WORKER_EXTRA_POD_CONFIG_EOPF: |
-      {% raw %}{{"affinity":{{"nodeAffinity":{{"requiredDuringSchedulingIgnoredDuringExecution":{{"nodeSelectorTerms":[{{"matchExpressions":[{{"key":"node-role.kubernetes.io/processing","operator":"Exists"}}]}}]}}}}}}}}{% endraw %}
+      {% raw %}{{"affinity":{{"nodeAffinity":{{"requiredDuringSchedulingIgnoredDuringExecution":{{"nodeSelectorTerms":[{{"matchExpressions":[{{"key":"node-role.kubernetes.io/rs_env","operator":"Exists"}}]}}]}}}}}}}}{% endraw %}
 
     WORKER_EXTRA_POD_CONFIG_STAGING: |
       {% raw %}{{"affinity":{{"nodeAffinity":{{"requiredDuringSchedulingIgnoredDuringExecution":{{"nodeSelectorTerms":[{{"matchExpressions":[{{"key":"node-role.kubernetes.io/access_csc","operator":"Exists"}}]}}]}}}}}},"tolerations":[{{"key":"role","operator":"Equal","value":"access_csc","effect":"NoSchedule"}}]}}{% endraw %}
@@ -622,11 +622,11 @@ scheduling:
       pullPolicy:
       pullSecrets: []
     nodeSelector:
-      node-role.kubernetes.io/processing: ""
+      node-role.kubernetes.io/rs_env: ""
     tolerations:
       - key: role
         operator: Equal
-        value: processing
+        value: rs_env
         effect: NoSchedule
     labels: {}
     annotations: {}
@@ -705,7 +705,7 @@ prePuller:
   extraTolerations:
     - key: role
       operator: Equal
-      value: processing
+      value: rs_env
       effect: NoSchedule
   # hook relates to the hook-image-awaiter Job and hook-image-puller DaemonSet
   hook:
@@ -723,11 +723,11 @@ prePuller:
       allowPrivilegeEscalation: false
     podSchedulingWaitDuration: 10
     nodeSelector:
-      node-role.kubernetes.io/processing: ""
+      node-role.kubernetes.io/rs_env: ""
     tolerations:
       - key: role
         operator: Equal
-        value: processing
+        value: rs_env
         effect: NoSchedule
     resources: {}
     serviceAccount:
