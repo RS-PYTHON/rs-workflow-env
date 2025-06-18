@@ -66,6 +66,17 @@ spec:
           name: create-database
           defaultMode: 0744
       restartPolicy: Never
+      affinity:  
+        nodeAffinity:
+          requiredDuringSchedulingIgnoredDuringExecution:
+            nodeSelectorTerms:
+              - matchExpressions:
+                  - key: "node-role.kubernetes.io/rs_env"
+                    operator: Exists
+      tolerations:
+        - key: role
+          value: rs_env
+          effect: NoSchedule
 
 ---
 apiVersion: v1
