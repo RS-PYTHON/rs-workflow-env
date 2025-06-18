@@ -302,7 +302,6 @@ proxy:
       node-role.kubernetes.io/rs_env: ""
     tolerations:
       - key: role
-        operator: Equal
         value: rs_env
         effect: NoSchedule
     networkPolicy:
@@ -355,7 +354,6 @@ proxy:
       node-role.kubernetes.io/rs_env: ""
     tolerations:
       - key: role
-        operator: Equal
         value: rs_env
         effect: NoSchedule
     extraPorts: []
@@ -402,7 +400,6 @@ singleuser:
   podNameTemplate:
   extraTolerations:
     - key: role
-      operator: Equal
       value: rs_env
       effect: NoSchedule
   nodeSelector:
@@ -625,7 +622,6 @@ scheduling:
       node-role.kubernetes.io/rs_env: ""
     tolerations:
       - key: role
-        operator: Equal
         value: rs_env
         effect: NoSchedule
     labels: {}
@@ -670,11 +666,9 @@ scheduling:
   corePods:
     tolerations:
       - key: hub.jupyter.org/dedicated
-        operator: Equal
         value: core
         effect: NoSchedule
       - key: hub.jupyter.org_dedicated
-        operator: Equal
         value: core
         effect: NoSchedule
     nodeAffinity:
@@ -682,11 +676,9 @@ scheduling:
   userPods:
     tolerations:
       - key: hub.jupyter.org/dedicated
-        operator: Equal
         value: user
         effect: NoSchedule
       - key: hub.jupyter.org_dedicated
-        operator: Equal
         value: user
         effect: NoSchedule
     nodeAffinity:
@@ -704,7 +696,6 @@ prePuller:
     allowPrivilegeEscalation: false
   extraTolerations:
     - key: role
-      operator: Equal
       value: rs_env
       effect: NoSchedule
   # hook relates to the hook-image-awaiter Job and hook-image-puller DaemonSet
@@ -726,7 +717,6 @@ prePuller:
       node-role.kubernetes.io/rs_env: ""
     tolerations:
       - key: role
-        operator: Equal
         value: rs_env
         effect: NoSchedule
     resources: {}

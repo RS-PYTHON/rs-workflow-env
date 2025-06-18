@@ -82,7 +82,6 @@ server:
               operator: Exists
   tolerations:
     - key: role
-      operator: Equal
       value: rs_env
       effect: NoSchedule
 ## ServiceAccount configuration

@@ -36,7 +36,6 @@ gateway:
               operator: Exists
   tolerations:
     - key: role
-      operator: Equal
       value: rs_env
       effect: NoSchedule
   extraConfig:
@@ -102,7 +101,6 @@ gateway:
                     operator: Exists
         tolerations:
           - key: role
-            operator: Equal
             value: rs_env
             effect: NoSchedule
 
@@ -121,7 +119,6 @@ controller:
               operator: Exists
   tolerations:
     - key: role
-      operator: Equal
       value: rs_env
       effect: NoSchedule
 
@@ -144,6 +141,5 @@ traefik:
               operator: Exists
   tolerations:
     - key: role
-      operator: Equal
       value: rs_env
       effect: NoSchedule
