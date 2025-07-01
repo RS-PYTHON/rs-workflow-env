@@ -13,7 +13,7 @@
 # limitations under the License.
 
 # -- Namespace for the deployment
-namespace: operational
+namespace: processing
 
 # -- Number of replicas for the deployment
 replicaCount: 1
