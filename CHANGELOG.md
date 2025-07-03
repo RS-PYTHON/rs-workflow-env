@@ -13,6 +13,22 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/) 
 >- **Fixed** for any bug fixes.
 >- **Security** in case of vulnerabilities.
 
+## [0.2a15] - 2025-07-04
+
+### Added
+
+- rs-osam service
+- rs-catalog-staging-configmap for rs-osam
+
+### Changed
+
+- [RSPY-697](https://github.com/RS-PYTHON/rs-workflow-env/pull/13) : Update nodepool
+- [RSPY-609](https://github.com/RS-PYTHON/rs-workflow-env/pull/14) : Dedicated (big) node for dask scheduler
+
+### Removed
+
+- [PR#15](https://github.com/RS-PYTHON/rs-workflow-env/pull/15) : Revert operationnal namespace
+
 ## [0.2a14] - 2025-06-10
 
 ### Added
