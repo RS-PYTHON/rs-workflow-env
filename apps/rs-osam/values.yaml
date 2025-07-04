@@ -38,6 +38,8 @@ app:
     useExternalStagingBucketConfigMap: true
     # -- Name of the external configmap to use. Used only if useExternalCatalogBucketConfigMap is true
     externalStagingBucketConfigMapName: "rs-catalog-staging-configmap"
+  # -- Description template for ovh users when osam creates them
+  obsDescriptionTemplate: "## linked to keycloak user %keycloak-user% from platform ops"
 
 # -- Pod affinity
 affinity:
