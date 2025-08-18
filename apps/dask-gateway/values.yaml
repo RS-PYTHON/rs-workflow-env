@@ -13,8 +13,6 @@
 # limitations under the License.
 
 gateway:
-  imagePullSecrets:
-    - name: ghcr-k8s
   replicas: 1
   prefix: /
   loglevel: INFO
@@ -89,6 +87,8 @@ gateway:
       name: ghcr.io/dask/dask-gateway
       tag: "2024.1.0"
       pullPolicy:
+    imagePullSecrets:
+      - name: ghcr-k8s
     namespace: dask-gateway
     scheduler:
       extraPodConfig:
