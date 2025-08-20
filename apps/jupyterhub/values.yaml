@@ -490,6 +490,7 @@ singleuser:
       pvcNameTemplate: claim-{username}{servername}
       volumeNameTemplate: volume-{username}{servername}
       storageAccessModes: [ReadWriteOnce]
+  # Defines the default image
   image:
     name: ghcr.io/rs-python/rs-infra-core-jupyter
     tag: "latest"
@@ -509,7 +510,14 @@ singleuser:
   cmd: null
   defaultUrl:
   extraPodConfig: {}
-  profileList: []
+  profileList:
+    - display_name: "Default (latest) environment"
+      description: "Latest RS-Python environment"
+      default: true
+    - display_name: "S3L0 dev environment"
+      description: "S3L0 RS-Python environment"
+      kubespawner_override:
+        image: ghcr.io/rs-python/rs-infra-core-jupyter:feat-rspy737-make-s3l0-processing-work
 
 # scheduling relates to the user-scheduler pods and user-placeholder pods.
 scheduling:
