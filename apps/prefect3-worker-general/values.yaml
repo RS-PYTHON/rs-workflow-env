@@ -14,7 +14,7 @@
 
 ## Common parameters
 # -- fully override common.names.fullname
-fullnameOverride: "{{ prefect3worker.eopf.name }}"
+fullnameOverride: "{{ prefect3worker.general.name }}"
 
 worker:
   clusterUid: "rspy"
@@ -24,10 +24,10 @@ worker:
     pullPolicy: IfNotPresent
   apiConfig: selfHostedServer
   config:
-    workPool: {{ prefect3worker.eopf.name }}
+    workPool: {{ prefect3worker.general.name }}
     limit: 200
     baseJobTemplate:
-      name: {{ prefect3worker.eopf.name }}-base-job-template
+      name: {{ prefect3worker.general.name }}-base-job-template
       configuration: |
         {
           "variables": {
@@ -57,7 +57,7 @@ worker:
                     "type": "null"
                   }
                 ],
-                "title": "{{ prefect3worker.eopf.name }}",
+                "title": "{{ prefect3worker.general.name }}",
                 "description": "Name given to infrastructure created by a worker."
               },
               "image": {
@@ -203,7 +203,7 @@ worker:
           },
           "job_configuration": {
             "env": "{% raw %}{{ env }}{% endraw %}",
-            "name": "{{ prefect3worker.eopf.name }}-job-",
+            "name": "{{ prefect3worker.general.name }}-job-",
             "labels": "{% raw %}{{ labels }}{% endraw %}",
             "command": "{% raw %}{{ command }}{% endraw %}",
             "namespace": "processing",
@@ -258,7 +258,7 @@ worker:
                     "completions": 1,
                     "parallelism": 1,
                     "restartPolicy": "Never",
-                    "serviceAccountName": "{{ prefect3worker.eopf.name }}"
+                    "serviceAccountName": "{{ prefect3worker.general.name }}"
                   }
                 },
                 "backoffLimit": 0,
@@ -267,7 +267,7 @@ worker:
               "metadata": {
                 "labels": "{% raw %}{{ labels }}{% endraw %}",
                 "namespace": "processing",
-                "generateName": "{{ prefect3worker.eopf.name }}-run-"
+                "generateName": "{{ prefect3worker.general.name }}-run-"
               },
               "apiVersion": "batch/v1"
             },
@@ -297,4 +297,4 @@ worker:
   livenessProbe:
     enabled: true
 
-  replicaCount: {{ prefect3worker.eopf.number | default(2) }}
+  replicaCount: {{ prefect3worker.general.number | default(2) }}
