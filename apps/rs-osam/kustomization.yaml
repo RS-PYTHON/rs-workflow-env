@@ -14,7 +14,7 @@
 
 commonLabels:
   app.kubernetes.io/instance: "{{ app_name }}"
-namespace: operational
+namespace: processing
 
 helmCharts:
 - name: rs-osam
