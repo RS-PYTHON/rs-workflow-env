@@ -58,7 +58,7 @@ jobs:
           
           conda run -n rspy ansible-galaxy collection install openstack.cloud amazon.aws kubernetes.core
           ln -s /usr/share/miniconda/envs/rspy/bin/kubectl /usr/local/bin/kubectl
-          shell: bash
+        shell: bash
       - name: Start minikube
         uses: medyagh/setup-minikube@latest
         with:
