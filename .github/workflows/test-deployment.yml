@@ -54,26 +54,30 @@ jobs:
           conda create -y -n rspy python=3.11
 
           # Install Ansible, Terraform, Openstackclient
-          conda run -n rspy conda install -y -c conda-forge ansible terraform python-openstackclient passlib boto3 kubernetes-helm kubernetes-client
-
-          conda run -n rspy ansible-galaxy collection install openstack.cloud amazon.aws
-        shell: bash
+          conda run -n rspy conda install -y -c conda-forge ansible terraform python-openstackclient passlib boto3 kubernetes-helm kubernetes-client python-kubernetes
+          
+          conda run -n rspy ansible-galaxy collection install openstack.cloud amazon.aws kubernetes.core
+          ln -s /usr/share/miniconda/envs/rspy/bin/kubectl /usr/local/bin/kubectl
+          shell: bash
       - name: Start minikube
         uses: medyagh/setup-minikube@latest
+        with:
+          start-args: '--profile cluster.local'
+          memory: 8000m
       - name: Generate inventory
         run: |
           cp -rfp inventory/sample inventory/mycluster
-          cp -rfp inventory/mycluster/.env.template inventory/mycluster/.env
-          cp -rfp inventory/mycluster/openrc.sh.template inventory/mycluster/openrc.sh
+          mv inventory/mycluster/.env.template inventory/mycluster/.env
+          mv inventory/mycluster/openrc.sh.template inventory/mycluster/openrc.sh
           sed -i 's!<changeme_with_full_path>/miniforge3/envs/rspy!/usr/share/miniconda/envs/rspy!g' inventory/mycluster/hosts.yaml
-          conda run -n rspy ansible-playbook generate_inventory.yaml -i inventory/mycluster/hosts.yaml
+          conda run -n rspy --no-capture-output env PYTHONUNBUFFERED=1 ANSIBLE_FORCE_COLOR=1 ansible-playbook registry.yaml -i inventory/mycluster/hosts.yaml -e ci_mode=true
+          conda run -n rspy --no-capture-output env PYTHONUNBUFFERED=1 ANSIBLE_FORCE_COLOR=1 ansible-playbook generate_inventory.yaml -i inventory/mycluster/hosts.yaml
         shell: bash
       - name: Deploy the core apps (check)
         run: |
-          ln -s /usr/share/miniconda/envs/rspy/bin/kubectl /usr/local/bin/kubectl
-          conda run -n rspy ansible-playbook --check apps.yaml -i inventory/mycluster/hosts.yaml
+          conda run -n rspy --no-capture-output env PYTHONUNBUFFERED=1 ANSIBLE_FORCE_COLOR=1 ansible-playbook --check apps.yaml -i inventory/mycluster/hosts.yaml -e private_registry=true
         shell: bash
       - name: Deploy the workflow-env apps (check)
         run: |
-          conda run -n rspy ansible-playbook --check apps.yaml -i inventory/mycluster/hosts.yaml -e '{"package_paths": ["./rs-workflow-env/apps/"]}'
+          conda run -n rspy --no-capture-output env PYTHONUNBUFFERED=1 ANSIBLE_FORCE_COLOR=1 ansible-playbook --check apps.yaml -i inventory/mycluster/hosts.yaml -e '{"package_paths": ["./rs-workflow-env/apps/"]}' -e private_registry=true
         shell: bash
