@@ -39,6 +39,7 @@ jobs:
         uses: actions/checkout@v4
         with:
           path: rs-workflow-env
+          ref: ${{ github.ref }}
       - name: Install requirements
         run: |
           # Install miniforge
