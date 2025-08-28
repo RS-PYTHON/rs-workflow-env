@@ -13,6 +13,22 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/) 
 >- **Fixed** for any bug fixes.
 >- **Security** in case of vulnerabilities.
 
+## [1.0a1] - 2025-08-29
+
+### Added
+
+- [PR#22](https://github.com/RS-PYTHON/rs-workflow-env/pull/22) : Use profileList in JupyterHub deployment to offer several environments
+- [RSPY-735](https://github.com/RS-PYTHON/rs-workflow-env/pull/23) : Create database performance
+
+### Changed
+
+- [PR#20](https://github.com/RS-PYTHON/rs-workflow-env/pull/20) : Increase Dask worker max memory
+
+### Fixed
+
+- [PR#21](https://github.com/RS-PYTHON/rs-workflow-env/pull/21) : Fix dask image pull secret
+- [PR#24](https://github.com/RS-PYTHON/rs-workflow-env/pull/24) : Fix CI
+
 ## [0.2] - 2025-08-04
 
 ### Changed
