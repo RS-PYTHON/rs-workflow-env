@@ -23,7 +23,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/) 
 ### Changed
 
 - [PR#20](https://github.com/RS-PYTHON/rs-workflow-env/pull/20) : Increase Dask worker max memory
-- Bump docker image
+- Bump Helm Chart version
 
 ### Fixed
 
