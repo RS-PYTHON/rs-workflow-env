@@ -17,7 +17,7 @@ kind: Ingress
 metadata:
   name: dask-gateway-dashboard
   annotations:
-    cert-manager.io/cluster-issuer: letsencrypt-prod
+    cert-manager.io/cluster-issuer: "{{ cluster_issuer }}"
     nginx.ingress.kubernetes.io/auth-response-headers: Authorization
     nginx.ingress.kubernetes.io/auth-signin: https://oauth2-proxy.{{ platform_domain_name }}/oauth2/start?rd=https://$host$request_uri
     nginx.ingress.kubernetes.io/auth-url: https://oauth2-proxy.{{ platform_domain_name }}/oauth2/auth
