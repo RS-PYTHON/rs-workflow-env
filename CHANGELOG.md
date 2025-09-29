@@ -13,6 +13,17 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/) 
 >- **Fixed** for any bug fixes.
 >- **Security** in case of vulnerabilities.
 
+## [1.0a2] - 2025-09-29
+
+### Changed
+
+- [PR#27](https://github.com/RS-PYTHON/rs-workflow-env/pull/27) : Update env to use different eopf processors
+- Bump Helm Chart version
+
+### Fixed
+
+- [PR#28](https://github.com/RS-PYTHON/rs-workflow-env/pull/28) : Update prefect server endpoint in jupyter deployment
+
 ## [1.0a1] - 2025-08-29
 
 ### Added
