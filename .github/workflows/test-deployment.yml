@@ -32,7 +32,7 @@ jobs:
     steps:
       - name: Get current branch name
         id: vars
-        run: echo "branch_name=${GITHUB_REF#refs/heads/}" >> $GITHUB_OUTPUT
+        run: echo "branch_name=${{ github.head_ref }}" >> $GITHUB_OUTPUT
 
       - name: Check if branch exists in rs-infra-core
         id: check_branch
