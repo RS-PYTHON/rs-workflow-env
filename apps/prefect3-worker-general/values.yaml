@@ -24,10 +24,10 @@ worker:
     pullPolicy: IfNotPresent
   apiConfig: selfHostedServer
   config:
-    workPool: {{ prefect3worker.general.name }}
+    workPool: "{{ prefect3worker.general.name }}"
     limit: 200
     baseJobTemplate:
-      name: {{ prefect3worker.general.name }}-base-job-template
+      name: "{{ prefect3worker.general.name }}-base-job-template"
       configuration: |
         {
           "variables": {
@@ -291,7 +291,7 @@ worker:
       effect: NoSchedule
 
   selfHostedServerApiConfig:
-    apiUrl: http://prefect-server.processing.svc.cluster.local:4200/api
+    apiUrl: "http://{{ prefect3.ops.name }}-server.processing.svc.cluster.local:4200/api"
 
   # ref: https://kubernetes.io/docs/tasks/configure-pod-container/configure-liveness-readiness-startup-probes/
   livenessProbe:
