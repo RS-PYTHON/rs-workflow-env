@@ -42,6 +42,7 @@ jobs:
             echo "branch_to_use=$BRANCH" >> $GITHUB_OUTPUT
           else
             echo "branch_to_use=" >> $GITHUB_OUTPUT  # Leave empty to use default
+          fi
         shell: bash
 
       - name: Checkout repository
