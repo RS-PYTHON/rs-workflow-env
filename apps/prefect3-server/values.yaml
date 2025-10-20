@@ -13,7 +13,7 @@
 # limitations under the License.
 
 # -- fully override common.names.fullname
-fullnameOverride: "{{ prefect3.ops.name }}-server"
+fullnameOverride: "{{ prefect3server.ops.name }}-server"
 
 global:
   prefect:
@@ -30,12 +30,12 @@ server:
     # -- set PREFECT_UI_ENABLED; enable the UI on the server
     enabled: true
     # -- sets PREFECT_UI_API_URL
-    #prefectUiApiUrl: "https://{{ prefect3.ops.subDomain }}.{{ platform_domain_name }}/api"
+    #prefectUiApiUrl: "https://{{ prefect3server.ops.subDomain }}.{{ platform_domain_name }}/api"
     # -- sets PREFECT_UI_URL
-    #prefectUiUrl: "https://{{ prefect3.ops.subDomain }}.{{ platform_domain_name }}"
+    #prefectUiUrl: "https://{{ prefect3server.ops.subDomain }}.{{ platform_domain_name }}"
     # -- sets PREFECT_UI_STATIC_DIRECTORY
     #prefectUiStaticDirectory: "/ui_build"
-    prefectUiApiUrl: "https://{{ prefect3.ops.subDomain }}.{{ platform_domain_name }}/api"
+    prefectUiApiUrl: "https://{{ prefect3server.ops.subDomain }}.{{ platform_domain_name }}/api"
 
   env:
     - name: PREFECT_LOGGING_EXTRA_LOGGERS
@@ -95,7 +95,7 @@ ingress:
   className: "nginx"
   #path must be /
   host:
-    hostname: "{{ prefect3.ops.subDomain }}.{{ platform_domain_name }}"
+    hostname: "{{ prefect3server.ops.subDomain }}.{{ platform_domain_name }}"
     path: /
     pathType: Prefix
 
@@ -104,7 +104,7 @@ ingress:
     nginx.ingress.kubernetes.io/backend-protocol: HTTP
     nginx.ingress.kubernetes.io/proxy-buffer-size: 32k
     nginx.ingress.kubernetes.io/auth-signin: "https://oauth2-proxy.{{ platform_domain_name }}/oauth2/start?rd=https://$host"
-    nginx.ingress.kubernetes.io/auth-url: "https://oauth2-proxy.{{ platform_domain_name }}/oauth2/auth?allowed_groups={{ prefect3.ops.allowedRoles | default('role:RS-ADMIN', true }}"
+    nginx.ingress.kubernetes.io/auth-url: "https://oauth2-proxy.{{ platform_domain_name }}/oauth2/auth?allowed_groups={{ prefect3server.ops.allowedRoles | default('role:RS-ADMIN', true }}"
     nginx.ingress.kubernetes.io/auth-response-headers: Authorization
 
   tls: true
@@ -113,8 +113,8 @@ ingress:
 
   extraTls:
     - hosts:
-        - "{{ prefect3.ops.subDomain }}.{{ platform_domain_name }}"
-      secretName: "{{ prefect3.ops.subDomain }}-{{ platform_domain_name | replace(".", "-") }}"
+        - "{{ prefect3server.ops.subDomain }}.{{ platform_domain_name }}"
+      secretName: "{{ prefect3server.ops.subDomain }}-{{ platform_domain_name | replace(".", "-") }}"
 
 # Disable bundled postgresql
 postgresql:
@@ -123,9 +123,9 @@ postgresql:
 # Postgresql credentials
 secret:
   create: true
-  name: "{{ prefect3.ops.name }}-database-password"
-  username: "{{ prefect3.ops.database.username }}"
-  password: "{{ prefect3.ops.database.password }}"
-  host: "{{ prefect3.ops.database.host }}"
+  name: "{{ prefect3server.ops.name }}-database-password"
+  username: "{{ prefect3server.ops.database.username }}"
+  password: "{{ prefect3server.ops.database.password }}"
+  host: "{{ prefect3server.ops.database.host }}"
   port: 5432
-  database: "{{ prefect3.ops.name }}"
+  database: "{{ prefect3server.ops.name }}"

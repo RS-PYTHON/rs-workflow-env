@@ -291,7 +291,7 @@ worker:
       effect: NoSchedule
 
   selfHostedServerApiConfig:
-    apiUrl: "http://{{ prefect3.ops.name }}-server.processing.svc.cluster.local:4200/api"
+    apiUrl: "http://{{ prefect3server.ops.name }}-server.processing.svc.cluster.local:4200/api"
 
   # ref: https://kubernetes.io/docs/tasks/configure-pod-container/configure-liveness-readiness-startup-probes/
   livenessProbe:
