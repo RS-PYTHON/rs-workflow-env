@@ -104,7 +104,7 @@ ingress:
     nginx.ingress.kubernetes.io/backend-protocol: HTTP
     nginx.ingress.kubernetes.io/proxy-buffer-size: 32k
     nginx.ingress.kubernetes.io/auth-signin: "https://oauth2-proxy.{{ platform_domain_name }}/oauth2/start?rd=https://$host"
-    nginx.ingress.kubernetes.io/auth-url: "https://oauth2-proxy.{{ platform_domain_name }}/oauth2/auth?allowed_groups={{ prefect3server.ops.allowedRoles | default('role:RS-ADMIN', true }}"
+    nginx.ingress.kubernetes.io/auth-url: "https://oauth2-proxy.{{ platform_domain_name }}/oauth2/auth?allowed_groups={{ prefect3server.ops.allowedRoles | default('role:RS-ADMIN', true) }}"
     nginx.ingress.kubernetes.io/auth-response-headers: Authorization
 
   tls: true
