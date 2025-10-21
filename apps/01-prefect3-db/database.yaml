@@ -15,13 +15,13 @@
 apiVersion: batch/v1
 kind: Job
 metadata:
-  name: create-prefect3-db
+  name: "create-{{ prefect3server.ops.name }}-db"
 spec:
   ttlSecondsAfterFinished: 360
   template:
     spec:
       containers:
-      - name: create-prefect3-db
+      - name: "create-{{ prefect3server.ops.name }}-db"
         image: ghcr.io/cloudnative-pg/postgresql:16.1
         command: ["/scripts/create-database.sh"]
         volumeMounts:
@@ -29,16 +29,16 @@ spec:
             mountPath: /scripts/
         env:
         - name: DATABASE
-          value: {{ prefect3.database.name }}
+          value: "{{ prefect3server.ops.name }}"
         - name: PGNEWUSER
           valueFrom:
             secretKeyRef:
-              name: {{ prefect3.database.secret }}
+              name: "{{ prefect3server.ops.name }}-database-password"
               key: username
         - name: PGNEWPASS
           valueFrom:
             secretKeyRef:
-              name: {{ prefect3.database.secret }}
+              name: "{{ prefect3server.ops.name }}-database-password"
               key: password
         - name: PGADMIN
           valueFrom:
@@ -82,10 +82,10 @@ spec:
 apiVersion: v1
 kind: Secret
 metadata:
-  name: {{ prefect3.database.secret }}
+  name: "{{ prefect3server.ops.name }}-database-password"
   labels: 
     app: prefect3
 type: Opaque
 stringData:
-  username: {{ prefect3.database.username }}
-  password: {{ prefect3.database.password }}
+  username: "{{ prefect3server.ops.database.username }}"
+  password: "{{ prefect3server.ops.database.password }}"

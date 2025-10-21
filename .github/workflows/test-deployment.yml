@@ -30,10 +30,26 @@ jobs:
     if: github.actor != 'dependabot[bot]' # ignore pull requests by github bot
     runs-on: ubuntu-latest
     steps:
+      - name: Get current branch name
+        id: vars
+        run: echo "branch_name=${{ github.head_ref }}" >> $GITHUB_OUTPUT
+
+      - name: Check if branch exists in rs-infra-core
+        id: check_branch
+        run: |
+          BRANCH=${{ steps.vars.outputs.branch_name }}
+          if git ls-remote --heads https://github.com/RS-PYTHON/rs-infra-core.git $BRANCH | grep -q $BRANCH; then
+            echo "branch_to_use=$BRANCH" >> $GITHUB_OUTPUT
+          else
+            echo "branch_to_use=" >> $GITHUB_OUTPUT  # Leave empty to use default
+          fi
+        shell: bash
+
       - name: Checkout repository
         uses: actions/checkout@v4
         with:
           repository: RS-PYTHON/rs-infra-core
+          ref: ${{ steps.check_branch.outputs.branch_to_use }}
           submodules: recursive
       - name: Checkout repository
         uses: actions/checkout@v4
