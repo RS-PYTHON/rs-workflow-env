@@ -15,7 +15,7 @@
 commonLabels:
   app.kubernetes.io/instance: "{{ app_name }}"
 
-namespace: processing
+namespace: {{ jupyterhub.ops.namespace }}
 
 helmCharts:
 - name: jupyterhub
