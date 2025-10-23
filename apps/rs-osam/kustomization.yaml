@@ -20,5 +20,5 @@ helmCharts:
 - name: rs-osam
   repo: https://rs-python.github.io/rs-helm
   releaseName: "{{ app_name }}"
-  version: 1.0.0-a2
+  version: 1.0.0-a3
   valuesFile: values.yaml

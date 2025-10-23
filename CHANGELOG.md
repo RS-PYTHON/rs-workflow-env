@@ -13,6 +13,17 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/) 
 >- **Fixed** for any bug fixes.
 >- **Security** in case of vulnerabilities.
 
+## [1.0a3] - 2025-10-23
+
+### Added
+
+- [RSPY-795](https://github.com/RS-PYTHON/rs-workflow-env/pull/33) : Multiple prefect instances
+
+### Changed
+
+- [PR#31](https://github.com/RS-PYTHON/rs-workflow-env/pull/31) : Pass cluster info from client to rs-dpr-service
+- Bump Helm Chart version
+
 ## [1.0a2] - 2025-09-29
 
 ### Changed
