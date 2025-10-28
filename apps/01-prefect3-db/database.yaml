@@ -66,7 +66,7 @@ spec:
           name: create-database
           defaultMode: 0744
       restartPolicy: Never
-      affinity:  
+      affinity:
         nodeAffinity:
           requiredDuringSchedulingIgnoredDuringExecution:
             nodeSelectorTerms:
@@ -83,7 +83,7 @@ apiVersion: v1
 kind: Secret
 metadata:
   name: "{{ prefect3server.ops.name }}-database-password"
-  labels: 
+  labels:
     app: prefect3
 type: Opaque
 stringData:
