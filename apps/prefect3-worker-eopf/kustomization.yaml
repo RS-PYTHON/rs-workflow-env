@@ -15,12 +15,12 @@
 commonLabels:
   app.kubernetes.io/instance: "{{ app_name }}"
 
-namespace: {{ prefect3worker.eopfs.namespace }}
+namespace: "{{ prefect3worker.eopfs.namespace }}"
 
 helmCharts:
 - name: prefect-worker
   repo: https://prefecthq.github.io/prefect-helm
   releaseName: "{{ app_name }}"
   version: 2025.3.14203557
-  namespace: {{ prefect3worker.eopfs.namespace }}
+  namespace: "{{ prefect3worker.eopfs.namespace }}"
   valuesFile: values.yaml

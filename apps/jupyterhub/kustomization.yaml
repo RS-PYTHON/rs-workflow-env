@@ -15,11 +15,11 @@
 commonLabels:
   app.kubernetes.io/instance: "{{ app_name }}"
 
-namespace: {{ jupyterhub.ops.namespace }}
+namespace: "{{ jupyterhub.ops.namespace }}"
 
 helmCharts:
 - name: jupyterhub
-  namespace: processing
+  namespace: "{{ jupyterhub.ops.namespace }}"
   repo: https://hub.jupyter.org/helm-chart/
   releaseName: "{{ app_name }}"
   version: 3.3.6
