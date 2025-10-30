@@ -53,11 +53,11 @@ hub:
   config:
     GenericOAuthenticator:
       client_id: jupyterhub
-      client_secret: {{ jupyterhub_oidc_client_secret }}
-      oauth_callback_url: https://processing.{{ platform_domain_name }}/jupyter/hub/oauth_callback
-      authorize_url: https://iam.{{ platform_domain_name }}/realms/rspy/protocol/openid-connect/auth
-      token_url: https://iam.{{ platform_domain_name }}/realms/rspy/protocol/openid-connect/token
-      userdata_url: https://iam.{{ platform_domain_name }}/realms/rspy/protocol/openid-connect/userinfo
+      client_secret: "{{ jupyterhub_oidc_client_secret }}"
+      oauth_callback_url: "https://{{ jupyterhub.ops.subDomain }}.{{ platform_domain_name }}/jupyter/hub/oauth_callback"
+      authorize_url: "https://iam.{{ platform_domain_name }}/realms/rspy/protocol/openid-connect/auth"
+      token_url: "https://iam.{{ platform_domain_name }}/realms/rspy/protocol/openid-connect/token"
+      userdata_url: "https://iam.{{ platform_domain_name }}/realms/rspy/protocol/openid-connect/userinfo"
       login_service: keycloak
       username_claim: preferred_username
       userdata_params:
@@ -65,9 +65,9 @@ hub:
       # In order to use keycloak client's roles as authorization layer
       claim_groups_key: realm_access.roles
       allowed_groups:
-        - RS-JUPYTER-USER
+        {{ jupyterhub.ops.allowedGroups | indent( width=8, first=False) }}
       admin_groups:
-        - RS-ADMIN
+        {{ jupyterhub.ops.adminGroups | indent( width=8, first=False) }}
       scope:
         - openid
       enable_auth_state: true
@@ -209,10 +209,10 @@ hub:
   services:
     dask-gateway:
       display: false
-      apiToken: {{ jupyterhub.services.daskgateway.apitoken }}
+      apiToken: {{ jupyterhub.ops.services.daskgateway.apitoken }}
     metrics:
       display: false
-      apiToken: {{ jupyterhub.services.metrics.apitoken }}
+      apiToken: {{ jupyterhub.ops.services.metrics.apitoken }}
   loadRoles:
     metrics:
       description: Access to prometheus metrics
@@ -444,26 +444,26 @@ singleuser:
     hub.jupyter.org/network-access-hub: "true"
   extraFiles: {}
   extraEnv:
-    DASK_GATEWAY_ADDRESS: http://traefik-dask-gateway.dask-gateway.svc.cluster.local
-    DASK_GATEWAY_PUBLIC: https://dash-dask.{{ platform_domain_name }}
-    RSPY_DASK_STAGING_CLUSTER_NAME: dask-staging
-    PREFECT_API_URL: http://prefect-server.processing.svc.cluster.local:4200/api
-    PREFECT_WORK_POOL_STAGING: {{ prefect3worker.staging.name }}
-    PREFECT_WORK_POOL_EOPF: {{ prefect3worker.eopf.name }}
-    PREFECT_WORK_POOL_GENERAL: {{ prefect3worker.general.name }}
-    RSPY_CATALOG_BUCKET: {{ rspy.catalog_bucket }}
-    RSPY_DPR_SIMU_URL: http://mockup-processor-dpr.processing.svc.cluster.local:8080
-    RSPY_GRAFANA_URL: https://monitoring.{{ platform_domain_name }}
-    RSPY_PREFECT_URL: https://processing.{{ platform_domain_name }}
-    RSPY_TEMP_BUCKET: {{ rspy.tmp_bucket }}
-    RSPY_UAC_CHECK_URL: http://apikeymanager.processing.svc.cluster.local:8000/auth/check_key
-    RSPY_UAC_HOMEPAGE : https://apikeymanager.{{ platform_domain_name }}/docs
-    RSPY_WEBSITE: https://{{ platform_domain_name }}
-    S3_ENDPOINT: {{ s3.endpoint }}
-    S3_REGION: {{ s3.region }}
-    TEMPO_ENDPOINT: http://alloy.monitoring.svc.cluster.local:4317
-    OTEL_PYTHON_REQUESTS_TRACE_HEADERS: "{{ jupyterhub.services.otel.trace_headers }}"
-    OTEL_PYTHON_REQUESTS_TRACE_BODY: "{{ jupyterhub.services.otel.trace_body }}"
+    DASK_GATEWAY_ADDRESS: "http://traefik-dask-gateway.dask-gateway.svc.cluster.local"
+    DASK_GATEWAY_PUBLIC: "https://dash-dask.{{ platform_domain_name }}"
+    RSPY_DASK_STAGING_CLUSTER_NAME: "dask-staging"
+    PREFECT_API_URL: "http://{{ prefect3server.ops.name }}-server.{{ prefect3server.ops.namespace }}.svc.cluster.local:4200/api"
+    PREFECT_WORK_POOL_STAGING: "{{ prefect3worker.staging.name }}"
+    PREFECT_WORK_POOL_EOPF: "{{ prefect3worker.eopf.name }}"
+    PREFECT_WORK_POOL_GENERAL: "{{ prefect3worker.general.name }}"
+    RSPY_CATALOG_BUCKET: "{{ rspy.catalog_bucket }}"
+    RSPY_DPR_SIMU_URL: "http://mockup-processor-dpr.processing.svc.cluster.local:8080"
+    RSPY_GRAFANA_URL: "https://monitoring.{{ platform_domain_name }}"
+    RSPY_PREFECT_URL: "https://{{ prefect3server.ops.subDomain }}.{{ platform_domain_name }}"
+    RSPY_TEMP_BUCKET: "{{ rspy.tmp_bucket }}"
+    RSPY_UAC_CHECK_URL: "http://apikeymanager.processing.svc.cluster.local:8000/auth/check_key"
+    RSPY_UAC_HOMEPAGE : "https://apikeymanager.{{ platform_domain_name }}/docs"
+    RSPY_WEBSITE: "https://{{ platform_domain_name }}"
+    S3_ENDPOINT: "{{ s3.endpoint }}"
+    S3_REGION: "{{ s3.region }}"
+    TEMPO_ENDPOINT: "http://alloy.monitoring.svc.cluster.local:4317"
+    OTEL_PYTHON_REQUESTS_TRACE_HEADERS: "{{ jupyterhub.ops.services.otel.trace_headers }}"
+    OTEL_PYTHON_REQUESTS_TRACE_BODY: "{{ jupyterhub.ops.services.otel.trace_body }}"
     WORKER_EXTRA_POD_CONFIG_EOPF: |
       {% raw %}{{"affinity":{{"nodeAffinity":{{"requiredDuringSchedulingIgnoredDuringExecution":{{"nodeSelectorTerms":[{{"matchExpressions":[{{"key":"node-role.kubernetes.io/rs_env","operator":"Exists"}}]}}]}}}}}}}}{% endraw %}
 
@@ -758,13 +758,13 @@ ingress:
   enabled: true
   ingressClassName: "nginx"
   hosts:
-    - processing.{{ platform_domain_name }}
-  pathSuffix:
+    - "{{ jupyterhub.ops.subDomain }}.{{ platform_domain_name }}"
+  pathSuffix: 
   pathType: Prefix
   tls:
     - secretName: jupyterhub-tls
       hosts:
-        - processing.{{ platform_domain_name }}
+        - "{{ jupyterhub.ops.subDomain }}.{{ platform_domain_name }}"
 
   annotations:
     cert-manager.io/cluster-issuer: "{{ cluster_issuer }}"

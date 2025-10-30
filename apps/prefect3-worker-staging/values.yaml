@@ -98,7 +98,7 @@ worker:
               "namespace": {
                 "type": "string",
                 "title": "Namespace",
-                "default": "processing",
+                "default": "{{ prefect3worker.staging.namespace }}",
                 "description": "The Kubernetes namespace to create jobs within."
               },
               "stream_output": {
@@ -206,7 +206,7 @@ worker:
             "name": "{{ prefect3worker.staging.name }}-job-",
             "labels": "{% raw %}{{ labels }}{% endraw %}",
             "command": "{% raw %}{{ command }}{% endraw %}",
-            "namespace": "processing",
+            "namespace": "{{ prefect3worker.staging.namespace }}",
             "job_manifest": {
               "kind": "Job",
               "spec": {
@@ -266,7 +266,7 @@ worker:
               },
               "metadata": {
                 "labels": "{% raw %}{{ labels }}{% endraw %}",
-                "namespace": "processing",
+                "namespace": "{{ prefect3worker.staging.namespace }}",
                 "generateName": "{{ prefect3worker.staging.name }}-run-"
               },
               "apiVersion": "batch/v1"
@@ -291,7 +291,7 @@ worker:
       effect: NoSchedule
 
   selfHostedServerApiConfig:
-    apiUrl: "http://{{ prefect3worker.general.serverName }}-server.processing.svc.cluster.local:4200/api"
+    apiUrl: "http://{{ prefect3server.ops.name }}-server.{{ prefect3server.ops.namespace }}.svc.cluster.local:4200/api"
 
   # ref: https://kubernetes.io/docs/tasks/configure-pod-container/configure-liveness-readiness-startup-probes/
   livenessProbe:

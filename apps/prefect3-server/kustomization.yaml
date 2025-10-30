@@ -13,13 +13,15 @@
 # limitations under the License.
 
 
+namespace: "{{ prefect3server.ops.namespace }}"
+
 helmCharts:
 - name: prefect-server
-  namespace: processing
-  releaseName: '{{ app_name }}'
   repo: https://prefecthq.github.io/prefect-helm
-  valuesFile: values.yaml
+  releaseName: "{{ app_name }}"
   version: 2025.3.14203557
+  namespace: "{{ prefect3server.ops.namespace }}"
+  valuesFile: values.yaml
 apiVersion: kustomize.config.k8s.io/v1beta1
 kind: Kustomization
 labels:

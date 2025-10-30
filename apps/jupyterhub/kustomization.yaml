@@ -13,11 +13,11 @@
 # limitations under the License.
 
 
-namespace: processing
+namespace: "{{ jupyterhub.ops.namespace }}"
 
 helmCharts:
 - name: jupyterhub
-  namespace: processing
+  namespace: "{{ jupyterhub.ops.namespace }}"
   releaseName: '{{ app_name }}'
   repo: https://hub.jupyter.org/helm-chart/
   valuesFile: values.yaml
