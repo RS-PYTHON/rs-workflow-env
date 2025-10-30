@@ -110,7 +110,7 @@ controller:
     name: ghcr.io/dask/dask-gateway-server
     tag: "2024.1.0"
     pullPolicy:
-  affinity: 
+  affinity:
     nodeAffinity:
       requiredDuringSchedulingIgnoredDuringExecution:
         nodeSelectorTerms:
@@ -132,7 +132,7 @@ traefik:
   service:
     type: ClusterIP
   dashboard: false
-  affinity: 
+  affinity:
     nodeAffinity:
       requiredDuringSchedulingIgnoredDuringExecution:
         nodeSelectorTerms:

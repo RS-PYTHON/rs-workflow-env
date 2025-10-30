@@ -1,4 +1,5 @@
-# Copyright 2024 CS Group
+#!/bin/bash
+# Copyright 2025 CS Group
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -12,19 +13,14 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+set -euo pipefail
 
-namespace: "{{ prefect3server.ops.namespace }}"
+APPS=rs-workflow-env/apps
 
-helmCharts:
-- name: prefect-server
-  repo: https://prefecthq.github.io/prefect-helm
-  releaseName: "{{ app_name }}"
-  version: 2025.3.14203557
-  namespace: "{{ prefect3server.ops.namespace }}"
-  valuesFile: values.yaml
-apiVersion: kustomize.config.k8s.io/v1beta1
-kind: Kustomization
-labels:
-- includeSelectors: true
-  pairs:
-    app.kubernetes.io/instance: '{{ app_name }}'
+# Lower the CPU requests
+sed -i 's!: 0.1!: 0.001!g' "${APPS}/jupyterhub/values.yaml"
+sed -i 's!: 500m!: 1m!g' "${APPS}/prefect3-server/values.yaml"
+sed -i 's!: "150m"!: "1m"!g'\
+  "${APPS}/prefect3-worker-eopf/values.yaml"\
+  "${APPS}/prefect3-worker-general/values.yaml"\
+  "${APPS}/prefect3-worker-staging/values.yaml"

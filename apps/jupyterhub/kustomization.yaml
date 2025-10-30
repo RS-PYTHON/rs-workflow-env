@@ -12,19 +12,23 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-commonLabels:
-  app.kubernetes.io/instance: "{{ app_name }}"
 
 namespace: "{{ jupyterhub.ops.namespace }}"
 
 helmCharts:
 - name: jupyterhub
   namespace: "{{ jupyterhub.ops.namespace }}"
+  releaseName: '{{ app_name }}'
   repo: https://hub.jupyter.org/helm-chart/
-  releaseName: "{{ app_name }}"
-  version: 3.3.6
   valuesFile: values.yaml
+  version: 3.3.6
 
 resources:
-  - servicemonitor.yaml
-  - secret.yaml
+- servicemonitor.yaml
+- secret.yaml
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+labels:
+- includeSelectors: true
+  pairs:
+    app.kubernetes.io/instance: '{{ app_name }}'

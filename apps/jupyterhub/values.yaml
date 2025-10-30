@@ -87,7 +87,7 @@ hub:
 
       class CustomGenericOAuthenticator(GenericOAuthenticator):
         """Customize the GenericOAuthenticator that we use above, in the config field."""
-        
+
         async def pre_spawn_start(self, user, spawner):
           """Called when spawning the user pod."""
 
@@ -95,7 +95,7 @@ hub:
             # Get the authentication state that was calculated by the authenticator
             auth_state = await user.get_auth_state()
 
-            # Encrypt it as a session cookie called "user", exactly in the same way than 
+            # Encrypt it as a session cookie called "user", exactly in the same way than
             # rs-server and apikey-manager do, see the SessionMiddleware source code.
             session = {"user": auth_state["oauth_user"]}
             session_b64 = b64encode(json.dumps(session).encode("utf-8"))
@@ -119,7 +119,7 @@ hub:
     extraPorts: []
     loadBalancerIP:
   baseUrl: /jupyter
-  cookieSecret: 
+  cookieSecret:
   concurrentSpawnLimit: 64
   consecutiveFailureLimit: 5
   activeServerLimit:
@@ -223,7 +223,7 @@ rbac:
 # proxy relates to the proxy pod, the proxy-public service, and the autohttps
 # pod and proxy-http service.
 proxy:
-  secretToken: 
+  secretToken:
   annotations: {}
   deploymentStrategy:
     ## type: Recreate
@@ -764,8 +764,8 @@ ingress:
       hosts:
         - "{{ .Values.jupyterhub.ops.subDomain }}.{{ platform_domain_name }}"
 
-  annotations: 
-    cert-manager.io/cluster-issuer: letsencrypt-prod
+  annotations:
+    cert-manager.io/cluster-issuer: "{{ cluster_issuer }}"
     nginx.ingress.kubernetes.io/backend-protocol: HTTP
     nginx.ingress.kubernetes.io/proxy-buffer-size: 32k
 # This line allow files under 64MB to be uploaded in jupyterlab
