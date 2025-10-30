@@ -13,14 +13,14 @@
 # limitations under the License.
 
 
-namespace: "{{ prefect3worker.eopfs.namespace }}"
+namespace: "{{ prefect3worker.eopf.namespace }}"
 
 helmCharts:
 - name: prefect-worker
   repo: https://prefecthq.github.io/prefect-helm
   releaseName: "{{ app_name }}"
   version: 2025.3.14203557
-  namespace: "{{ prefect3worker.eopfs.namespace }}"
+  namespace: "{{ prefect3worker.eopf.namespace }}"
   valuesFile: values.yaml
 apiVersion: kustomize.config.k8s.io/v1beta1
 kind: Kustomization
