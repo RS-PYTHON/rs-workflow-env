@@ -64,8 +64,10 @@ hub:
         state: state
       # In order to use keycloak client's roles as authorization layer
       claim_groups_key: realm_access.roles
-      allowed_groups: {{ jupyterhub.ops.allowedGroups | toYaml | nindent 8 }}
-      admin_groups: {{ jupyterhub.ops.adminGroups | toYaml | nindent 8 }}
+      allowed_groups:
+        {{ jupyterhub.ops.allowedGroups | indent( width=8, first=False) }}
+      admin_groups:
+        {{ jupyterhub.ops.adminGroups | indent( width=8, first=False) }}
       scope:
         - openid
       enable_auth_state: true
