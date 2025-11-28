@@ -19,7 +19,7 @@ global:
   prefect:
     image:
       repository: prefecthq/prefect
-      prefectTag: 3.2.13-py3.13.9-k8s
+      prefectTag: 3.6.4-py3.13.9-k8s
       pullPolicy: IfNotPresent
 
     loggingLevel: WARNING
