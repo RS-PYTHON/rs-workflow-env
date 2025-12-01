@@ -1,0 +1,223 @@
+# Copyright 2024 CS Group
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+name: Build the Dask EOPF/DPR Docker images
+
+# Run workflow only for ...
+on:
+  pull_request: # pull requests
+    types: [opened, synchronize, reopened]
+  push:
+    branches:
+      - develop # pushes on the 'develop' branch
+    tags:
+      - '**' # new git tags (including hierarchical tags like v1.0/beta)
+  workflow_dispatch: # manual trigger
+    inputs:
+      docker_tag:
+        description: Tag the docker images as e.g. 'latest' or 'feat-rspy123'
+        required: true
+
+env:
+  DOCKER_REGISTRY: ghcr.io
+
+jobs:
+
+  # Calculate variables for this workflow
+  set-env:
+    if: github.actor != 'dependabot[bot]' # ignore pull requests by github bot
+    runs-on: ubuntu-latest
+    name: "Set environment"
+    outputs:
+      docker_tag: ${{ steps.set-env.outputs.docker_tag }}
+    steps:
+      - id: set-env
+        name: "Set environment"
+        run: |
+          set -x
+
+          # Get the current branch name (or source branch for a pull request)
+          if [[ ${{ github.event_name }} == pull_request ]]; then
+            branch_name=${{ github.event.pull_request.head.ref }}
+          else
+            branch_name=${{ github.ref_name }}
+          fi
+
+          # Determine the docker tag to set to new docker images.
+          # For a pull request, use the branch name
+          if [[ ${{ github.event_name }} == pull_request ]]; then
+            docker_tag="$branch_name"
+
+          # For a push on develop or a tag, use the docker tag :latest
+          elif [[ ${{ github.event_name }} == push ]]; then
+            docker_tag=latest
+
+          # For a manual trigger, use the user-defined tag
+          elif [[ ${{ github.event_name }} == workflow_dispatch ]]; then
+            docker_tag=${{ github.event.inputs.docker_tag }}
+
+          else
+            >&2 echo "Unknown trigger"
+            exit 1
+          fi
+
+          # Replace special characters by -
+          docker_tag=$(sed "s/[^a-zA-Z0-9]/-/g" <<< "$docker_tag")
+
+          # Save values
+          echo "docker_tag=$docker_tag" >> $GITHUB_OUTPUT
+        shell: bash
+
+  # Enable conditional execution of workflow steps and jobs, based on the files modified
+  # by pull request, on a feature branch, or by the recently pushed commits.
+  changes:
+    runs-on: ubuntu-latest
+    name: "Check modified files"
+    permissions:
+      pull-requests: read
+    outputs:
+      common: ${{ steps.filter.outputs.common }}
+      mockup: ${{ steps.filter.outputs.mockup }}
+      l0: ${{ steps.filter.outputs.l0 }}
+      s1ard: ${{ steps.filter.outputs.s1ard }}
+    steps:
+      - uses: actions/checkout@v6
+      - uses: dorny/paths-filter@v3
+        id: filter
+        with:
+          filters: |
+            common:
+              - docker/build-dask-eopf.py
+              - docker/Dockerfile.dask-eopf-localcluster
+              - docker/resources/layer-cleanup.sh
+              - docker/resources/restore-apt.sh
+            mockup: [docker/Dockerfile.dask-eopf-mockup]
+            l0: ['docker/**/*dask-l0.*']
+            s1ard: ['docker/**/*dask-s1ard.*']
+          list-files: 'json' # Enables listing of files matching the filter
+
+  build-dask-eopf:
+    runs-on: ubuntu-latest
+    name: Build images
+    needs: [changes, set-env]
+    permissions: write-all
+
+    # See: https://docs.github.com/en/actions/how-tos/write-workflows/choose-what-workflows-do/run-job-variations
+    strategy:
+      matrix:
+        proc: [mockup, l0, s1ard]
+        local_cluster: ["", "LocalCluster"] # build the Dask LocalCluster image for local debugging ?
+        exclude:
+          - proc: mockup
+            local_cluster: "LocalCluster"
+        include:
+          - proc: mockup
+            condition: "${{ needs.changes.outputs.common == 'true' || needs.changes.outputs.mockup == 'true' }}"
+          - proc: l0
+            condition: "${{ needs.changes.outputs.common == 'true' || needs.changes.outputs.l0 == 'true' }}"
+          - proc: s1ard
+            condition: "${{ needs.changes.outputs.common == 'true' || needs.changes.outputs.s1ard == 'true' }}"
+
+    steps:
+      - uses: actions/checkout@v6
+
+      # Login to Docker Hub to increase pull quota from 100 to 200 per 6 hours
+      - name: Log into Docker Hub
+        uses: docker/login-action@v3
+        with:
+          username: ${{ vars.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
+
+      - name: Log into GitHub Container Registry
+        uses: docker/login-action@v3
+        with:
+          registry: ${{ env.DOCKER_REGISTRY }}
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      # Extract metadata from Git reference and GitHub events
+      - name: Extract Docker metadata
+        id: meta
+        uses: docker/metadata-action@v5
+        with:
+          images: ${{ env.DOCKER_REGISTRY }}/${{ github.repository }} # ghcr.io/RS-PYTHON/rs-workflow-env
+
+      - id: build
+        name: Build the Dask image
+        if: ${{ matrix.condition }}
+        run: |
+          set -x
+
+          if [[ "${{ matrix.local_cluster }}" == "LocalCluster" ]]; then
+            options="--local_cluster"
+          fi
+
+          ./docker/build-dask-eopf.py \
+            --gitlab_eopf_token "${{ secrets.GITLAB_EOPF_TOKEN }}" \
+            --docker_tag ${{ needs.set-env.outputs.docker_tag }} \
+            --labels "${{ steps.meta.outputs.labels }}" \
+            $options \
+            ${{ matrix.proc }}
+
+          # Get the docker image name and tag that was built
+          last_built=$(docker images | awk 'NR==2')
+          repository=$(echo "$last_built" | awk '{print $1}')
+          repository_and_tag=$(echo "$last_built" | awk '{print $1 ":" $2}')
+
+          # Save values
+          echo "repository=$repository" >> $GITHUB_OUTPUT
+          echo "repository_and_tag=$repository_and_tag" >> $GITHUB_OUTPUT
+        shell: bash
+
+      - name: Run Trivy vulnerability scanner
+        uses: aquasecurity/trivy-action@master
+        env:
+          TRIVY_DB_REPOSITORY: public.ecr.aws/aquasecurity/trivy-db:2
+        with:
+          image-ref: ${{ steps.build.outputs.repository_and_tag }}
+          format: sarif
+          output: trivy-results-docker.sarif
+          exit-code: 0
+          limit-severities-for-sarif: true
+          severity: HIGH,CRITICAL
+          #timeout: '30m'
+
+      - name: Upload Trivy scan results to GitHub Security tab
+        uses: github/codeql-action/upload-sarif@v3
+        with:
+          sarif_file: trivy-results-docker.sarif
+          category: ${{ steps.build.outputs.repository }}
+
+      - name: Display link to Trivy results
+        run: |
+
+            set -x
+
+            # If this is not a pull request, the query is "is:open+branch:branch_name"
+            if [[ "${{ github.ref_name }}" != *merge* ]]; then
+              query="is:open+branch:${{ github.ref_name }}"
+
+            # Else the ref_name is e.g. '13/merge'. Change it into 'pr:13'
+            else
+              query=$(sed "s|\(.*\)/merge|pr:\1|g" <<< "${{ github.ref_name }}")
+            fi
+
+            echo "Trivy scan results:" \
+            "https://github.com/${{ github.repository }}/security/code-scanning?query=${query}" \
+            >> $GITHUB_STEP_SUMMARY
+        shell: bash
+
+      - name: Push Docker image
+        run: docker push ${{ steps.build.outputs.repository_and_tag }}
+        shell: bash

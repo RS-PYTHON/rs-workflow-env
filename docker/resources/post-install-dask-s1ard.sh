@@ -23,5 +23,5 @@ chmod -R a+w /usr/local/lib/python3.*/site-packages/pyproj/proj_dir/share/proj
 S1_ARD_PATH=$(python -c "import s1_ard_core;print(s1_ard_core.__path__[0])")
 SARSEN_PATH=$(python -c "import sarsen;print(sarsen.__path__[0])")
 SARPY_PATH=$(python -c "import sarpy;print(sarpy.__path__[0])")
-cp ${S1_ARD_PATH}/patch/sarsen/*py ${SARSEN_PATH}/
-cp ${S1_ARD_PATH}/patch/sarpy/sentinel.py ${SARPY_PATH}/io/complex/sentinel.py
+cp "${S1_ARD_PATH}"/patch/sarsen/*py "${SARSEN_PATH}/"
+cp "${S1_ARD_PATH}"/patch/sarpy/sentinel.py "${SARPY_PATH}"/io/complex/sentinel.py

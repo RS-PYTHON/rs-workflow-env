@@ -63,7 +63,7 @@ RUN \
     if [ -f /opt/post-install-${IMAGE2BUILD}.sh ]; then \
         /opt/post-install-${IMAGE2BUILD}.sh && \
         layer-cleanup.sh; \
-    fi \
+    fi; \
     rm -f /opt/post-install-*.sh
 
 # Clean everything

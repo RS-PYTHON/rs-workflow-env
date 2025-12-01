@@ -759,7 +759,7 @@ ingress:
   ingressClassName: "nginx"
   hosts:
     - "{{ jupyterhub.ops.subDomain }}.{{ platform_domain_name }}"
-  pathSuffix: 
+  pathSuffix:
   pathType: Prefix
   tls:
     - secretName: jupyterhub-tls

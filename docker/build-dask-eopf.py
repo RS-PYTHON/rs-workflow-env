@@ -98,12 +98,23 @@ parser.add_argument(
     help="Docker tag to use (default: latest)",
 )
 parser.add_argument(
+    "--labels",
+    default="",
+    help="List of docker label lines as 'key=value'",
+)
+parser.add_argument(
     "--push",
     action="store_true",
     help="Push image to Docker registry",
 )
 
 args = parser.parse_args()
+
+# Build label options: "--label key=value" for each line
+labels = []
+for line in args.labels.split("\n"):
+    if line:
+        labels += ["--label", line]
 
 ######################
 # BUILD DOCKER IMAGE #
@@ -139,6 +150,14 @@ for proc, local_cluster in procs_to_build:
 
     def run_command(command: list[str]):
         """Run command line"""
+        print(f"""
+#########
+# BUILD #
+#########
+
+{' '.join(command)}
+""")
+
         if code := subprocess.run(
             command,
             env={"GITLAB_EOPF_TOKEN": args.gitlab_eopf_token},
@@ -169,7 +188,7 @@ for proc, local_cluster in procs_to_build:
             f"{registry}:{args.docker_tag}",
             "--progress=plain",
             str(THIS_DIR),
-        ],
+        ] + labels,
     )
 
     # Push to registry
