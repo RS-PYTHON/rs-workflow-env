@@ -1,0 +1,85 @@
+# Copyright 2024 CS Group
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+# This Dockerfiles installs a DPR processor in the rs-dpr-service image,
+# to be able to run the processor with the Dask LocalCluster mode in local mode.
+
+FROM ghcr.io/rs-python/rs-dpr-service:latest
+
+ARG IMAGE2BUILD
+
+# Default user from parent image
+ARG USER=user
+
+# Do everything from root
+USER root
+
+COPY ./resources/layer-cleanup.sh ./resources/restore-apt.sh /usr/local/bin/
+RUN chmod 755 /usr/local/bin/layer-cleanup.sh /usr/local/bin/restore-apt.sh
+
+# System installations
+RUN \
+    restore-apt.sh && apt update && \
+    apt install -y git && \
+    layer-cleanup.sh
+
+# Install processor and eopf
+ADD ./resources/requirements-*.txt /opt
+# NOTE, with older docker versions, use:
+# RUN --mount=type=secret,id=GITLAB_EOPF_TOKEN \
+# GITLAB_EOPF_TOKEN=$(cat /run/secrets/GITLAB_EOPF_TOKEN) pip install ...
+RUN --mount=type=secret,id=GITLAB_EOPF_TOKEN,env=GITLAB_EOPF_TOKEN \
+    pip install -U pip && \
+    pip install -U -r /opt/requirements-${IMAGE2BUILD}.txt && \
+    layer-cleanup.sh
+
+# Other installations
+RUN \
+    restore-apt.sh && \
+    apt update && \
+    apt install -y \
+        python3-pydot graphviz && \
+    pip install \
+        bokeh">=3.1.0" \
+        jupyter-server-proxy && \
+    layer-cleanup.sh
+
+# Auto configure opentelemetry
+RUN opentelemetry-bootstrap -a install && layer-cleanup.sh
+
+# Run post-install script if it exists
+ADD ./resources/post-install-*.sh /opt
+RUN \
+    if [ -f /opt/post-install-${IMAGE2BUILD}.sh ]; then \
+        /opt/post-install-${IMAGE2BUILD}.sh && \
+        layer-cleanup.sh; \
+    fi
+
+# Clean everything
+RUN apt autoremove -y git
+RUN rm -rf /opt/requirements-*.txt /opt/post-install-*.sh
+
+# Remove custom scripts
+RUN rm -f /usr/local/bin/layer-cleanup.sh /usr/local/bin/restore-apt.sh
+
+# Restore user
+USER $USER
+
+# Set labels based on the Open Containers Initiative (OCI):
+LABEL org.opencontainers.image.source="https://github.com/RS-PYTHON/rs-demo"
+LABEL dockerfile.url="https://github.com/RS-PYTHON/rs-demo/blob/develop/local-mode/docker/Dockerfile.dask-eopf-localcluster"
+
+# This Dockerfile is used to build:
+# ghcr.io/rs-python/dask/l0/localcluster
+# ghcr.io/rs-python/dask/s1ard/localcluster
