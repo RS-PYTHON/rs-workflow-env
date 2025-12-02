@@ -14,6 +14,12 @@
 
 # This Dockerfiles installs a DPR processor in the dask-gateway image for local and cluster modes.
 
+#
+# Target Docker image name:
+# ghcr.io/rs-python/dask/l0
+# ghcr.io/rs-python/dask/s1ard
+#
+
 ARG PYTHON_VERSION_DPR=3.11.7
 ARG DASK_GATEWAY_TAG=2024.1.0
 
@@ -77,9 +83,5 @@ RUN rm -f /usr/local/bin/layer-cleanup.sh /usr/local/bin/restore-apt.sh
 USER $USER
 
 # Set labels based on the Open Containers Initiative (OCI):
-LABEL org.opencontainers.image.source="https://github.com/RS-PYTHON/rs-demo"
-LABEL dockerfile.url="https://github.com/RS-PYTHON/rs-demo/blob/develop/local-mode/docker/Dockerfile.dask-eopf-local"
-
-# This Dockerfile is used to build:
-# ghcr.io/rs-python/dask/l0
-# ghcr.io/rs-python/dask/s1ard
+LABEL org.opencontainers.image.source="https://github.com/RS-PYTHON/rs-workflow-env"
+LABEL dockerfile.url="https://github.com/RS-PYTHON/rs-workflow-env/blob/develop/local-mode/docker/Dockerfile.dask-eopf"
