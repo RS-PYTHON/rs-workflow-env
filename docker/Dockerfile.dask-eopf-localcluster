@@ -1,4 +1,4 @@
-# Copyright 2024 CS Group
+# Copyright 2025 CS Group
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -42,7 +42,8 @@ ADD ./resources/requirements-*.txt /opt
 RUN --mount=type=secret,id=GITLAB_EOPF_TOKEN,env=GITLAB_EOPF_TOKEN \
     pip install -U pip && \
     pip install -U -r /opt/requirements-${IMAGE2BUILD}.txt && \
-    layer-cleanup.sh
+    layer-cleanup.sh && \
+    rm -rf /opt/requirements-*.txt
 
 # Other installations
 RUN \
@@ -58,17 +59,21 @@ RUN \
 # Auto configure opentelemetry
 RUN opentelemetry-bootstrap -a install && layer-cleanup.sh
 
+# Env var to the folder where we store the config files for the payload files.
+ENV PAYLOAD_CONFIG_FILES=/opt/${IMAGE2BUILD}
+RUN mkdir -p "$PAYLOAD_CONFIG_FILES"
+
 # Run post-install script if it exists
-ADD ./resources/post-install-*.sh /opt
+ADD ./resources /opt/resources
 RUN \
-    if [ -f /opt/post-install-${IMAGE2BUILD}.sh ]; then \
-        /opt/post-install-${IMAGE2BUILD}.sh && \
+    if [ -f /opt/resources/post-install-${IMAGE2BUILD}.sh ]; then \
+        /opt/resources/post-install-${IMAGE2BUILD}.sh && \
         layer-cleanup.sh; \
-    fi
+    fi && \
+    rm -rf /opt/resources
 
 # Clean everything
-RUN apt autoremove -y git
-RUN rm -rf /opt/requirements-*.txt /opt/post-install-*.sh
+RUN apt autoremove -y git && layer-cleanup.sh
 
 # Remove custom scripts
 RUN rm -f /usr/local/bin/layer-cleanup.sh /usr/local/bin/restore-apt.sh
