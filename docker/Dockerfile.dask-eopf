@@ -44,7 +44,8 @@ ADD ./resources/requirements-*.txt /opt
 RUN --mount=type=secret,id=GITLAB_EOPF_TOKEN,env=GITLAB_EOPF_TOKEN \
     pip install -U pip && \
     pip install -U -r /opt/requirements-${IMAGE2BUILD}.txt && \
-    layer-cleanup.sh
+    layer-cleanup.sh && \
+    rm -rf /opt/requirements-*.txt
 
 # Install complete dask subsets
 RUN pip install dask[complete] && layer-cleanup.sh
@@ -58,17 +59,16 @@ RUN pip install opentelemetry-distro opentelemetry-exporter-otlp opentelemetry-i
     layer-cleanup.sh
 
 # Run post-install script if it exists
-ADD ./resources/post-install-*.sh /opt
+ADD ./resources /opt/resources
 RUN \
-    if [ -f /opt/post-install-${IMAGE2BUILD}.sh ]; then \
-        /opt/post-install-${IMAGE2BUILD}.sh && \
+    if [ -f /opt/resources/post-install-${IMAGE2BUILD}.sh ]; then \
+        /opt/resources/post-install-${IMAGE2BUILD}.sh && \
         layer-cleanup.sh; \
-    fi; \
-    rm -f /opt/post-install-*.sh
+    fi && \
+    rm -rf /opt/resources
 
 # Clean everything
-RUN apt autoremove -y git
-RUN rm -rf /opt/requirements-*.txt /opt/post-install-*.sh
+RUN apt autoremove -y git && layer-cleanup.sh
 
 # Remove custom scripts
 RUN rm -f /usr/local/bin/layer-cleanup.sh /usr/local/bin/restore-apt.sh
