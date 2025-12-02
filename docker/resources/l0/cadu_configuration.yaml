@@ -1,0 +1,86 @@
+S1:
+  # CADU Output Zarr Chunk Size
+  cadu_chunk_size :
+    sar: 1000
+    hktm: 1000
+    ais: 1000
+    gps: 1000
+    hktm_tf: 1000
+
+  # S1 L0 Specific Output Zarr Chunk Size
+  isp_chunk_size:
+    sar: 1000
+    # SAR modes
+    iw: 1000
+    ew: 1000
+    sm: 1000
+    rf: 1000
+    wv: 1000
+
+    s1: 1000
+    s2: 1000
+    s3: 1000
+    s4: 1000
+    s5: 1000
+    s6: 1000
+
+    n1: 1000
+    n2: 1000
+    n3: 1000
+    n4: 1000
+    n5: 1000
+    n6: 1000
+
+    ais: 1000
+    gps: 1000
+    hktm_tf: 1000
+
+S3:
+  # CADU Output Zarr Chunk Size
+  cadu_chunk_size:
+    navatt: 30000
+    olci: 30000
+    slstr: 30000
+    sral: 30000
+    mwr: 30000
+    gnss: 30000
+    doris: 30000
+    hktm: 30000
+    hktm_tf: 30000
+
+  # S3 L0 Specific Output Zarr Chunk Size
+  isp_chunk_size:
+
+    # Intermediate Product Chunk Size
+    S03NAT_IG: 30000
+    S03OLCRIG: 30000
+    S03OLCR0G: 30000
+    S03OLCR1G: 30000
+    S03OLC_IG: 30000
+    S03SLS_IG: 30000
+    S03ALT_IG: 30000
+    S03MWR_IG: 30000
+    S03GNS_IG: 30000
+    S03DONAIG: 30000
+    S03DODOIG: 30000
+    S03HKM_IG: 30000
+    S03HKM2IG: 30000
+
+    # Level-0 Product Chunk Size
+    S03NATL0_: 30000
+    S03OLCCR0: 30000
+    S03OLCCR1: 30000
+    S03OLCL0_: 30000
+    S03OLCCR0: 30000
+    S03SLSL0_: 30000
+    S03SRCRL0: 30000
+    S03ALTL0_: 30000
+    S03SRCRL0: 30000
+    S03MWRL0_: 30000
+    S03GNSL0_: 30000
+    S03DORNAV: 30000
+    S03DORDOP: 30000
+    S03HKML0_: 30000
+    S03HKM2L0: 30000
+
+    hktm_tf: 30000
