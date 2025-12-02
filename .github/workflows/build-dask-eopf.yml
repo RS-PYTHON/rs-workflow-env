@@ -252,12 +252,10 @@ jobs:
     name: "Test rs-demo"
     needs: [changes, set-env, build-dask-eopf]
     if: >
-      "${{
-        (needs.changes.outputs.common == 'true') ||
-        (needs.changes.outputs.mockup == 'true') ||
-        (needs.changes.outputs.l0 == 'true') ||
-        (needs.changes.outputs.s1ard == 'true')
-      }}"
+      (needs.changes.outputs.common == 'true') ||
+      (needs.changes.outputs.mockup == 'true') ||
+      (needs.changes.outputs.l0 == 'true') ||
+      (needs.changes.outputs.s1ard == 'true')
     steps:
       - name: Log into Docker registry
         uses: docker/login-action@v3
