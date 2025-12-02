@@ -114,6 +114,7 @@ jobs:
 
           # Save values
           echo "docker_tag=$docker_tag" >> $GITHUB_OUTPUT
+          echo "common_trigger=$common_trigger" >> $GITHUB_OUTPUT
         shell: bash
 
   build-dask-eopf:
