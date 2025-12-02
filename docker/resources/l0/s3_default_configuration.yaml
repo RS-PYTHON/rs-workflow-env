@@ -1,0 +1,540 @@
+# -------------------------------------------------------------
+# S3 Processor Configuration
+# -------------------------------------------------------------
+S3:
+   # ==========================================================
+  # Window Time
+  # ==========================================================
+  # set the window start stop time base on instrument
+  # window_time:
+  #   olci:
+  #         start_slice: '2024-04-11T12:44:23.808509'
+  #         stop_slice: '2024-04-11T12:46:22.041641'
+  #         fine_precision: 24
+
+  cadu_processing_configuration:
+    cadu_size: 2044
+    syn_marker_size: 4
+    syn_marker_value: 449838109
+    annotation_size: 8
+    transfer_frame_header_size: 8
+    mpdu_header_size: 2
+    mpdu_packet_zone_size: 1902
+    rs_check_symbols_size: 128
+    use_dual_basis: true
+    spacecraft_id:
+      a: 243
+      b: 244
+      c: 203
+      d: 162
+
+  isp_primary_header_size: 6
+  packet_stores:
+    navatt:
+    - 0
+    # - 4
+    olci:
+    - 1
+    slstr:
+    - 3
+    sral:
+    - 5
+    mwr:
+    - 7
+    gnss:
+    - 8
+    doris:
+    - 9
+    hktm:
+    - 10
+    - 11
+    idle:
+    - 6
+    - 13
+    - 14
+    - 21
+    - 63
+
+  properties:
+    mwr:
+      processing:expression: systematic
+      processing:facility: Copernicus S3 Core Ground Segment-DPA
+      processing:version: level-0
+      product:timeliness_category: NRT
+      product:timeliness: PT3H
+      sat:platform_international_designator: '2016-011A'
+      providers:
+      - name: 'SGS_'
+        roles:
+          - processor
+      - name: 'European Space Agency'
+        roles:
+          - producer
+    gnss:
+      processing:expression: systematic
+      processing:facility: Copernicus S3 Core Ground Segment-DPA
+      processing:version: level-0
+      product:timeliness_category: NRT
+      product:timeliness: PT3H
+      sat:platform_international_designator: '2016-011A'
+      providers:
+      - name: 'SGS_'
+        roles:
+          - processor
+      - name: 'European Space Agency'
+        roles:
+          - producer
+    doris:
+      processing:expression: systematic
+      processing:facility: Copernicus S3 Core Ground Segment-DPA
+      processing:version: level-0
+      product:timeliness_category: NRT
+      product:timeliness: PT3H
+      sat:platform_international_designator: '2016-011A'
+      providers:
+      - name: 'SGS_'
+        roles:
+          - processor
+      - name: 'European Space Agency'
+        roles:
+          - producer
+    hktm:
+      processing:expression: systematic
+      processing:facility: Copernicus S3 Core Ground Segment-DPA
+      processing:version: level-0
+      product:timeliness_category: NRT
+      product:timeliness: PT3H
+      sat:platform_international_designator: '2016-011A'
+      providers:
+      - name: 'SGS_'
+        roles:
+          - processor
+      - name: 'European Space Agency'
+        roles:
+          - producer
+    navatt:
+      processing:expression: systematic
+      processing:facility: Copernicus S3 Core Ground Segment-DPA
+      processing:version: level-0
+      product:timeliness_category: NRT
+      product:timeliness: PT3H
+      sat:platform_international_designator: '2016-011A'
+      providers:
+      - name: 'SGS_'
+        roles:
+          - processor
+      - name: 'European Space Agency'
+        roles:
+          - producer
+    olci:
+      processing:expression: systematic
+      processing:facility: Copernicus S3 Core Ground Segment-DPA
+      processing:version: level-0
+      product:timeliness_category: NRT
+      product:timeliness: PT3H
+      sat:platform_international_designator: '2016-011A'
+      providers:
+      - name: 'SGS_'
+        roles:
+          - processor
+      - name: 'European Space Agency'
+        roles:
+          - producer
+    slstr:
+      processing:expression: systematic
+      processing:facility: Copernicus S3 Core Ground Segment-DPA
+      processing:version: level-0
+      product:timeliness_category: NRT
+      product:timeliness: PT3H
+      sat:platform_international_designator: '2016-011A'
+      providers:
+      - name: 'SGS_'
+        roles:
+          - processor
+      - name: 'European Space Agency'
+        roles:
+          - producer
+    sral:
+      processing:expression: systematic
+      processing:facility: Copernicus S3 Core Ground Segment-DPA
+      processing:version: level-0
+      product:timeliness_category: NRT
+      product:timeliness: PT3H
+      sat:platform_international_designator: '2016-011A'
+      providers:
+      - name: 'SGS_'
+        roles:
+          - processor
+      - name: 'European Space Agency'
+        roles:
+          - producer
+
+  apid_mapping:
+    S03NAT_IG: [361]
+    S03MWR_IG: [1323]
+    S03GNS_IG: [
+      772, 788, 774, 790, 780,
+      796, 781, 797, 779, 795
+      ]
+    S03SLS_IG: [
+      1184, 1185, 1186, 1187, 1188,
+      1189, 1190, 1191, 1192, 1193,
+      1194, 1195, 1196
+      ]
+    S03OLCRIG: [1057, 1073, 1089, 1105, 1121]
+    S03OLC_IG: [1056, 1072, 1088, 1104, 1120]
+    S03SRCRIG: [
+      1442, 1458, 1443, 1459, 1444,
+      1460, 1445, 1461
+      ]
+    S03ALT_IG: [
+      1440, 1456, 1441, 1457, 1446,
+      1462, 1447, 1463
+      ]
+    S03DONAIG: [1686, 1702, 1693, 1709, 1694, 1710]
+    S03DODOIG: [
+      1681, 1697, 1682, 1698, 1685,
+      1701, 1687, 1703, 1688, 1704,
+      1689, 1705, 1690, 1706, 1691,
+      1707, 1692, 1708
+      ]
+    S03HKM_IG: [
+      65, 66, 69, 70, 81,
+      82, 85, 86, 97, 98,
+      99, 100, 101, 102, 113,
+      114, 115, 116, 117, 118,
+      129, 130, 131, 132, 133,
+      134, 145, 146, 147, 148,
+      149, 150, 161, 162, 163,
+      164, 165, 166, 177, 178,
+      179, 180, 181, 182, 193,
+      194, 197, 198, 209, 210,
+      211, 212, 213, 214, 225,
+      226, 227, 228, 229, 230,
+      321, 322, 323, 324, 325,
+      326, 353, 354, 355, 356,
+      357, 358, 369, 370, 371,
+      372, 373, 374, 385, 386,
+      387, 388, 389, 390, 401,
+      402, 403, 404, 405, 406,
+      1281, 1282, 1283, 1284, 1285,
+      1286, 1287, 1290, 1291, 1292,
+      1293, 1294, 1295, 769, 772,
+      775, 785, 788, 791, 1025,
+      1026, 1027, 1028, 1029, 1030,
+      1037, 1039, 1153, 1154, 1155,
+      1156, 1157, 1158, 1165, 1167,
+      1409, 1410, 1411, 1412, 1413,
+      1414, 1416, 1417, 1420, 1421,
+      1422, 1423, 513, 514, 515,
+      517, 518, 529, 530, 531,
+      533, 534, 545, 546, 1665,
+      1666, 1681, 1682, 1697, 1698
+    ]
+    S03HKM2IG: [
+      74, 75, 90, 91, 103,
+      104, 106, 107, 119, 120,
+      122, 123, 136, 138, 139,
+      151, 152, 154, 155, 167,
+      168, 170, 171, 183, 184,
+      186, 187, 188, 190, 199,
+      202, 203, 216, 218, 219,
+      222, 232, 234, 235, 236,
+      238, 328, 330, 331, 360,
+      362, 363, 376, 378, 379,
+      392, 394, 395, 408, 410,
+      411, 1288, 1289, 777, 793,
+      771, 787, 1031, 1033, 1034,
+      1035, 1036, 1038, 1159, 1160,
+      1161, 1162, 1163, 1164, 1166,
+      1415, 1418, 1419, 519, 520,
+      521, 522, 523, 524, 526,
+      535, 536, 537, 538, 539,
+      540, 542
+    ]
+
+  output_product_types:
+
+    cadu_olci: S03OLCISP
+    cadu_slstr: S03SLSISP
+    cadu_hktm: S03HKMISP
+    cadu_sral: S03SRAISP
+    cadu_doris: S03DORISP
+    cadu_gnss: S03GNSISP
+    cadu_mwr: S03MWRISP
+    cadu_navatt: S03NATISP
+
+    # TF product
+    hktm_tf: S03HKMRAW
+
+    # Intermediate products types
+    S03DORISP:
+      doris_nav: S03DONAIG
+      doris_dop: S03DODOIG
+    S03GNSISP:
+      gnss: S03GNS_IG
+    S03MWRISP:
+      mwr: S03MWR_IG
+    S03SRAISP:
+      sral_sra: S03ALT_IG
+      sral_cal: S03SRCRIG
+    S03SLSISP:
+      slstr: S03SLS_IG
+    S03OLCISP:
+      olci_efr: S03OLC_IG
+      olci_cal: S03OLCRIG
+    S03NATISP:
+      navatt: S03NAT_IG
+    S03HKMISP:
+      hkm_l0: S03HKM_IG
+      hkm_l0_2: S03HKM2IG
+
+    S03OLCRIG:
+      - S03OLCR0G
+      - S03OLCR1G
+
+    # Final L0 product types
+    S03DONAIG: S03DORNAV
+    S03DODOIG: S03DORDOP
+
+    S03GNS_IG: S03GNSL0_
+    S03MWR_IG: S03MWRL0_
+    S03SLS_IG: S03SLSL0_
+    S03OLC_IG: S03OLCL0_
+    S03OLCR0G: S03OLCCR0
+    S03OLCR1G: S03OLCCR1
+    S03NAT_IG: S03NATL0_
+    S03ALT_IG: S03ALTL0_
+    S03SRCRIG: S03SRCRL0
+    S03HKM_IG: S03HKML0_
+    S03HKM2IG: S03HKM2L0
+
+  # Time in seconds for granules generation window
+  granules_generation_time:
+    S03OLC_IG: 120
+    S03ALT_IG: 600
+    S03SLS_IG: 300
+  # Apply product specific sorting
+  sorting:
+    slstr_specific: true
+    olci_cal_specific: true
+
+  # OLCI Calibration
+  spectral_configuration:
+    first_sequence_code: 101
+    spectral_sequence:
+      - false
+      - true
+      - true
+      - false
+      - false
+      - false
+      - true
+      - false
+      - true
+
+    sequence_description:
+      S01:
+        id: 101
+        sequence: S01
+        triggers: RAC
+        description: "RADIOMETRIC CALIBRATION"
+      S02:
+        id: 102
+        sequence: S02
+        triggers: NONE
+        description: "SPECTRAL CALIBRATION with DIFF1 at ORBIT N"
+      S03:
+        id: 103
+        sequence: S03
+        triggers: SPC
+        description: "SPECTRAL CALIBRATION with DIFF3 at ORBIT N+1"
+      S04:
+        id: 104
+        sequence: S04
+        triggers: RAC
+        description: "DIFFUSER1 AGEING at ORBIT N"
+      S05:
+        id: 105
+        sequence: S05
+        triggers: RAC
+        description: "DIFFUSER1 AGEING at ORBIT N+1"
+      S06:
+        id: 106
+        sequence: S06
+        triggers: NONE
+        description: "ORBITAL STABILITY"
+      S07:
+        id: 107
+        sequence: S07
+        triggers: NONE
+        description: "SPECTRAL CALIBRATION using Solar Fraunhofer lines"
+      S08:
+        id: 108
+        sequence: S08
+        triggers: NONE
+        description: "RADIOMETRIC CALIBRATION for observation of atmospheric absorption lines"
+      S09:
+        id: 109
+        sequence: S09
+        triggers: NONE
+        description: "OBSERVATION of atmospheric absorption lines"
+
+  # Merge and consolidation parameters
+  merge_and_consolidation:
+    # OLCI
+    olci:
+      # Activated
+      enabled: true
+      # Minimum length of a tolorated granule in seconds
+      min_granule_length: 16
+      # Maximum distance between granules to be merged in seconds
+      max_merge_distance: 360
+      # Seasonnal Effect Gap in secondes
+      seasonnal_effect_gap: 2700
+    # SLSTR
+    slstr:
+      # Activated
+      enabled: true
+      # Minimum length of a tolorated granule in seconds
+      min_granule_length: 155
+      # Maximum distance between granules to be merged in seconds
+      max_merge_distance: 900
+    # SRAL
+    sral:
+      # Activated
+      enabled: true
+      # Minimum length of a tolorated granule in seconds
+      min_granule_length: 16
+      # Maximum distance between granules to be merged in seconds
+      max_merge_distance: 1200
+
+  # -------------------------------------------------------------
+  # Quality Checks Configuration
+  # -------------------------------------------------------------
+  quality_checks_configuration:
+    # Allowed range for each field
+    isp_field_allowed_range:
+      common:
+        discard_packets: true
+        # Primary Header
+        packet_version:
+          type: range
+          min: 0
+          max: 7           # (2^3 - 1)
+        packet_type:
+          type: range
+          min: 0
+          max: 1           # (2^1 - 1)
+        header_flag:
+          type: range
+          min: 0
+          max: 1           # (2^1 - 1)
+        application_process_identifier:
+          type: range
+          min: 0
+          max: 2047        # (2^11 - 1)
+        packet_category:
+          type: range
+          min: 0
+          max: 15          # (2^4 - 1)
+        sequence_flag:
+          type: range
+          min: 0
+          max: 3           # (2^2 - 1)
+        packet_sequence_count:
+          type: range
+          min: 0
+          max: 16383       # (2^14 - 1)
+        packet_data_length:
+          type: range
+          min: 14          # (Secondary Header(12b) + CRC (2b))
+          max: 65535       # (2^16 - 1)
+        # Secondary Header
+        packet_service_type:
+          type: range
+          min: 0
+          max: 255         # (2^8 - 1)
+        packet_subtype:
+          type: range
+          min: 0
+          max: 255         # (2^8 - 1)
+        coarse_time:
+          type: range
+          min: 0
+          max: 4294967295  # (2^32 - 1)
+        fine_time:
+          type: range
+          min: 0
+          max: 16777215    # (2^24 - 1)
+        time_status:
+          type: range
+          min: 0
+          max: 255         # (2^8 - 1)
+
+    # Check CRC
+    check_crc:
+      S03NAT_IG: true
+      S03MWR_IG: true
+      S03GNS_IG: true
+      S03DODOIG: true
+      S03DONAIG: true
+      S03HKM_IG: true
+      S03HKM2IG: true
+      S03SLS_IG: true
+      S03OLC_IG: true
+      S03OLCRIG: true
+      S03OLCR0G: true
+      S03OLCR1G: true
+      S03ALT_IG: true
+      S03SRCRIG: true
+    # Check Gaps
+    check_gaps:
+      S03NAT_IG: true
+      S03MWR_IG: true
+      S03GNS_IG: true
+      S03DODOIG: true
+      S03DONAIG: true
+      S03HKM_IG: true
+      S03HKM2IG: true
+      S03SLS_IG: true
+      S03OLC_IG: true
+      S03OLCRIG: true
+      S03OLCR0G: true
+      S03OLCR1G: true
+      S03ALT_IG: true
+      S03SRCRIG: true
+    # Remove corrupted packets
+    remove_corrupted_packets:
+      S03NAT_IG: true
+      S03MWR_IG: true
+      S03GNS_IG: true
+      S03DODOIG: true
+      S03DONAIG: true
+      S03HKM_IG: true
+      S03HKM2IG: true
+      S03SLS_IG: true
+      S03OLC_IG: true
+      S03OLCRIG: true
+      S03OLCR0G: true
+      S03OLCR1G: true
+      S03ALT_IG: true
+      S03SRCRIG: true
+    # Remove duplicated packets
+    remove_duplicated_packets:
+      S03NAT_IG: true
+      S03MWR_IG: true
+      S03GNS_IG: true
+      S03DODOIG: true
+      S03DONAIG: true
+      S03HKM_IG: true
+      S03HKM2IG: true
+      S03SLS_IG: true
+      S03OLC_IG: true
+      S03OLCRIG: true
+      S03OLCR0G: true
+      S03OLCR1G: true
+      S03ALT_IG: true
+      S03SRCRIG: true
+    # Maximim threashold of errors allowed
+    max_format_errors: 1
