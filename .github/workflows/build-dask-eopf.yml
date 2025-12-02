@@ -70,7 +70,8 @@ jobs:
     outputs:
       docker_tag: ${{ steps.set-env.outputs.docker_tag }}
       branch_name: ${{ steps.set-env.outputs.branch_name }}
-      common_trigger: ${{ steps.set-env.outputs.common_trigger }}
+      common_changes: ${{ steps.set-env.outputs.common_changes }}
+      any_changes: ${{ steps.set-env.outputs.any_changes }}
     steps:
       - id: set-env
         name: "Set environment"
@@ -105,23 +106,36 @@ jobs:
           # Replace special characters by -
           docker_tag=$(sed "s/[^a-zA-Z0-9]/-/g" <<< "$docker_tag")
 
-          # We always trigger the image build if the common files have changed
+          # We always trigger the image builds if the common files have changed
           # or if the job was triggered manually
-          common_trigger=false
+          common_changes=false
           if [[ (${{ github.event_name }} == workflow_dispatch) || (${{ needs.changes.outputs.common }} == true) ]]; then
-            common_trigger=true
+            common_changes=true
+          fi
+
+          # Do we have any changes in the processor files or was the job triggered manually ?
+          any_changes=false
+          if [[ \
+            (${common_changes} == 'true') || \
+            (${{ needs.changes.outputs.mockup }} == 'true') || \
+            (${{ needs.changes.outputs.l0 }} == 'true') || \
+            (${{ needs.changes.outputs.s1ard }} == 'true') \
+          ]]; then
+            any_changes=true
           fi
 
           # Save values
           echo "branch_name=$branch_name" >> $GITHUB_OUTPUT
           echo "docker_tag=$docker_tag" >> $GITHUB_OUTPUT
-          echo "common_trigger=$common_trigger" >> $GITHUB_OUTPUT
+          echo "common_changes=$common_changes" >> $GITHUB_OUTPUT
+          echo "any_changes=$any_changes" >> $GITHUB_OUTPUT
         shell: bash
 
   build-dask-eopf:
     runs-on: ubuntu-latest
     name: Build images
     needs: [changes, set-env]
+    if: ${{ needs.set-env.outputs.any_changes == 'true' }}
     permissions: write-all
 
     # See: https://docs.github.com/en/actions/how-tos/write-workflows/choose-what-workflows-do/run-job-variations
@@ -134,11 +148,11 @@ jobs:
             local_cluster: "LocalCluster"
         include:
           - proc: mockup
-            condition: "${{ (needs.changes.outputs.mockup == 'true') || (needs.set-env.outputs.common_trigger == 'true') }}"
+            condition: "${{ (needs.changes.outputs.mockup == 'true') || (needs.set-env.outputs.common_changes == 'true') }}"
           - proc: l0
-            condition: "${{ (needs.changes.outputs.l0 == 'true') || (needs.set-env.outputs.common_trigger == 'true') }}"
+            condition: "${{ (needs.changes.outputs.l0 == 'true') || (needs.set-env.outputs.common_changes == 'true') }}"
           - proc: s1ard
-            condition: "${{ (needs.changes.outputs.s1ard == 'true') || (needs.set-env.outputs.common_trigger == 'true') }}"
+            condition: "${{ (needs.changes.outputs.s1ard == 'true') || (needs.set-env.outputs.common_changes == 'true') }}"
 
     steps:
       - name: Checkout
@@ -251,11 +265,7 @@ jobs:
     runs-on: ubuntu-latest
     name: "Test rs-demo"
     needs: [changes, set-env, build-dask-eopf]
-    if: >
-      (needs.changes.outputs.common == 'true') ||
-      (needs.changes.outputs.mockup == 'true') ||
-      (needs.changes.outputs.l0 == 'true') ||
-      (needs.changes.outputs.s1ard == 'true')
+    if: ${{ needs.set-env.outputs.any_changes == 'true' }}
     steps:
       - name: Log into Docker registry
         uses: docker/login-action@v3
