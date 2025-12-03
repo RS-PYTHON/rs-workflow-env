@@ -1,4 +1,4 @@
-# Copyright 2024 CS Group
+# Copyright 2025 CS Group
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -12,73 +12,76 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+# This Dockerfiles installs a DPR processor in the dask-gateway image for local and cluster modes.
+
 #
-# This Dockerfile installs the mock DPR processor in the dask-gateway image for local and cluster modes.
 # Target Docker image name:
-# ghcr.io/rs-python/dask/mockup
+# ghcr.io/rs-python/dask/l0
+# ghcr.io/rs-python/dask/s1ard
 #
 
 ARG PYTHON_VERSION_DPR=3.11.7
 ARG DASK_GATEWAY_TAG=2024.1.0
 
-# Get the contents from the rs-testmeans_dpr-processor-mock image
-FROM ghcr.io/rs-python/rs-testmeans_dpr-processor-mock:latest AS dpr_mock
-
 FROM ghcr.io/rs-python/dask/dask-gateway:${DASK_GATEWAY_TAG}-py${PYTHON_VERSION_DPR}
+
+ARG IMAGE2BUILD
 
 # Default user from parent image
 ARG USER=dask:dask
-ARG USER_NAME=dask
 
+# Do everything from root
 USER root
+
 COPY ./resources/layer-cleanup.sh ./resources/restore-apt.sh /usr/local/bin/
 RUN chmod 755 /usr/local/bin/layer-cleanup.sh /usr/local/bin/restore-apt.sh
 
-############################################
-# Install the DPR mockup (=fake processor) #
-############################################
-
-# Copy the src folder from the dpr_mock image
-COPY --from=dpr_mock /src /src
-WORKDIR /src/DPR
-
-# Give USERNAME rights to write in /src
-RUN chown -R $USER_NAME /src
-
-# Export the poetry dependencies into a requirements.txt file then install it with pip
+# System installations
 RUN \
-    pip install -U pip && \
-    pip install --no-cache-dir poetry pip-autoremove && \
-    poetry self add poetry-plugin-export && \
-    poetry export --without-hashes --format=requirements.txt > requirements.txt && \
-    pip-autoremove -y poetry && \
-    pip install -r requirements.txt && \
-    rm -f requirements.txt && \
+    restore-apt.sh && apt update && \
+    apt install -y git && \
     layer-cleanup.sh
 
-##################
-# End DPR mockup #
-##################
+# Install processor and eopf
+ADD ./resources/requirements-*.txt /opt
+# NOTE, with older docker versions, use:
+# RUN --mount=type=secret,id=GITLAB_EOPF_TOKEN \
+# GITLAB_EOPF_TOKEN=$(cat /run/secrets/GITLAB_EOPF_TOKEN) pip install ...
+RUN --mount=type=secret,id=GITLAB_EOPF_TOKEN,env=GITLAB_EOPF_TOKEN \
+    pip install -U pip && \
+    pip install -U -r /opt/requirements-${IMAGE2BUILD}.txt && \
+    layer-cleanup.sh && \
+    rm -rf /opt/requirements-*.txt
 
 # Install complete dask subsets
 RUN pip install dask[complete] && layer-cleanup.sh
 
 # Other installations
-RUN \
-    restore-apt.sh && apt update && \
-    apt install -y python3-pydot graphviz && \
-    layer-cleanup.sh
+RUN restore-apt.sh && apt update && apt install -y python3-pydot graphviz && layer-cleanup.sh
 
 # Install and auto configure opentelemetry
 RUN pip install opentelemetry-distro opentelemetry-exporter-otlp opentelemetry-instrumentation-aws-lambda opentelemetry-test-utils && \
     opentelemetry-bootstrap -a install && \
     layer-cleanup.sh
 
+# Run post-install script if it exists
+ADD ./resources /opt/resources
+RUN \
+    if [ -f /opt/resources/post-install-${IMAGE2BUILD}.sh ]; then \
+        /opt/resources/post-install-${IMAGE2BUILD}.sh && \
+        layer-cleanup.sh; \
+    fi && \
+    rm -rf /opt/resources
+
+# Clean everything
+RUN apt autoremove -y git && layer-cleanup.sh
+
 # Remove custom scripts
 RUN rm -f /usr/local/bin/layer-cleanup.sh /usr/local/bin/restore-apt.sh
 
+# Restore user
 USER $USER
 
 # Set labels based on the Open Containers Initiative (OCI):
-LABEL org.opencontainers.image.source="https://github.com/RS-PYTHON/rs-demo"
-LABEL dockerfile.url="https://github.com/RS-PYTHON/rs-demo/blob/develop/local-mode/docker/Dockerfile.dask-eopf-mockup-local"
+LABEL org.opencontainers.image.source="https://github.com/RS-PYTHON/rs-workflow-env"
+LABEL dockerfile.url="https://github.com/RS-PYTHON/rs-workflow-env/blob/develop/local-mode/docker/eopf/Dockerfile.dask-eopf"

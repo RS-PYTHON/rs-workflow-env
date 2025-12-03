@@ -85,4 +85,4 @@ USER $USER
 
 # Set labels based on the Open Containers Initiative (OCI):
 LABEL org.opencontainers.image.source="https://github.com/RS-PYTHON/rs-workflow-env"
-LABEL dockerfile.url="https://github.com/RS-PYTHON/rs-workflow-env/blob/develop/docker/Dockerfile.dask-eopf-localcluster"
+LABEL dockerfile.url="https://github.com/RS-PYTHON/rs-workflow-env/blob/develop/docker/eopf/Dockerfile.dask-eopf-localcluster"
