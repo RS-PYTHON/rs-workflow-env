@@ -52,7 +52,6 @@ jobs:
           else
             echo "branch_to_use=" >> $GITHUB_OUTPUT  # Leave empty to use default
           fi
-        shell: bash
       - name: Checkout infra-core repository
         uses: actions/checkout@v4
         with:
@@ -82,18 +81,13 @@ jobs:
             ~/miniforge3
             /usr/share/miniconda
           key: conda-${{ runner.os }}-${{ hashFiles('.github/common/resources/install-requirements.sh') }}
-          restore-keys: |
-            conda-${{ runner.os }}-
       - name: Aggressive cleanup
         run: |
           # Cleanup disk space (level between 0 and 14, more cleaning takes more time)
-          .github/common/resources/aggressive-cleanup.sh 2
-        shell: bash
+          .github/common/resources/aggressive-cleanup.sh 6
       - name: Install requirements (if cache missed)
         if: steps.cache-conda.outputs.cache-hit != 'true'
-        run: |
-          .github/common/resources/install-requirements.sh
-        shell: bash
+        run: .github/common/resources/install-requirements.sh
       - name: Start minikube
         uses: medyagh/setup-minikube@latest
         with:
@@ -104,44 +98,48 @@ jobs:
       - name: "Configure cluster labels, IP and DNS (host + CoreDNS)"
         run: |
           if [ "${{ matrix.deploy_monitoring }}" = "true" ]; then
-            .github/common/resources/configure-cluster.sh "node-role.kubernetes.io/infra= node-role.kubernetes.io/rs_env= node-role.kubernetes.io/prefect_flow= node-role.kubernetes.io/access_csc=" "iam kube monitoring oauth2-proxy processing"
+            SUBDOMAINS="dash-dask iam kube monitoring oauth2-proxy processing"
           else
-            .github/common/resources/configure-cluster.sh "node-role.kubernetes.io/infra= node-role.kubernetes.io/rs_env= node-role.kubernetes.io/prefect_flow= node-role.kubernetes.io/access_csc=" "iam kube oauth2-proxy processing"
+            SUBDOMAINS="dash-dask iam kube oauth2-proxy processing"
           fi
-        shell: bash
+          .github/common/resources/configure-cluster.sh \
+            "node-role.kubernetes.io/infra= node-role.kubernetes.io/rs_env= node-role.kubernetes.io/prefect_flow= node-role.kubernetes.io/access_csc=" \
+            "$SUBDOMAINS"
       - name: Deploy minio
         run: |
           # Minio for cloudnative pg - https://github.com/minio/minio/tree/master/helm/minio#installing-the-chart-toy-setup
           helm repo add minio https://charts.min.io/
           helm repo update minio
           if [ "${{ matrix.deploy_monitoring }}" = "true" ]; then
-            helm install minio minio/minio --namespace minio --set mode=standalone --set replicas=1 --set persistence.enabled=false --set resources.requests.memory=512Mi --set rootUser=s3_access_key,rootPassword=s3_secret_key --set buckets[0].name=rs-cluster-psql,buckets[1].name=rs-cluster-velero,buckets[2].name=rs-cluster-loki-chunks,buckets[3].name=rs-cluster-loki-ruler,buckets[4].name=rs-cluster-tempo --create-namespace --wait
+            MINIO_BUCKETS="rs-cluster-psql,buckets[1].name=rs-cluster-velero,buckets[2].name=rs-cluster-loki-chunks,buckets[3].name=rs-cluster-loki-ruler,buckets[4].name=rs-cluster-tempo"
           else
-            helm install minio minio/minio --namespace minio --set mode=standalone --set replicas=1 --set persistence.enabled=false --set resources.requests.memory=512Mi --set rootUser=s3_access_key,rootPassword=s3_secret_key --set buckets[0].name=rs-cluster-psql,buckets[1].name=rs-cluster-velero --create-namespace --wait
+            MINIO_BUCKETS="rs-cluster-psql,buckets[1].name=rs-cluster-velero"
           fi
+          helm install minio minio/minio --namespace minio --set mode=standalone --set replicas=1 --set persistence.enabled=false \
+                                          --set resources.requests.memory=512Mi --set rootUser=s3_access_key,rootPassword=s3_secret_key \
+                                          --set buckets[0].name=$MINIO_BUCKETS --create-namespace --wait
       - name: Generate inventory
         run: |
           .github/common/resources/configure-inventory.sh
           # --- Generate inventory
           conda run -n rspy --no-capture-output env PYTHONUNBUFFERED=1 ANSIBLE_FORCE_COLOR=1 ansible-playbook registry.yaml -i inventory/mycluster/hosts.yaml -e ci_mode=true
           conda run -n rspy --no-capture-output env PYTHONUNBUFFERED=1 ANSIBLE_FORCE_COLOR=1 ansible-playbook generate_inventory.yaml -i inventory/mycluster/hosts.yaml
-        shell: bash
       - name: Deploy the core apps (for real)
         run: |
           # --- Use local cluster issuer instead of Let's Encrypt
           if [ "${{ matrix.deploy_monitoring }}" = "true" ]; then
-            .github/common/resources/configure-local-ca.sh iam:iam kube:default monitoring:monitoring processing:processing oauth2-proxy:iam
+            .github/common/resources/configure-local-ca.sh \
+              dash-dask:dask-gateway iam:iam kube:default monitoring:monitoring processing:processing oauth2-proxy:iam
           else
-            .github/common/resources/configure-local-ca.sh iam:iam kube:default processing:processing oauth2-proxy:iam
+            .github/common/resources/configure-local-ca.sh \
+              dash-dask:dask-gateway iam:iam kube:default processing:processing oauth2-proxy:iam
           fi
           conda run -n rspy --no-capture-output env PYTHONUNBUFFERED=1 ANSIBLE_FORCE_COLOR=1 ansible-playbook apps.yaml -i inventory/mycluster/hosts.yaml
-        shell: bash
       - name: Deploy the monitoring apps (for real)
         if: ${{ matrix.deploy_monitoring }}
         run: |
           ./rs-infra-monitoring/.github/common/resources/configure-minikube-deployment.sh
           conda run -n rspy --no-capture-output env PYTHONUNBUFFERED=1 ANSIBLE_FORCE_COLOR=1 ansible-playbook apps.yaml -i inventory/mycluster/hosts.yaml -e '{"package_paths": ["./rs-infra-monitoring/apps/"]}'
-        shell: bash
       - name: Deploy the required server-deployment apps (for real)
         run: |
           # rs-osam requires rs-catalog-staging-configmap
@@ -149,19 +147,14 @@ jobs:
             echo Installing $app...
             conda run -n rspy --no-capture-output env PYTHONUNBUFFERED=1 ANSIBLE_FORCE_COLOR=1 ansible-playbook apps.yaml -i inventory/mycluster/hosts.yaml  -e '{"package_paths": ["./rs-server-deployment/apps/"], "app": "'$app'"}'
           done
-        shell: bash
       - name: Deploy the workflow-env apps (check)
         run: |
           conda run -n rspy --no-capture-output env PYTHONUNBUFFERED=1 ANSIBLE_FORCE_COLOR=1 ansible-playbook --check apps.yaml -i inventory/mycluster/hosts.yaml -e '{"package_paths": ["./rs-workflow-env/apps/"]}' -e private_registry=true
-        shell: bash
       - name: Deploy the workflow-env apps (for real)
         run: |
           sed -i 's!debug: false!debug: true!g' roles/app-installer/defaults/main.yaml
           ./rs-workflow-env/.github/common/resources/configure-minikube-deployment.sh
           conda run -n rspy --no-capture-output env PYTHONUNBUFFERED=1 ANSIBLE_FORCE_COLOR=1 ansible-playbook apps.yaml -i inventory/mycluster/hosts.yaml -e '{"package_paths": ["./rs-workflow-env/apps/"]}'
-        shell: bash
       - name: 🩺 Kubernetes failure diagnostics
         if: failure()
-        run: |
-          .github/common/resources/minikube-diagnostics.sh
-        shell: bash
+        run: .github/common/resources/minikube-diagnostics.sh
