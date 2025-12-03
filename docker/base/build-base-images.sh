@@ -31,7 +31,7 @@ set -x
 SCRIPT_DIR=$( cd -- "$( dirname -- "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )
 
 # Directory that contains custom requirements for the docker images
-CUSTOM_REQ=$(realpath "${SCRIPT_DIR}/../.github/scripts")
+CUSTOM_REQ=$(realpath "${SCRIPT_DIR}/../scripts")
 
 # We use a different python version in eopf + the dpr processors + rs-dpr-service
 PYTHON_VERSION=3.13.9
@@ -42,6 +42,8 @@ DASK_GATEWAY_TAG=2024.1.0
 
 PREFECT_TAG=3.6.4
 
+JUPYTER_HUB_VERSION=5.4.2
+
 ######################
 # Python and Jupyter #
 ######################
@@ -49,7 +51,7 @@ PREFECT_TAG=3.6.4
 # For each dockerfile and associated docker image name, separated by a ;
 for params in \
     "Dockerfile.python;python:${PYTHON_VERSION}-slim-bookworm" \
-    "Dockerfile.jupyter;quay.io/jupyter/base-notebook:hub-5.4.2;-py${PYTHON_VERSION}" # see: https://quay.io/repository/jupyter/base-notebook?tab=tags
+    "Dockerfile.jupyter;quay.io/jupyter/base-notebook:hub-${JUPYTER_HUB_VERSION};-py${PYTHON_VERSION}" # see: https://quay.io/repository/jupyter/base-notebook?tab=tags
 do
     dockerfile=$(echo $params | cut -d ";" -f 1)
     base=$(echo $params | cut -d ";" -f 2)
