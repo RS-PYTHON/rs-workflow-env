@@ -28,6 +28,8 @@ from pathlib import Path
 # This script directory
 THIS_DIR = Path(__file__).parent
 
+DOCKER_SCRIPTS = THIS_DIR.parent / "scripts"
+
 ########
 # Init #
 ########
@@ -187,6 +189,8 @@ for proc, local_cluster in procs_to_build:
             "-t",
             f"{registry}:{args.docker_tag}",
             "--progress=plain",
+            "--build-context",
+            f"docker-scripts={str(DOCKER_SCRIPTS)}",
             str(THIS_DIR),
         ] + labels,
     )

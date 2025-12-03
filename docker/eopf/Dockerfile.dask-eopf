@@ -33,7 +33,7 @@ ARG USER=dask:dask
 # Do everything from root
 USER root
 
-COPY ./resources/layer-cleanup.sh ./resources/restore-apt.sh /usr/local/bin/
+COPY --from=docker-scripts ./layer-cleanup.sh ./restore-apt.sh /usr/local/bin/
 RUN chmod 755 /usr/local/bin/layer-cleanup.sh /usr/local/bin/restore-apt.sh
 
 # System installations
