@@ -148,7 +148,7 @@ hub:
     password:
   image:
     name: quay.io/jupyterhub/k8s-hub
-    tag: "3.3.6"
+    tag: "4.3.1"
     pullPolicy:
     pullSecrets: []
   pdb:
@@ -386,7 +386,7 @@ proxy:
       allowPrivilegeEscalation: false
     image:
       name: quay.io/jupyterhub/k8s-secret-sync
-      tag: "3.3.6"
+      tag: "4.3.1"
       pullPolicy:
       pullSecrets: []
     resources: {}
@@ -416,7 +416,7 @@ singleuser:
   networkTools:
     image:
       name: quay.io/jupyterhub/k8s-network-tools
-      tag: "3.3.6"
+      tag: "4.3.1"
       pullPolicy:
       pullSecrets: []
     resources: {}
@@ -715,7 +715,7 @@ prePuller:
     # image and the configuration below relates to the hook-image-awaiter Job
     image:
       name: quay.io/jupyterhub/k8s-image-awaiter
-      tag: "3.3.6"
+      tag: "4.3.1"
       pullPolicy:
       pullSecrets: []
     containerSecurityContext:
@@ -759,7 +759,7 @@ ingress:
   ingressClassName: "nginx"
   hosts:
     - "{{ jupyterhub.ops.subDomain }}.{{ platform_domain_name }}"
-  pathSuffix: 
+  pathSuffix:
   pathType: Prefix
   tls:
     - secretName: jupyterhub-tls
