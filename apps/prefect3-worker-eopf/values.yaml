@@ -299,6 +299,6 @@ worker:
 
   replicaCount: {{ prefect3worker.eopf.number | default(2) }}
 
-  extraEnvVars: 
+  extraEnvVars:
     - name: RSPY_HOST_OSAM
       value: "http://rs-osam.processing.svc.cluster.local:8080"
