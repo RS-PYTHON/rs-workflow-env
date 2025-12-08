@@ -53,11 +53,11 @@ jobs:
         with:
           filters: |
             common:
-              - docker/build-dask-eopf.py
-              - docker/Dockerfile.dask-eopf-localcluster
-              - docker/resources/layer-cleanup.sh
-              - docker/resources/restore-apt.sh
-            mockup: [docker/Dockerfile.dask-eopf-mockup]
+              - docker/eopf/build-dask-eopf.py
+              - docker/eopf/Dockerfile.dask-eopf-localcluster
+              - docker/eopf/resources/layer-cleanup.sh
+              - docker/eopf/resources/restore-apt.sh
+            mockup: [docker/eopf/Dockerfile.dask-eopf-mockup]
             l0: ['docker/**/*dask-l0.*']
             s1ard: ['docker/**/*dask-s1ard.*']
           list-files: 'json' # Enables listing of files matching the filter
@@ -193,7 +193,7 @@ jobs:
             options="--local_cluster"
           fi
 
-          ./docker/build-dask-eopf.py \
+          ./docker/eopf/build-dask-eopf.py \
             --gitlab_eopf_token "${{ secrets.GITLAB_EOPF_TOKEN }}" \
             --docker_tag ${{ needs.set-env.outputs.docker_tag }} \
             --labels "${{ steps.meta.outputs.labels }}" \

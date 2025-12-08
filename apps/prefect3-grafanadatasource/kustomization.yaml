@@ -12,20 +12,10 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-
-namespace: "{{ jupyterhub.ops.namespace }}"
-
-helmCharts:
-- name: jupyterhub
-  namespace: "{{ jupyterhub.ops.namespace }}"
-  releaseName: '{{ app_name }}'
-  repo: https://hub.jupyter.org/helm-chart/
-  valuesFile: values.yaml
-  version: 4.3.1
+namespace: database
 
 resources:
-- servicemonitor.yaml
-- secret.yaml
+- grafanadatasource.yaml
 apiVersion: kustomize.config.k8s.io/v1beta1
 kind: Kustomization
 labels:

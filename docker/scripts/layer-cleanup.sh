@@ -1,3 +1,4 @@
+#!/bin/bash
 # Copyright 2024 CS Group
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -12,23 +13,26 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+apt-get autoclean --yes
+apt-get autoremove --yes
 
-namespace: "{{ jupyterhub.ops.namespace }}"
+rm -rf /var/lib/apt/lists/*
+rm -rf /usr/local/src/*
 
-helmCharts:
-- name: jupyterhub
-  namespace: "{{ jupyterhub.ops.namespace }}"
-  releaseName: '{{ app_name }}'
-  repo: https://hub.jupyter.org/helm-chart/
-  valuesFile: values.yaml
-  version: 4.3.1
+rm -rf /var/cache/apt/*
+rm -rf /root/.cache/*
+# including /root/.cache/pip
+rm -rf /home/*/.cache/*
+rm -rf /usr/local/share/.cache/*
+# including /usr/local/share/.cache/yarn
 
-resources:
-- servicemonitor.yaml
-- secret.yaml
-apiVersion: kustomize.config.k8s.io/v1beta1
-kind: Kustomization
-labels:
-- includeSelectors: true
-  pairs:
-    app.kubernetes.io/instance: '{{ app_name }}'
+rm -rf /tmp/* /var/tmp/*
+rm -rf /opt/conda/pkgs/cache
+
+rm -rf /tmp/whl
+
+# WARNING: this removes the apt repository list. To restore it and be able to run 'apt update',
+# you need to run ./restore-apt.sh
+rm -rf /etc/apt/sources.list /etc/apt/sources.list.d/*
+
+exit 0
