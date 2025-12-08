@@ -65,6 +65,10 @@ RUN \
 # Auto configure opentelemetry
 RUN opentelemetry-bootstrap -a install && layer-cleanup.sh
 
+# Env var to the folder where we store the config files for the payload files.
+ENV PAYLOAD_CONFIG_FILES=/opt/${IMAGE2BUILD}
+RUN mkdir -p "$PAYLOAD_CONFIG_FILES"
+
 # Run post-install script if it exists
 ADD ./resources /opt/resources
 RUN \
