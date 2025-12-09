@@ -15,12 +15,16 @@
 ## Common parameters
 # -- fully override common.names.fullname
 fullnameOverride: "{{ prefect3worker.staging.name }}"
+# -- python version
+PYTHON_VERSION: 3.13.9
+# -- prefect version
+PREFECT_TAG: 3.6.4
 
 worker:
   clusterUid: "rspy"
   image:
     repository: ghcr.io/rs-python/prefecthq/prefect
-    prefectTag: 3.6.4-py3.13.9-k8s
+    prefectTag: "{{ .Values.PREFECT_TAG }}-py{{ .Values.PYTHON_VERSION }}-k8s"
     pullPolicy: IfNotPresent
   apiConfig: selfHostedServer
   config:
@@ -71,7 +75,7 @@ worker:
                 ],
                 "title": "Image",
                 "examples": [
-                  "ghcr.io/rs-python/prefecthq/prefect:3.6.4-py3.13.9-k8s"
+                  "ghcr.io/rs-python/prefecthq/prefect:{{ .Values.PREFECT_TAG }}-py{{ .Values.PYTHON_VERSION }}3.13.9-k8s"
                 ],
                 "description": "The image reference of a container image to use for created jobs. If not set, the latest Prefect image will be used."
               },
