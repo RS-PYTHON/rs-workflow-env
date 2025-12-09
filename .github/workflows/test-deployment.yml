@@ -58,35 +58,26 @@ jobs:
           repository: RS-PYTHON/rs-infra-core
           ref: ${{ steps.check_branch.outputs.branch_to_use }}
       - name: Checkout infra-monitoring repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
         if: ${{ matrix.deploy_monitoring }}
         with:
           path: rs-infra-monitoring
           repository: RS-PYTHON/rs-infra-monitoring
       - name: Checkout server-deployment repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
         with:
           path: rs-server-deployment
           repository: RS-PYTHON/rs-server-deployment
       - name: Checkout repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
         with:
           path: rs-workflow-env
           ref: ${{ github.ref }}
-      - name: Cache Miniforge and Conda env
-        id: cache-conda
-        uses: actions/cache@v4
-        with:
-          path: |
-            ~/miniforge3
-            /usr/share/miniconda
-          key: conda-${{ runner.os }}-${{ hashFiles('.github/common/resources/install-requirements.sh') }}
       - name: Aggressive cleanup
         run: |
           # Cleanup disk space (level between 0 and 14, more cleaning takes more time)
           .github/common/resources/aggressive-cleanup.sh 6
-      - name: Install requirements (if cache missed)
-        if: steps.cache-conda.outputs.cache-hit != 'true'
+      - name: Install requirements
         run: .github/common/resources/install-requirements.sh
       - name: Start minikube
         uses: medyagh/setup-minikube@latest
