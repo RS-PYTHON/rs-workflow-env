@@ -1,0 +1,41 @@
+
+version: 1
+
+disable_existing_loggers: false
+
+loggers:
+  eopf:
+    handlers:
+      - console
+
+  l0:
+    handlers:
+      - file
+
+formatters:
+  console:
+    format: "%(asctime)s - %(name)s - %(levelname)s - %(message)s"
+    datefmt: '%Y-%m-%d %H:%M:%S'
+
+  file:
+    format: "%(asctime)s : %(levelname)s : %(module)s : %(funcName)s : %(lineno)d - %(message)s"
+    datefmt: '%Y-%m-%d %H:%M:%S'
+
+
+handlers:
+  file:
+    class: logging.FileHandler
+    level: DEBUG
+    formatter: file
+    filename: ./reports/logging_config.log
+
+  console:
+    class: logging.StreamHandler
+    level: DEBUG
+    formatter: console
+
+root:
+  level: INFO
+  handlers:
+    - file
+    - console
