@@ -699,7 +699,7 @@ S1:
         type: range
         min: 0
         max: 16777215
-      sas_ssb_data_field:
+      ssbflag:
         type: range
         min: 0
         max: 1
