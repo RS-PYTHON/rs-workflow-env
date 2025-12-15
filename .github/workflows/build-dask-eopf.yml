@@ -58,7 +58,9 @@ jobs:
               - docker/eopf/resources/layer-cleanup.sh
               - docker/eopf/resources/restore-apt.sh
             mockup: [docker/eopf/Dockerfile.dask-eopf-mockup]
-            l0: ['docker/**/*dask-l0.*']
+            l0: 
+              - 'docker/**/*dask-l0.*'
+              - 'docker/**/l0'
             s1ard: ['docker/**/*dask-s1ard.*']
           list-files: 'json' # Enables listing of files matching the filter
 
