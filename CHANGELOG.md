@@ -13,6 +13,24 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/) 
 >- **Fixed** for any bug fixes.
 >- **Security** in case of vulnerabilities.
 
+## [1.0a5] - 2025-12-18
+
+### Added
+
+[PR#40](https://github.com/RS-PYTHON/rs-workflow-env/pull/40) : Add RSPY_HOST_OSAM variable for prefect eopf worker
+[PR#41](https://github.com/RS-PYTHON/rs-workflow-env/pull/41) : Add s3 default config file
+[PR#37](https://github.com/RS-PYTHON/rs-workflow-env/pull/37) : Add Prefect database GrafanaDataSource
+
+### Changed
+
+[PR#38](https://github.com/RS-PYTHON/rs-workflow-env/pull/38) : Upgrade to Python 3.13, prefect 3.6.4 (custom image), L0 version 1.4.2, jupyter 5.4.2
+[PR#39](https://github.com/RS-PYTHON/rs-workflow-env/pull/39) : Improve CICD robustness
+[PR#42](https://github.com/RS-PYTHON/rs-workflow-env/pull/42) : Use Python 3.12 as NonRoot + complete update of jupyter
+
+## [1.0a4] - 2025-11-20
+
+No changes.
+
 ## [1.0a3] - 2025-10-23
 
 ### Added

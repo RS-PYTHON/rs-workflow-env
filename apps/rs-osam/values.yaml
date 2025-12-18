@@ -22,7 +22,7 @@ app:
   # -- Port for the application
   port: 8000
   # -- URL suffix for the application. The same value should also be included into ingress.path
-  docsUrl: /docs
+  docsUrl: /osam/docs
   # -- Config directory for the application
   confDir: /app/conf
   # -- URL of the API Key Manager service (internal)
@@ -116,3 +116,4 @@ ingress:
   # -- Ingress path for the application
   path:
     - /storage
+    - /osam/docs
