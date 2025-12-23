@@ -19,7 +19,7 @@ helmCharts:
   releaseName: '{{ app_name }}'
   repo: https://rs-python.github.io/rs-helm
   valuesFile: values.yaml
-  version: 1.0.0-a4
+  version: 1.0.0-a5
 apiVersion: kustomize.config.k8s.io/v1beta1
 kind: Kustomization
 labels:
