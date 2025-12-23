@@ -27,6 +27,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/) 
 - [PR#39](https://github.com/RS-PYTHON/rs-workflow-env/pull/39) : Improve CICD robustness
 - [PR#42](https://github.com/RS-PYTHON/rs-workflow-env/pull/42) : Use Python 3.12 as NonRoot + complete update of jupyter
 - Change OSAM /docs endpoint to /osam/docs (swagger UI)
+- jupyterhub : replace outdated S3 L0 environement with fixed version of jupyter built from rs-infra-core
 
 ## [1.0a4] - 2025-11-20
 
