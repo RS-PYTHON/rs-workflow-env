@@ -53,7 +53,7 @@ jobs:
             echo "branch_to_use=" >> $GITHUB_OUTPUT  # Leave empty to use default
           fi
       - name: Checkout infra-core repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
         with:
           repository: RS-PYTHON/rs-infra-core
           ref: ${{ steps.check_branch.outputs.branch_to_use }}
@@ -96,19 +96,14 @@ jobs:
           .github/common/resources/configure-cluster.sh \
             "node-role.kubernetes.io/infra= node-role.kubernetes.io/rs_env= node-role.kubernetes.io/prefect_flow= node-role.kubernetes.io/access_csc=" \
             "$SUBDOMAINS"
-      - name: Deploy minio
+      - name: Deploy seaweedfs
         run: |
-          # Minio for cloudnative pg - https://github.com/minio/minio/tree/master/helm/minio#installing-the-chart-toy-setup
-          helm repo add minio https://charts.min.io/
-          helm repo update minio
           if [ "${{ matrix.deploy_monitoring }}" = "true" ]; then
-            MINIO_BUCKETS="rs-cluster-psql,buckets[1].name=rs-cluster-velero,buckets[2].name=rs-cluster-loki-chunks,buckets[3].name=rs-cluster-loki-ruler,buckets[4].name=rs-cluster-tempo"
+            MINIO_BUCKETS="rs-cluster-psql,rs-cluster-velero,rs-cluster-loki-chunks,rs-cluster-loki-ruler,rs-cluster-tempo"
           else
-            MINIO_BUCKETS="rs-cluster-psql,buckets[1].name=rs-cluster-velero"
+            MINIO_BUCKETS="rs-cluster-psql,rs-cluster-velero"
           fi
-          helm install minio minio/minio --namespace minio --set mode=standalone --set replicas=1 --set persistence.enabled=false \
-                                          --set resources.requests.memory=512Mi --set rootUser=s3_access_key,rootPassword=s3_secret_key \
-                                          --set buckets[0].name=$MINIO_BUCKETS --create-namespace --wait
+          .github/common/resources/deploy-seaweedfs.sh $MINIO_BUCKETS
       - name: Generate inventory
         run: |
           .github/common/resources/configure-inventory.sh
