@@ -478,7 +478,7 @@ singleuser:
   extraContainers: []
   allowPrivilegeEscalation: false
   uid: 1001
-  fsGid: 100
+  fsGid: 1001
   serviceAccountName:
   storage:
     type: dynamic
