@@ -19,7 +19,7 @@ global:
   prefect:
     image:
       repository: ghcr.io/rs-python/prefecthq/prefect
-      prefectTag: 3.6.5-py3.13.9-k8s
+      prefectTag: 3.6.12-py3.13.11-k8s
       pullPolicy: IfNotPresent
 
     loggingLevel: WARNING

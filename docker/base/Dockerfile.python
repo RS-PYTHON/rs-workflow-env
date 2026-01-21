@@ -23,7 +23,7 @@ ARG BASE=xxx
 FROM "${BASE}"
 ARG BASE=xxx
 
-ARG PYTHON_VERSION=3.13.9
+ARG PYTHON_VERSION=3.13.11
 
 COPY ./layer-cleanup.sh /usr/local/bin/
 RUN chmod 755 /usr/local/bin/layer-cleanup.sh
