@@ -34,15 +34,15 @@ SCRIPT_DIR=$( cd -- "$( dirname -- "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )
 CUSTOM_REQ=$(realpath "${SCRIPT_DIR}/../scripts")
 
 # We use a different python version in eopf + the dpr processors + rs-dpr-service
-PYTHON_VERSION=3.13.9
+PYTHON_VERSION=3.13.11
 PYTHON_VERSION_DPR=3.11.7
 
 DASK_TAG=2024.5.2
 DASK_GATEWAY_TAG=2024.1.0
 
-PREFECT_TAG=3.6.5
+PREFECT_TAG=3.6.12
 
-JUPYTER_HUB_VERSION=5.4.2
+JUPYTER_HUB_VERSION=5.4.3
 
 ######################
 # Python and Jupyter #
@@ -70,7 +70,6 @@ do
 
     # Push the docker image to the registry, if the --push option is specified.
     if [[ " $@ " == *" --push "* ]]; then
-        docker login https://ghcr.io/v2/rs-python
         docker push "$target"
     fi
 done
@@ -85,7 +84,9 @@ for python_version in $PYTHON_VERSION $PYTHON_VERSION_DPR; do
     tmp="${SCRIPT_DIR}/tmp/dask/py${python_version}"
     mkdir -p "$tmp"
     cd "$tmp"
-    git clone git@github.com:dask/dask-gateway.git || true # don't fail if already cloned
+    if [[ ! -d dask-gateway ]]; then
+      git clone https://github.com/dask/dask-gateway.git
+    fi
     cd dask-gateway
     git checkout "tags/$DASK_GATEWAY_TAG"
     git reset --hard
@@ -129,7 +130,6 @@ for python_version in $PYTHON_VERSION $PYTHON_VERSION_DPR; do
 
     # Push the docker image to the registry, if the --push option is specified.
     if [[ " $@ " == *" --push "* ]]; then
-        docker login https://ghcr.io/v2/rs-python
         docker push "$target"
     fi
 done
@@ -142,7 +142,9 @@ done
 tmp="${SCRIPT_DIR}/tmp/prefect"
 mkdir -p "$tmp"
 cd "$tmp"
-git clone git@github.com:PrefectHQ/prefect.git || true # don't fail if already cloned
+if [[ ! -d prefect ]]; then
+  git clone https://github.com/PrefectHQ/prefect.git
+fi
 cd prefect
 git checkout "tags/$PREFECT_TAG"
 git reset --hard
@@ -173,7 +175,6 @@ do
 
     # Push the docker image to the registry, if the --push option is specified.
     if [[ " $@ " == *" --push "* ]]; then
-        docker login https://ghcr.io/v2/rs-python
         docker push "$target"
     fi
 done
