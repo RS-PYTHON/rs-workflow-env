@@ -13,6 +13,18 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/) 
 >- **Fixed** for any bug fixes.
 >- **Security** in case of vulnerabilities.
 
+## [1.0a6] - 2026-02-02
+
+### Changed
+
+- [PR#48](https://github.com/RS-PYTHON/rs-workflow-env/pull/48) : Replace minio by seaweedfs
+- [PR#50](https://github.com/RS-PYTHON/rs-workflow-env/pull/50) : Update to Python 3.13.11/Jupyter 5.4.3/Prefect 3.6.12
+- Put back the default docker image for prefect components
+
+### Fixed
+
+- [PR#49](https://github.com/RS-PYTHON/rs-workflow-env/pull/49) : Fixed fsGid value in Jupyter singleuser
+
 ## [1.0a5] - 2025-12-18
 
 ### Added

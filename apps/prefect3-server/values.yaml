@@ -18,8 +18,8 @@ fullnameOverride: "{{ prefect3server.ops.name }}-server"
 global:
   prefect:
     image:
-      repository: ghcr.io/rs-python/prefecthq/prefect
-      prefectTag: 3.6.12-py3.13.11-k8s
+      repository: prefecthq/prefect
+      prefectTag: 3.6.12-python3.13-kubernetes
       pullPolicy: IfNotPresent
 
     loggingLevel: WARNING
