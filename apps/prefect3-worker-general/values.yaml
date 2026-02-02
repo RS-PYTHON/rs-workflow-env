@@ -19,8 +19,8 @@ fullnameOverride: "{{ prefect3worker.general.name }}"
 worker:
   clusterUid: "rspy"
   image:
-    repository: ghcr.io/rs-python/prefecthq/prefect
-    prefectTag: 3.6.12-py3.13.11-k8s
+    repository: prefecthq/prefect
+    prefectTag: 3.6.12-python3.13-kubernetes
     pullPolicy: IfNotPresent
   apiConfig: selfHostedServer
   config:
@@ -71,7 +71,7 @@ worker:
                 ],
                 "title": "Image",
                 "examples": [
-                  "ghcr.io/rs-python/prefecthq/prefect:3.6.12-py3.13.11-k8s"
+                  "prefecthq/prefect:3.6.12-python3.13-kubernetes"
                 ],
                 "description": "The image reference of a container image to use for created jobs. If not set, the latest Prefect image will be used."
               },
