@@ -29,7 +29,7 @@ spec:
             mountPath: /scripts/
         env:
         - name: DATABASE
-          value: "{{ prefect3server.ops.name }}"
+          value: "{{ prefect3server.ops.database.name }}"
         - name: PGNEWUSER
           valueFrom:
             secretKeyRef:
