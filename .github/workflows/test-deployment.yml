@@ -63,11 +63,6 @@ jobs:
         with:
           path: rs-infra-monitoring
           repository: RS-PYTHON/rs-infra-monitoring
-      - name: Checkout server-deployment repository
-        uses: actions/checkout@v6
-        with:
-          path: rs-server-deployment
-          repository: RS-PYTHON/rs-server-deployment
       - name: Checkout repository
         uses: actions/checkout@v6
         with:
@@ -126,13 +121,6 @@ jobs:
         run: |
           ./rs-infra-monitoring/.github/common/resources/configure-minikube-deployment.sh
           conda run -n rspy --no-capture-output env PYTHONUNBUFFERED=1 ANSIBLE_FORCE_COLOR=1 ansible-playbook apps.yaml -i inventory/mycluster/hosts.yaml -e '{"package_paths": ["./rs-infra-monitoring/apps/"]}'
-      - name: Deploy the required server-deployment apps (for real)
-        run: |
-          # rs-osam requires rs-catalog-staging-configmap
-          for app in rs-catalog-staging-configmap ; do
-            echo Installing $app...
-            conda run -n rspy --no-capture-output env PYTHONUNBUFFERED=1 ANSIBLE_FORCE_COLOR=1 ansible-playbook apps.yaml -i inventory/mycluster/hosts.yaml  -e '{"package_paths": ["./rs-server-deployment/apps/"], "app": "'$app'"}'
-          done
       - name: Deploy the workflow-env apps (check)
         run: |
           conda run -n rspy --no-capture-output env PYTHONUNBUFFERED=1 ANSIBLE_FORCE_COLOR=1 ansible-playbook --check apps.yaml -i inventory/mycluster/hosts.yaml -e '{"package_paths": ["./rs-workflow-env/apps/"]}' -e private_registry=true
