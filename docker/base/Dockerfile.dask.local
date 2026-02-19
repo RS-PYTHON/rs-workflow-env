@@ -23,10 +23,9 @@
 #
 
 ARG PYTHON_VERSION_BASE=xxx
+ARG DASK_TAG=xxx
+ARG DASK_GATEWAY_TAG=xxx
 FROM python:${PYTHON_VERSION_BASE}-slim-bookworm
-
-ARG DASK_TAG=2024.5.2
-ARG DASK_GATEWAY_TAG=2024.1.0
 
 COPY ./layer-cleanup.sh /usr/local/bin/
 RUN chmod 755 /usr/local/bin/layer-cleanup.sh

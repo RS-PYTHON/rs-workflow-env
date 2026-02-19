@@ -23,9 +23,9 @@
 #
 
 ARG PYTHON_VERSION_BASE=xxx
+ARG DASK_TAG=xxx
+ARG DASK_GATEWAY_TAG=xxx
 FROM python:${PYTHON_VERSION_BASE}-slim-bookworm
-
-ARG DASK_GATEWAY_TAG=2025.4.0
 
 COPY ./layer-cleanup.sh /usr/local/bin/
 RUN chmod 755 /usr/local/bin/layer-cleanup.sh
@@ -50,6 +50,8 @@ RUN \
     pip install --upgrade pip && \
     pip install -r /opt/dask-gateway/Dockerfile.requirements.txt && \
     pip install \
+        dask==${DASK_TAG} \
+        distributed==${DASK_TAG} \
         dask-gateway==${DASK_GATEWAY_TAG} \
         bokeh">=3.1.0" \
         jupyter-server-proxy \
