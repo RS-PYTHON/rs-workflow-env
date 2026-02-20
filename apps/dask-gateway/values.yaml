@@ -18,7 +18,7 @@ gateway:
   loglevel: INFO
   image:
     name: ghcr.io/dask/dask-gateway-server
-    tag: "2024.1.0"
+    tag: "2025.4.0"
     pullPolicy:
   auth:
     type: jupyterhub
@@ -85,7 +85,7 @@ gateway:
   backend:
     image:
       name: ghcr.io/dask/dask-gateway
-      tag: "2024.1.0"
+      tag: "2025.4.0"
       pullPolicy:
     imagePullSecrets:
       - name: ghcr-k8s
@@ -108,7 +108,7 @@ controller:
   enabled: true
   image:
     name: ghcr.io/dask/dask-gateway-server
-    tag: "2024.1.0"
+    tag: "2025.4.0"
     pullPolicy:
   affinity:
     nodeAffinity:
