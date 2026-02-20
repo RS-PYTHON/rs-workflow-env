@@ -39,8 +39,11 @@ DOCKER_SCRIPTS = THIS_DIR.parent / "scripts"
 class Image:
     """Docker image information"""
 
-    # Docker image name (registry)
-    name: str
+    # Docker image name for cluster usage (registry)
+    k8s_name: str
+
+    # Docker image name for local usage (registry)
+    local_name: str
 
     # Name of the LocalCluster image (for debugging)
     local_cluster_name: str = ""
@@ -51,14 +54,19 @@ class Image:
 
 # All possible processor images
 all_procs = {
-    "mockup": Image("ghcr.io/rs-python/dask/mockup"),
+    "mockup": Image(
+        "ghcr.io/rs-python/dask/mockup/k8s",
+        "ghcr.io/rs-python/dask/mockup/local"
+    ),
     "l0": Image(
-        "ghcr.io/rs-python/dask/l0",
+        "ghcr.io/rs-python/dask/l0/k8s",
+        "ghcr.io/rs-python/dask/l0/local",
         "ghcr.io/rs-python/dask/l0/localcluster",
         "dask-l0",
     ),
     "s1ard": Image(
-        "ghcr.io/rs-python/dask/s1ard",
+        "ghcr.io/rs-python/dask/s1ard/k8s",
+        "ghcr.io/rs-python/dask/s1ard/local",
         "ghcr.io/rs-python/dask/s1ard/localcluster",
         "dask-s1ard",
     ),
@@ -173,11 +181,13 @@ for proc, local_cluster in procs_to_build:
     image = all_procs[proc]
 
     # Docker image name
-    registry = image.local_cluster_name if local_cluster else image.name
+    if local_cluster:
+        registries = [image.local_cluster_name]
+    else:
+        registries = [image.k8s_name, image.local_name]
 
-    # Build image
-    run_command(
-        [
+    for registry in registries:
+        command = [
             "docker",
             "build",
             "--build-arg",
@@ -192,8 +202,14 @@ for proc, local_cluster in procs_to_build:
             "--build-context",
             f"docker-scripts={str(DOCKER_SCRIPTS)}",
             str(THIS_DIR),
-        ] + labels,
-    )
+        ]
+
+        # Extract base image used from the target name (k8s or local) and add it as an argument
+        if not local_cluster:
+            command += ["--build-arg", f"BASE_IMAGE_TARGET={registry.rsplit('/', 1)[1]}"]
+        
+        # Build image
+        run_command(command + labels)
 
     # Push to registry
     if args.push:

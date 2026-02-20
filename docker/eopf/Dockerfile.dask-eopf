@@ -20,10 +20,15 @@
 # ghcr.io/rs-python/dask/s1ard
 #
 
-ARG PYTHON_VERSION_DPR=3.11.7
-ARG DASK_GATEWAY_TAG=2024.1.0
+# Base image type: can be "k8s" for cluster usage or "local" for local usage.
+ARG BASE_IMAGE_TARGET=xxx
 
-FROM ghcr.io/rs-python/dask/dask-gateway:${DASK_GATEWAY_TAG}-py${PYTHON_VERSION_DPR}
+# Versions used: currently all processors use Dask 2024.5.2 with Python 3.11.7, and the base images are all built with dask-gateway and dask-gateway-server 2025.4.0
+# ANY VERSION CHANGE MUST BE UPDATED IN THE BASE IMAGES SCRIPT GENERATOR (docker/base/build-base-images.sh) AND IN THIS FILE.
+ARG PYTHON_VERSION_DPR=3.11.7
+ARG DASK_TAG=2024.5.2
+
+FROM ghcr.io/rs-python/dask/dask-gateway:${BASE_IMAGE_TARGET}-py${PYTHON_VERSION_DPR}-${DASK_TAG}
 
 ARG IMAGE2BUILD
 
