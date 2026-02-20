@@ -45,7 +45,7 @@ jobs:
       common: ${{ steps.filter.outputs.common }}
       mockup: ${{ steps.filter.outputs.mockup }}
       l0: ${{ steps.filter.outputs.l0 }}
-      s1ard: ${{ steps.filter.outputs.s1ard }}
+      # s1ard: ${{ steps.filter.outputs.s1ard }} # Disabled because we can't access S1ARD repo
     steps:
       - uses: actions/checkout@v6
       - uses: dorny/paths-filter@v3
@@ -59,7 +59,7 @@ jobs:
               - docker/eopf/resources/restore-apt.sh
             mockup: [docker/eopf/Dockerfile.dask-eopf-mockup]
             l0: ['docker/**/*dask-l0.*', 'docker/**/l0/*']
-            s1ard: ['docker/**/*dask-s1ard.*']
+          # s1ard: ['docker/**/*dask-s1ard.*'] # Disabled because we can't access S1ARD repo
           list-files: 'json' # Enables listing of files matching the filter
 
   # Calculate variables for this workflow
@@ -119,7 +119,7 @@ jobs:
             (${common_changes} == 'true') || \
             (${{ needs.changes.outputs.mockup }} == 'true') || \
             (${{ needs.changes.outputs.l0 }} == 'true') || \
-            (${{ needs.changes.outputs.s1ard }} == 'true') \
+          # (${{ needs.changes.outputs.s1ard }} == 'true') \ # Disabled because we can't access S1ARD repo
           ]]; then
             any_changes=true
           fi
@@ -141,7 +141,7 @@ jobs:
     # See: https://docs.github.com/en/actions/how-tos/write-workflows/choose-what-workflows-do/run-job-variations
     strategy:
       matrix:
-        proc: [mockup, l0, s1ard]
+        proc: [mockup, l0] # No S1ARD because we can't access its repo
         local_cluster: ["", "LocalCluster"] # build the Dask LocalCluster image for local debugging ?
         exclude:
           - proc: mockup
@@ -151,8 +151,9 @@ jobs:
             condition: "${{ (needs.changes.outputs.mockup == 'true') || (needs.set-env.outputs.common_changes == 'true') }}"
           - proc: l0
             condition: "${{ (needs.changes.outputs.l0 == 'true') || (needs.set-env.outputs.common_changes == 'true') }}"
-          - proc: s1ard
-            condition: "${{ (needs.changes.outputs.s1ard == 'true') || (needs.set-env.outputs.common_changes == 'true') }}"
+          # Disabled because we can't access S1ARD repo
+          # - proc: s1ard
+          #   condition: "${{ (needs.changes.outputs.s1ard == 'true') || (needs.set-env.outputs.common_changes == 'true') }}"
 
     steps:
       - name: Checkout
