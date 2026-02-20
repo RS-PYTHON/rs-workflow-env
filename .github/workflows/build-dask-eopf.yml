@@ -118,13 +118,13 @@ jobs:
           if [[ \
             (${common_changes} == 'true') || \
             (${{ needs.changes.outputs.mockup }} == 'true') || \
-            (${{ needs.changes.outputs.l0 }} == 'true') || \
+            (${{ needs.changes.outputs.l0 }} == 'true') \
+          # (${{ needs.changes.outputs.s1ard }} == 'true') \ # Disabled because we can't access S1ARD repo
           ]]; then
             any_changes=true
           fi
 
-          # Disabled because we can't access S1ARD repo (to be put in the if condition above in case of change):
-          # (${{ needs.changes.outputs.s1ard }} == 'true') \
+          
 
           # Save values
           echo "branch_name=$branch_name" >> $GITHUB_OUTPUT
