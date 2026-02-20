@@ -142,13 +142,13 @@ for versions_index in "${versions_list[@]}"; do
             -t "${target}" \
             --progress=plain \
             "${tmp}/dask-gateway"
+
+        # Push the docker image to the registry, if the --push option is specified.
+        if [[ " $@ " == *" --push "* ]]; then
+            docker push "$target"
+        fi
     done
 
-    # Push the docker image to the registry, if the --push option is specified.
-    if [[ " $@ " == *" --push "* ]]; then
-        docker push "$localtarget"
-        docker push "$k8starget"
-    fi
 done
 
 ###########
