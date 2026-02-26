@@ -77,6 +77,7 @@ jobs:
       - name: Start minikube
         uses: medyagh/setup-minikube@latest
         with:
+          minikube-version: 1.37.0
           addons: 'metallb,metrics-server'
           cpus: 4
           memory: 8000m
