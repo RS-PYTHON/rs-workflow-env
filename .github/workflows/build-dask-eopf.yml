@@ -141,7 +141,8 @@ jobs:
     # See: https://docs.github.com/en/actions/how-tos/write-workflows/choose-what-workflows-do/run-job-variations
     strategy:
       matrix:
-        proc: [mockup, l0, s1ard]
+        # proc: [mockup, l0, s1ard] # TODO restore ARD once we regain access to it
+        proc: [mockup, l0]
         local_cluster: ["", "LocalCluster"] # build the Dask LocalCluster image for local debugging ?
         exclude:
           - proc: mockup
