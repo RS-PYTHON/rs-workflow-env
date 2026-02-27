@@ -141,7 +141,8 @@ jobs:
     # See: https://docs.github.com/en/actions/how-tos/write-workflows/choose-what-workflows-do/run-job-variations
     strategy:
       matrix:
-        proc: [mockup, l0, s1ard]
+        # proc: [mockup, l0, s1ard] # TODO restore ARD once we regain access to it
+        proc: [mockup, l0]
         local_cluster: ["", "LocalCluster"] # build the Dask LocalCluster image for local debugging ?
         exclude:
           - proc: mockup
@@ -151,8 +152,8 @@ jobs:
             condition: "${{ (needs.changes.outputs.mockup == 'true') || (needs.set-env.outputs.common_changes == 'true') }}"
           - proc: l0
             condition: "${{ (needs.changes.outputs.l0 == 'true') || (needs.set-env.outputs.common_changes == 'true') }}"
-          - proc: s1ard
-            condition: "${{ (needs.changes.outputs.s1ard == 'true') || (needs.set-env.outputs.common_changes == 'true') }}"
+#          - proc: s1ard
+#            condition: "${{ (needs.changes.outputs.s1ard == 'true') || (needs.set-env.outputs.common_changes == 'true') }}"
 
     steps:
       - name: Checkout
