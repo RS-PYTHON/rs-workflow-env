@@ -20,6 +20,9 @@ on:
     types: [opened, synchronize, reopened]
     paths:
       - 'docker/base/**'
+      - 'docker/scripts/**'
+      - '.github/actions/publish-docker/action.yml'
+      - '.github/workflows/build-base-images.yml'
   push:
     branches:
       - develop # pushes on the 'develop' branch
@@ -27,6 +30,9 @@ on:
       - '**' # new git tags (including hierarchical tags like v1.0/beta)
     paths:
       - 'docker/base/**'
+      - 'docker/scripts/**'
+      - '.github/actions/publish-docker/action.yml'
+      - '.github/workflows/build-base-images.yml'
 
 jobs:
   build-base-images:

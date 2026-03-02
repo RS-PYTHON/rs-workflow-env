@@ -497,7 +497,7 @@ singleuser:
       storageAccessModes: [ReadWriteOnce]
   # Defines the default image
   image:
-    name: ghcr.io/rs-python/rs-infra-core-jupyter
+    name: ghcr.io/rs-python/rs-workflow-env-jupyter
     tag: "latest"
     pullPolicy: Always
     pullSecrets: []
@@ -522,7 +522,7 @@ singleuser:
     - display_name: "Release v1.0a7"
       description: "RS-Python release v1.0a7"
       kubespawner_override:
-        image: ghcr.io/rs-python/rs-infra-core-jupyter:v1-0a7
+        image: ghcr.io/rs-python/rs-workflow-env-jupyter:1.0a7
 
 # scheduling relates to the user-scheduler pods and user-placeholder pods.
 scheduling:
