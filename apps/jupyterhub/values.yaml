@@ -519,10 +519,10 @@ singleuser:
     - display_name: "Default (latest) environment"
       description: "Latest RS-Python environment"
       default: true
-    - display_name: "Release v1.0a6"
-      description: "RS-Python release v1.0a6"
+    - display_name: "Release v1.0a7"
+      description: "RS-Python release v1.0a7"
       kubespawner_override:
-        image: ghcr.io/rs-python/rs-workflow-env-jupyter:latest
+        image: ghcr.io/rs-python/rs-workflow-env-jupyter:v1-0a7
 
 # scheduling relates to the user-scheduler pods and user-placeholder pods.
 scheduling:
