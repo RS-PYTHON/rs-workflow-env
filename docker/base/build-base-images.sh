@@ -34,13 +34,13 @@ SCRIPT_DIR=$( cd -- "$( dirname -- "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )
 CUSTOM_REQ=$(realpath "${SCRIPT_DIR}/../scripts")
 
 # We use a different python version in eopf + the dpr processors + rs-dpr-service
-PYTHON_VERSION=3.13.11
+PYTHON_VERSION=3.13.12
 PYTHON_VERSION_DPR=3.11.7
 
 DASK_TAG=2024.5.2
 DASK_GATEWAY_TAG=2024.1.0
 
-PREFECT_TAG=3.6.12
+PREFECT_TAG=3.6.20
 
 JUPYTER_HUB_VERSION=5.4.3
 
