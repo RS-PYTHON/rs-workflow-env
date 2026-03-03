@@ -22,6 +22,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/) 
 - [PR#59](https://github.com/RS-PYTHON/rs-workflow-env/pull/59) : Update Jupyter environment to latest release
 - [PR#64](https://github.com/RS-PYTHON/rs-workflow-env/pull/64) : CI: allow to specify rs-infra-core ref to use
 - [PR#60](https://github.com/RS-PYTHON/rs-workflow-env/pull/60) : Update copyright year to 2026, disable S1 ARD
+- [RSPY-876](https://github.com/RS-PYTHON/rs-workflow-env/pull/67) : Move JupyterHub image to rs-workflow-env
+
 - update jupyter env with docker image tag 1.0a7
 
 ### Removed
