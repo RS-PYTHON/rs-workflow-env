@@ -20,7 +20,7 @@ worker:
   clusterUid: "rspy"
   image:
     repository: prefecthq/prefect
-    prefectTag: 3.6.12-python3.13-kubernetes
+    prefectTag: 3.6.20-python3.13-kubernetes
     pullPolicy: IfNotPresent
   apiConfig: selfHostedServer
   config:
@@ -71,7 +71,7 @@ worker:
                 ],
                 "title": "Image",
                 "examples": [
-                  "prefecthq/prefect:3.6.12-python3.13-kubernetes"
+                  "prefecthq/prefect:3.6.20-python3.13-kubernetes"
                 ],
                 "description": "The image reference of a container image to use for created jobs. If not set, the latest Prefect image will be used."
               },
