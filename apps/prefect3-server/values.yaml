@@ -19,7 +19,7 @@ global:
   prefect:
     image:
       repository: prefecthq/prefect
-      prefectTag: 3.6.12-python3.13-kubernetes
+      prefectTag: 3.6.20-python3.13-kubernetes
       pullPolicy: IfNotPresent
 
     loggingLevel: WARNING

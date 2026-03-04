@@ -46,6 +46,7 @@ ADD ./resources/requirements-*.txt /opt
 # RUN --mount=type=secret,id=GITLAB_EOPF_TOKEN \
 # GITLAB_EOPF_TOKEN=$(cat /run/secrets/GITLAB_EOPF_TOKEN) pip install ...
 RUN --mount=type=secret,id=GITLAB_EOPF_TOKEN,env=GITLAB_EOPF_TOKEN \
+    git config --global url."https://__token__:${GITLAB_EOPF_TOKEN}@gitlab.eopf.copernicus.eu/".insteadOf "https://gitlab.eopf.copernicus.eu/" && \
     pip install -U pip && \
     pip install -U -r /opt/requirements-${IMAGE2BUILD}.txt && \
     layer-cleanup.sh && \

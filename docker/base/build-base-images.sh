@@ -34,7 +34,7 @@ SCRIPT_DIR=$( cd -- "$( dirname -- "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )
 CUSTOM_REQ=$(realpath "${SCRIPT_DIR}/../scripts")
 
 # We use a different python version in eopf + the dpr processors + rs-dpr-service
-PYTHON_VERSION=3.13.11
+PYTHON_VERSION=3.13.12
 PYTHON_VERSION_DPR=3.11.7
 
 # Different versions of dask and dask-gateway used (must be declared here to use update_framework_versions.sh script)
@@ -46,7 +46,7 @@ DASK_GATEWAY_TAG=2025.4.0
 declare -a STAGING_VERSIONS=($PYTHON_VERSION $DASK_TAG_STAGING $DASK_GATEWAY_TAG)
 declare -a PROCESSOR_VERSIONS=($PYTHON_VERSION_DPR $DASK_TAG $DASK_GATEWAY_TAG)
 
-PREFECT_TAG=3.6.12
+PREFECT_TAG=3.6.20
 
 JUPYTER_HUB_VERSION=5.4.3
 
