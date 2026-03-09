@@ -64,6 +64,7 @@ jobs:
           filters: |
             common:
               - docker/eopf/build-dask-eopf.py
+              - docker/eopf/Dockerfile.dask-eopf
               - docker/eopf/Dockerfile.dask-eopf-localcluster
               - docker/eopf/resources/layer-cleanup.sh
               - docker/eopf/resources/restore-apt.sh
