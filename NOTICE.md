@@ -46,9 +46,9 @@ Below are all the FOSS (Free and open-source software) used and their respective
 
 - Prefect
   - Helm chart:
-    - Version: 2025.3.14203557
-    - Licence: [Apache License 2.0](https://github.com/PrefectHQ/prefect-helm/blob/2025.3.14203557/LICENSE)
-    - Source: <https://github.com/PrefectHQ/prefect-helm/tree/2025.3.14203557>
+    - Version: 2026.2.27173158
+    - Licence: [Apache License 2.0](https://github.com/PrefectHQ/prefect-helm/blob/2026.2.27173158/LICENSE)
+    - Source: <https://github.com/PrefectHQ/prefect-helm/tree/2026.2.27173158>
     - Copyright: Copyright The Prefect Development Team. [Authors and Contributors](https://github.com/PrefectHQ/prefect-helm/graphs/contributors)
   - Container image(s)
     - prefecthq/prefect:3.6.20-python3.13-kubernetes

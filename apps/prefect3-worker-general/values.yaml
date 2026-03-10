@@ -290,6 +290,10 @@ worker:
       value: rs_env
       effect: NoSchedule
 
+  extraEnvVars:
+    - name: PREFECT_INTEGRATIONS_KUBERNETES_OBSERVER_NAMESPACES
+      value: "{{ prefect3worker.general.namespace }}"
+
   selfHostedServerApiConfig:
     apiUrl: "http://{{ prefect3server.ops.name }}-server.{{ prefect3server.ops.namespace }}.svc.cluster.local:4200/api"
 
