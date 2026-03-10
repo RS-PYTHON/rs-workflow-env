@@ -295,7 +295,7 @@ jobs:
             "https://github.com/${{ github.repository }}/security/code-scanning?query=${query}" \
             >> $GITHUB_STEP_SUMMARY
 
-            [[ if "${{ matrix.local_cluster }}" != "LocalCluster" ]]; then
+            if [[ "${{ matrix.local_cluster }}" != "LocalCluster" ]]; then
               echo "Trivy scan results:" \
               "https://github.com/${{ github.second_repository }}/security/code-scanning?query=${query}" \
               >> $GITHUB_STEP_SUMMARY
