@@ -196,7 +196,7 @@ jobs:
           images: ${{ env.DOCKER_REGISTRY }}/${{ github.repository }} # ghcr.io/RS-PYTHON/rs-workflow-env
 
       - id: build
-        name: Build the Dask image
+        name: Build the Dask images
         if: ${{ matrix.condition }}
         run: |
           set -x
@@ -220,6 +220,18 @@ jobs:
           # Save values
           echo "repository=$repository" >> $GITHUB_OUTPUT
           echo "repository_and_tag=$repository_and_tag" >> $GITHUB_OUTPUT
+
+          # If we're not in local cluster, two images are built (one for local and one for k8s).
+          # In this case, get the second last built image
+          if [[ "${{ matrix.local_cluster }}" != "LocalCluster" ]]; then
+            second_last_built=$(docker images | awk 'NR==3')
+            second_repository=$(echo "$second_last_built" | awk '{print $1}')
+            second_repository_and_tag=$(echo "$second_last_built" | awk '{print $1 ":" $2}')
+
+            # Save values
+            echo "repository=$second_repository" >> $GITHUB_OUTPUT
+            echo "repository_and_tag=$second_repository_and_tag" >> $GITHUB_OUTPUT
+          fi
         shell: bash
 
       - name: Run Trivy vulnerability scanner
@@ -243,6 +255,27 @@ jobs:
           sarif_file: trivy-results-docker.sarif
           category: ${{ steps.build.outputs.repository }}
 
+      - name: Run Trivy vulnerability scanner
+        if: ${{ matrix.condition && matrix.local_cluster != 'LocalCluster' }}
+        uses: aquasecurity/trivy-action@master
+        env:
+          TRIVY_DB_REPOSITORY: public.ecr.aws/aquasecurity/trivy-db:2
+        with:
+          image-ref: ${{ steps.build.outputs.second_repository_and_tag }}
+          format: sarif
+          output: trivy-results-docker.sarif
+          exit-code: 0
+          limit-severities-for-sarif: true
+          severity: HIGH,CRITICAL
+          #timeout: '30m'
+
+      - name: Upload Trivy scan results to GitHub Security tab
+        if: ${{ matrix.condition && matrix.local_cluster != 'LocalCluster' }}
+        uses: github/codeql-action/upload-sarif@v4
+        with:
+          sarif_file: trivy-results-docker.sarif
+          category: ${{ steps.build.outputs.second_repository }}
+
       - name: Display link to Trivy results
         if: ${{ matrix.condition }}
         run: |
@@ -261,11 +294,22 @@ jobs:
             echo "Trivy scan results:" \
             "https://github.com/${{ github.repository }}/security/code-scanning?query=${query}" \
             >> $GITHUB_STEP_SUMMARY
+
+            [[ if "${{ matrix.local_cluster }}" != "LocalCluster" ]]; then
+              echo "Trivy scan results:" \
+              "https://github.com/${{ github.second_repository }}/security/code-scanning?query=${query}" \
+              >> $GITHUB_STEP_SUMMARY
+            fi
         shell: bash
 
       - name: Push Docker image
         if: ${{ matrix.condition }}
         run: docker push ${{ steps.build.outputs.repository_and_tag }}
+        shell: bash
+
+      - name: Push Docker image
+        if: ${{ matrix.condition && matrix.local_cluster != 'LocalCluster' }}
+        run: docker push ${{ steps.build.outputs.second_repository_and_tag }}
         shell: bash
 
   ###########
