@@ -19,7 +19,7 @@ helmCharts:
 - name: prefect-server
   repo: https://prefecthq.github.io/prefect-helm
   releaseName: "{{ app_name }}"
-  version: 2025.3.14203557
+  version: 2026.2.27173158
   namespace: "{{ prefect3server.ops.namespace }}"
   valuesFile: values.yaml
 apiVersion: kustomize.config.k8s.io/v1beta1
