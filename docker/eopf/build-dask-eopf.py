@@ -64,14 +64,12 @@ all_procs = {
         "ghcr.io/rs-python/dask/l0/localcluster",
         "dask-l0",
     ),
-    # S1ARD image cannot be built currently as we cannot access the private source repository.
-    # If this changes, uncomment the following lines.
-    # "s1ard": Image(
-    #     "ghcr.io/rs-python/dask/s1ard/k8s",
-    #     "ghcr.io/rs-python/dask/s1ard/local",
-    #     "ghcr.io/rs-python/dask/s1ard/localcluster",
-    #     "dask-s1ard",
-    # ),
+    "s1ard": Image(
+        "ghcr.io/rs-python/dask/s1ard/k8s",
+        "ghcr.io/rs-python/dask/s1ard/local",
+        "ghcr.io/rs-python/dask/s1ard/localcluster",
+        "dask-s1ard",
+    ),
 }
 
 ######################
