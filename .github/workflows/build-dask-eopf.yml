@@ -229,8 +229,8 @@ jobs:
             second_repository_and_tag=$(echo "$second_last_built" | awk '{print $1 ":" $2}')
 
             # Save values
-            echo "repository=$second_repository" >> $GITHUB_OUTPUT
-            echo "repository_and_tag=$second_repository_and_tag" >> $GITHUB_OUTPUT
+            echo "second_repository=$second_repository" >> $GITHUB_OUTPUT
+            echo "second_repository_and_tag=$second_repository_and_tag" >> $GITHUB_OUTPUT
           fi
         shell: bash
 
