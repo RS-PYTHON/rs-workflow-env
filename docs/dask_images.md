@@ -16,9 +16,49 @@ The screenshot above shows the current Dask architecture in a real cluster. The 
 
 Local mode is the lightweight environment used for tests on a local computer, for development purposes only. This environment is deployed through docker-compose, that doesn't allow the use of Helm chart, which makes the Dask architecture in local mode different than the one in a real Kubernetes cluster. For this reason, there is no access to a centralized Dask server in local mode, and each Dask image deployed in local mode needs to include its own Dask server, through a dependency to "dask-gateway-server" that doesn't exist in the cluster mode images. All Dask images suited for local mode are suffixed with "local" (for example, `ghcr.io/rs-python/dask/l0/local`), and while in theory they are supposed to work in cluster mode as well, they are created for development purposes only and for the docker-compose local mode specifically.
 
-![Screenshot of Dask architecture in local mode](images/dask_local_example.png "Dask architecture in local mode")
+```yaml
+services:
+  dask-staging:
+    image: ghcr.io/rs-python/dask/staging/local:latest
+    ports:
+      - 8701:8000
+    volumes:
+      # Each dask worker needs these files in order to securely connect to edrs.
+      - ./certs/client.crt:${EDRS_CLIENT_CRT_PATH}
+      - ./certs/client.key:${EDRS_CLIENT_KEY_PATH}
+      - ./certs/ca.crt:${EDRS_CA_CRT_PATH}
 
-This screenshot is an example of how the Dask images are deployed in local mode. The important thing to notice is that each service is deployed independently to the other ones. There is no central server like in cluster mode, and each image used acts as its own Dask server deploying itself as a Dask cluster.
+  dask-l0:
+    image: ghcr.io/rs-python/dask/l0/local:latest
+    # Change memory per worker with e.g. DASK_MEMORY_EOPF=4G DASK_CORES_EOPF=4 docker compose up # ...
+    entrypoint: > # don't use '|' it doesn't work
+      tini -g -- dask-gateway-server
+      --ClusterConfig.worker_memory="${DASK_MEMORY_EOPF}"
+      --ClusterConfig.worker_cores="${DASK_CORES_EOPF}"
+    ports:
+      - 8702:8000
+
+  dask-s1ard:
+    image: ghcr.io/rs-python/dask/s1ard/local:latest
+    # Change memory per worker with e.g. DASK_MEMORY_EOPF=4G DASK_CORES_EOPF=4 docker compose up # ...
+    entrypoint: > # don't use '|' it doesn't work
+      tini -g -- dask-gateway-server
+      --ClusterConfig.worker_memory="${DASK_MEMORY_EOPF}"
+      --ClusterConfig.worker_cores="${DASK_CORES_EOPF}"
+    ports:
+      - 8704:8000
+
+  dask-eopf-mockup:
+    image: ghcr.io/rs-python/dask/mockup/local:latest
+    ports:
+      - 8703:8000
+    entrypoint: > # don't use '|' it doesn't work
+      tini -g -- dask-gateway-server
+      --ClusterConfig.worker_memory="${DASK_MEMORY_EOPF}"
+      --ClusterConfig.worker_cores="${DASK_CORES_EOPF}"
+```
+
+The code above is taken from the [*docker-compose.yaml*](https://github.com/RS-PYTHON/rs-demo/blob/develop/local-mode/docker-compose.yml) file used to deploy the local mode, and is an example of how the Dask images are deployed in local mode. The important thing to notice is that each service is deployed independently to the other ones. There is no central server like in cluster mode, and each image used acts as its own Dask server deploying itself as a Dask cluster.
 
 ## Base images
 
