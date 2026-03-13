@@ -42,7 +42,7 @@ class Image:
     # Docker image name for cluster usage (registry)
     k8s_name: str
 
-    # Docker image name for local usage (registry)
+    # Docker image name for local mode usage (registry)
     local_name: str
 
     # Name of the LocalCluster image (for debugging)

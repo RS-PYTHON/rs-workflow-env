@@ -221,7 +221,7 @@ jobs:
           echo "repository=$repository" >> $GITHUB_OUTPUT
           echo "repository_and_tag=$repository_and_tag" >> $GITHUB_OUTPUT
 
-          # If we're not in local cluster, two images are built (one for local and one for k8s).
+          # If we're not in local cluster, two images are built (one for local mode and one for k8s).
           # In this case, get the second last built image
           if [[ "${{ matrix.local_cluster }}" != "LocalCluster" ]]; then
             second_last_built=$(docker images | awk 'NR==3')

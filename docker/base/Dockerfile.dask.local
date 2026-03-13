@@ -12,14 +12,10 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-# dask-gateway-server image for local mode.
-# We copy paste https://github.com/dask/dask-gateway/blob/main/dask-gateway-server/Dockerfile
-# and make modifications for the local mode.
-
 #
-# Build the base dask-gateway image for local and cluster modes.
+# Build the base dask-gateway image for local mode.
 # Target Docker image name:
-# ghcr.io/rs-python/dask/dask-gateway
+# ghcr.io/rs-python/dask/dask-gateway:local-py<PYTHON_VERSION_BASE>-<DASK_TAG>
 #
 
 ARG PYTHON_VERSION_BASE=xxx
