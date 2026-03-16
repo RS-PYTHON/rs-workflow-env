@@ -38,6 +38,10 @@ on:
       docker_tag:
         description: Tag the docker images as e.g. 'latest' or 'feat-rspy123'
         required: true
+  workflow_run:
+    workflows: ["Build the base Docker images"]
+    types:
+      - completed
 
 env:
   DOCKER_REGISTRY: ghcr.io
