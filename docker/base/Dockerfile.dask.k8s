@@ -12,27 +12,22 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-# dask-gateway-server image for local mode.
-# We copy paste https://github.com/dask/dask-gateway/blob/main/dask-gateway-server/Dockerfile
-# and make modifications for the local mode.
-
 #
-# Build the base dask-gateway image for local and cluster modes.
+# Build the base dask-gateway image for and cluster mode.
 # Target Docker image name:
-# ghcr.io/rs-python/dask/dask-gateway
+# ghcr.io/rs-python/dask/dask-gateway:k8s-py<PYTHON_VERSION_BASE>-<DASK_TAG>
 #
 
 ARG PYTHON_VERSION_BASE=xxx
 FROM python:${PYTHON_VERSION_BASE}-slim-bookworm
 
-ARG DASK_TAG=2024.5.2
-ARG DASK_GATEWAY_TAG=2024.1.0
+ARG DASK_TAG=xxx
+ARG DASK_GATEWAY_TAG=xxx
 
 COPY ./layer-cleanup.sh /usr/local/bin/
 RUN chmod 755 /usr/local/bin/layer-cleanup.sh
 
 COPY ./dask-gateway /opt/dask-gateway
-COPY ./dask-gateway-server /opt/dask-gateway-server
 
 # Do the same as in:
 # https://github.com/dask/dask-gateway/blob/main/dask-gateway/Dockerfile
@@ -51,18 +46,16 @@ RUN apt-get update \
 RUN \
     pip install --upgrade pip && \
     pip install -r /opt/dask-gateway/Dockerfile.requirements.txt && \
-    pip install -r /opt/dask-gateway-server/Dockerfile.requirements.txt && \
     pip install \
         dask==${DASK_TAG} \
         distributed==${DASK_TAG} \
         dask-gateway==${DASK_GATEWAY_TAG} \
-        dask-gateway-server[local,kubernetes]==${DASK_GATEWAY_TAG} \
         bokeh">=3.1.0" \
         jupyter-server-proxy \
     && layer-cleanup.sh
 
 # Remove custom scripts
-RUN rm -rf /usr/local/bin/layer-cleanup.sh /opt/dask-gateway /opt/dask-gateway-server
+RUN rm -rf /usr/local/bin/layer-cleanup.sh /opt/dask-gateway
 
 # Create a non-root user to run as
 RUN useradd --create-home --user-group --uid 1000 dask
@@ -71,7 +64,6 @@ ENV PATH=/home/dask/.local/bin:$PATH
 WORKDIR /home/dask/
 
 ENTRYPOINT ["tini", "-g", "--"]
-CMD ["dask-gateway-server"]
 
 # Set labels based on the Open Containers Initiative (OCI):
 # https://github.com/opencontainers/image-spec/blob/main/annotations.md#pre-defined-annotation-keys

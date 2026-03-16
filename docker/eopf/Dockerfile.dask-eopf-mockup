@@ -18,13 +18,16 @@
 # ghcr.io/rs-python/dask/mockup
 #
 
+# Base image type: can be "k8s" for cluster usage or "local" for local usage.
+ARG BASE_IMAGE_TARGET=xxx
+
 ARG PYTHON_VERSION_DPR=3.11.7
-ARG DASK_GATEWAY_TAG=2024.1.0
+ARG DASK_TAG=2024.5.2
 
 # Get the contents from the rs-testmeans_dpr-processor-mock image
 FROM ghcr.io/rs-python/rs-testmeans_dpr-processor-mock:latest AS dpr_mock
 
-FROM ghcr.io/rs-python/dask/dask-gateway:${DASK_GATEWAY_TAG}-py${PYTHON_VERSION_DPR}
+FROM ghcr.io/rs-python/dask/dask-gateway:${BASE_IMAGE_TARGET}-py${PYTHON_VERSION_DPR}-${DASK_TAG}
 
 # Default user from parent image
 ARG USER=dask:dask

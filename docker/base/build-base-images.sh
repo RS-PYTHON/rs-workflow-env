@@ -18,7 +18,7 @@
 # Target Docker image names:
 # ghcr.io/rs-python/python:xxx-slim-bookworm
 # ghcr.io/rs-python/quay.io/jupyter/base-notebook:hub-xxx
-# ghcr.io/rs-python/dask/dask-gateway
+# ghcr.io/rs-python/dask/dask-gateway:xxx-pyzzz-yyy
 # ghcr.io/rs-python/prefecthq/prefect:xxx-pyzzz
 # ghcr.io/rs-python/prefecthq/prefect:xxx-pyzzz-k8s
 #
@@ -37,8 +37,14 @@ CUSTOM_REQ=$(realpath "${SCRIPT_DIR}/../scripts")
 PYTHON_VERSION=3.13.12
 PYTHON_VERSION_DPR=3.11.7
 
+# Different versions of dask and dask-gateway used (must be declared here to use update_framework_versions.sh script)
 DASK_TAG=2024.5.2
-DASK_GATEWAY_TAG=2024.1.0
+DASK_TAG_STAGING=2026.1.2
+DASK_GATEWAY_TAG=2025.4.0
+
+# Versions used: format is [PYTHON_VERSION DASK_TAG DASK_GATEWAY_TAG]
+declare -a STAGING_VERSIONS=($PYTHON_VERSION $DASK_TAG_STAGING $DASK_GATEWAY_TAG)
+declare -a PROCESSOR_VERSIONS=($PYTHON_VERSION_DPR $DASK_TAG $DASK_GATEWAY_TAG)
 
 PREFECT_TAG=3.6.20
 
@@ -78,7 +84,14 @@ done
 # Dask #
 ########
 
-for python_version in $PYTHON_VERSION $PYTHON_VERSION_DPR; do
+declare -a versions_list=("PROCESSOR_VERSIONS" "STAGING_VERSIONS")
+for versions_index in "${versions_list[@]}"; do
+    declare -n versions="${versions_index}"
+
+    # Retrieve values from list
+    python_version=${versions[0]}
+    dask_tag=${versions[1]}
+    dask_gateway_tag=${versions[2]}
 
     # Checkout the dask-gateway git repository into a local ./tmp folder
     tmp="${SCRIPT_DIR}/tmp/dask/py${python_version}"
@@ -88,7 +101,7 @@ for python_version in $PYTHON_VERSION $PYTHON_VERSION_DPR; do
       git clone https://github.com/dask/dask-gateway.git
     fi
     cd dask-gateway
-    git checkout "tags/$DASK_GATEWAY_TAG"
+    git checkout "tags/$dask_gateway_tag"
     git reset --hard
 
     # Refreeze Dockerfile.requirements.txt files based on Dockerfile.requirements.in
@@ -107,8 +120,8 @@ for python_version in $PYTHON_VERSION $PYTHON_VERSION_DPR; do
         req=$(realpath "${matrix_image}/Dockerfile.requirements.txt")
 
         # Force the dask versions (in dask-gateway)
-        sed -i "s|dask==.*|dask==${DASK_TAG}|g" "$req"
-        sed -i "s|distributed==.*|distributed==${DASK_TAG}|g" "$req"
+        sed -i "s|dask==.*|dask==${dask_tag}|g" "$req"
+        sed -i "s|distributed==.*|distributed==${dask_tag}|g" "$req"
         sed -i "s|fsspec==.*|fsspec|g" "$req"
 
         # Comment the line that installs dask-gateway-server from sources (in dask-gateway-server).
@@ -119,19 +132,28 @@ for python_version in $PYTHON_VERSION $PYTHON_VERSION_DPR; do
     # Copy Dockerfile requirements
     cp -t "${tmp}/dask-gateway" "${CUSTOM_REQ}/layer-cleanup.sh" "${CUSTOM_REQ}/restore-apt.sh"
 
-    # Build our custom Dockerfile
-    target="ghcr.io/rs-python/dask/dask-gateway:${DASK_GATEWAY_TAG}-py${python_version}"
-    docker build \
-        --build-arg "PYTHON_VERSION_BASE=${python_version}" \
-        -f "${SCRIPT_DIR}/Dockerfile.dask" \
-        -t "${target}" \
-        --progress=plain \
-        "${tmp}/dask-gateway"
+    # Target environments supported: local and k8s
+    localenv="local"
+    k8senv="k8s"
+    
+    # Build the docker image for each target (local and k8s)
+    for env in "$localenv" "$k8senv"; do
+        target="ghcr.io/rs-python/dask/dask-gateway:${env}-py${python_version}-${dask_tag}"
+        docker build \
+            --build-arg "PYTHON_VERSION_BASE=${python_version}" \
+            --build-arg "DASK_TAG=${dask_tag}" \
+            --build-arg "DASK_GATEWAY_TAG=${dask_gateway_tag}" \
+            -f "${SCRIPT_DIR}/Dockerfile.dask.${env}" \
+            -t "${target}" \
+            --progress=plain \
+            "${tmp}/dask-gateway"
 
-    # Push the docker image to the registry, if the --push option is specified.
-    if [[ " $@ " == *" --push "* ]]; then
-        docker push "$target"
-    fi
+        # Push the docker image to the registry, if the --push option is specified.
+        if [[ " $@ " == *" --push "* ]]; then
+            docker push "$target"
+        fi
+    done
+
 done
 
 ###########

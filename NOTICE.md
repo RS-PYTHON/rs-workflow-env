@@ -20,13 +20,13 @@ Below are all the FOSS (Free and open-source software) used and their respective
 
 - Dask Gateway
   - Helm chart:
-    - Version: 2024.1.0
-    - Licence: [BSD 3-Clause License](https://github.com/dask/dask-gateway/blob/2024.1.0/LICENSE)
-    - Source: <https://github.com/dask/dask-gateway/tree/2024.1.0/resources/helm>
+    - Version: 2025.4.0
+    - Licence: [BSD 3-Clause License](https://github.com/dask/dask-gateway/blob/2025.4.0/LICENSE)
+    - Source: <https://github.com/dask/dask-gateway/tree/2025.4.0/resources/helm>
     - Copyright: Dask developers. [Authors and Contributors](https://github.com/dask/dask-gateway/graphs/contributors)
   - Container image(s)
-    - ghcr.io/dask/dask-gateway-server:2024.1.0
-      - Licence: [BSD 3-Clause License](https://github.com/dask/dask-gateway/blob/2024.1.0/LICENSE)
+    - ghcr.io/dask/dask-gateway-server:2025.4.0
+      - Licence: [BSD 3-Clause License](https://github.com/dask/dask-gateway/blob/2025.4.0/LICENSE)
     - library/traefik:2.10.6
       - Licence: [MIT License](https://github.com/traefik/traefik/blob/v2.10.6/LICENSE.md)
 
