@@ -38,10 +38,7 @@ on:
       docker_tag:
         description: Tag the docker images as e.g. 'latest'
         required: false
-  workflow_run:
-    workflows: ["Build the base Docker images"]
-    types:
-      - completed
+
 env:
   DOCKER_REGISTRY: ghcr.io
 
