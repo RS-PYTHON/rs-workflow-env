@@ -16,23 +16,9 @@ name: Build the Jupyter Docker image
 
 # Run workflow only for ...
 on:
-  pull_request: # pull requests
-    types: [opened, synchronize, reopened]
-    paths:
-      - 'docker/jupyter/**'
-      - 'docker/scripts/**'
-      - '.github/actions/publish-docker/action.yml'
-      - '.github/workflows/build-jupyter.yml'
-  push:
-    branches:
-      - develop # pushes on the 'develop' branch
-    tags:
-      - '**' # new git tags (including hierarchical tags like v1.0/beta)
-    paths:
-      - 'docker/jupyter/**'
-      - 'docker/scripts/**'
-      - '.github/actions/publish-docker/action.yml'
-      - '.github/workflows/build-jupyter.yml'
+  workflow_run:
+    workflows: ["Build the base Docker images"]
+    types: [completed]
   workflow_dispatch: # manual trigger
     inputs:
       docker_tag:

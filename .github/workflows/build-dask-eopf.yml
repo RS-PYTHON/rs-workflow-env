@@ -16,23 +16,9 @@ name: Build the Dask EOPF/DPR Docker images
 
 # Run workflow only for ...
 on:
-  pull_request: # pull requests
-    types: [opened, synchronize, reopened]
-    paths:
-      - 'docker/eopf/**'
-      - 'docker/scripts/**'
-      - '.github/actions/publish-docker/action.yml'
-      - '.github/workflows/build-dask-eopf.yml'
-  push:
-    branches:
-      - develop # pushes on the 'develop' branch
-    tags:
-      - '**' # new git tags (including hierarchical tags like v1.0/beta)
-    paths:
-      - 'docker/eopf/**'
-      - 'docker/scripts/**'
-      - '.github/actions/publish-docker/action.yml'
-      - '.github/workflows/build-dask-eopf.yml'
+  workflow_run:
+    workflows: ["Build the base Docker images"]
+    types: [completed]
   workflow_dispatch: # manual trigger
     inputs:
       docker_tag:
