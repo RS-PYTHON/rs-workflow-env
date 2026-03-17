@@ -13,13 +13,6 @@
 # limitations under the License.
 
 gateway:
-  replicas: 1
-  prefix: /
-  loglevel: INFO
-  image:
-    name: ghcr.io/dask/dask-gateway-server
-    tag: "2025.4.0"
-    pullPolicy:
   auth:
     type: jupyterhub
     jupyterhub:
@@ -83,10 +76,6 @@ gateway:
         )
 
   backend:
-    image:
-      name: ghcr.io/dask/dask-gateway
-      tag: "2025.4.0"
-      pullPolicy:
     imagePullSecrets:
       - name: ghcr-k8s
     namespace: dask-gateway
@@ -105,11 +94,6 @@ gateway:
             effect: NoSchedule
 
 controller:
-  enabled: true
-  image:
-    name: ghcr.io/dask/dask-gateway-server
-    tag: "2025.4.0"
-    pullPolicy:
   affinity:
     nodeAffinity:
       requiredDuringSchedulingIgnoredDuringExecution:
@@ -123,15 +107,10 @@ controller:
       effect: NoSchedule
 
 traefik:
-  replicas: 1
-  image:
-    name: traefik
-    tag: "2.10.6"
-    pullPolicy:
-  loglevel: WARN
+  additionalArguments:
+    - --providers.kubernetescrd.allowcrossnamespace=false
   service:
     type: ClusterIP
-  dashboard: false
   affinity:
     nodeAffinity:
       requiredDuringSchedulingIgnoredDuringExecution:
