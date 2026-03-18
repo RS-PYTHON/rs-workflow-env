@@ -56,6 +56,8 @@ jobs:
     outputs:
       base: ${{ steps.filter.outputs.base }}
     steps:
+      - name: Debug event name
+        run: echo "Event name is ${{ github.event_name }}"
       - uses: actions/checkout@v6
       - uses: dorny/paths-filter@v3
         id: filter
@@ -77,6 +79,10 @@ jobs:
       contents: read
       packages: write
     steps:
+      - name: Debug event name
+        run: echo "Event name is ${{ github.event_name }}"
+      - name: Show changed value
+        run: echo "Changed is ${{ needs.changes.outputs.base }}"
       - name: Checkout repository
         uses: actions/checkout@v6
       - name: Login to GHCR
