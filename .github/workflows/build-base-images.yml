@@ -12,7 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-name: Build the base Docker images
+name: Build the base Docker images for Prefect
 
 # Run workflow only for ...
 on:
@@ -20,13 +20,9 @@ on:
     types: [opened, synchronize, reopened]
     paths:
       - 'docker/base/**'
-      - 'docker/eopf/**'
-      - 'docker/jupyter/**'
       - 'docker/scripts/**'
       - '.github/actions/publish-docker/action.yml'
       - '.github/workflows/build-base-images.yml'
-      - '.github/workflows/build-dask-eopf.yml'
-      - '.github/workflows/build-jupyter.yml'
   push:
     branches:
       - develop # pushes on the 'develop' branch
@@ -34,16 +30,12 @@ on:
       - '**' # new git tags (including hierarchical tags like v1.0/beta)
     paths:
       - 'docker/base/**'
-      - 'docker/eopf/**'
-      - 'docker/jupyter/**'
       - 'docker/scripts/**'
       - '.github/actions/publish-docker/action.yml'
       - '.github/workflows/build-base-images.yml'
-      - '.github/workflows/build-dask-eopf.yml'
-      - '.github/workflows/build-jupyter.yml'
 
 jobs:
-  build-base-images:
+  build-base-prefect-images:
     runs-on: ubuntu-latest
     permissions:
       contents: read
@@ -54,4 +46,4 @@ jobs:
       - name: Login to GHCR
         run: echo "${{ secrets.GITHUB_TOKEN }}" | docker login ghcr.io --username "${{ github.actor }}" --password-stdin
       - name: Build and push base images
-        run: docker/base/build-base-images.sh --push
+        run: docker/base/build-base-images.sh -t prefect --push

@@ -19,6 +19,7 @@ on:
   pull_request: # pull requests
     types: [opened, synchronize, reopened]
     paths:
+      - 'docker/base/**'
       - 'docker/jupyter/**'
       - 'docker/scripts/**'
       - '.github/actions/publish-docker/action.yml'
@@ -29,6 +30,7 @@ on:
     tags:
       - '**' # new git tags (including hierarchical tags like v1.0/beta)
     paths:
+      - 'docker/base/**'
       - 'docker/jupyter/**'
       - 'docker/scripts/**'
       - '.github/actions/publish-docker/action.yml'
@@ -38,6 +40,20 @@ env:
   DOCKER_REGISTRY: ghcr.io
 
 jobs:
+
+  # Build base images for Jupyter only
+  build-base-jupyter-images:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v6
+      - name: Login to GHCR
+        run: echo "${{ secrets.GITHUB_TOKEN }}" | docker login ghcr.io --username "${{ github.actor }}" --password-stdin
+      - name: Build and push base images
+        run: docker/base/build-base-images.sh -t jupyter --push
 
   # Calculate variables for this workflow
   set-env:

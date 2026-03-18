@@ -19,6 +19,7 @@ on:
   pull_request: # pull requests
     types: [opened, synchronize, reopened]
     paths:
+      - 'docker/base/**'
       - 'docker/eopf/**'
       - 'docker/scripts/**'
       - '.github/actions/publish-docker/action.yml'
@@ -29,6 +30,7 @@ on:
     tags:
       - '**' # new git tags (including hierarchical tags like v1.0/beta)
     paths:
+      - 'docker/base/**'
       - 'docker/eopf/**'
       - 'docker/scripts/**'
       - '.github/actions/publish-docker/action.yml'
@@ -67,6 +69,20 @@ jobs:
             l0: ['docker/**/*dask-l0.*', 'docker/**/l0/*']
             s1ard: ['docker/**/*dask-s1ard.*']
           list-files: 'json' # Enables listing of files matching the filter
+
+  # Build base images for Dask only
+  build-base-dask-images:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v6
+      - name: Login to GHCR
+        run: echo "${{ secrets.GITHUB_TOKEN }}" | docker login ghcr.io --username "${{ github.actor }}" --password-stdin
+      - name: Build and push base images
+        run: docker/base/build-base-images.sh -t dask --push
 
   # Calculate variables for this workflow
   set-env:
