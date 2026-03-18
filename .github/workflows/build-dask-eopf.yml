@@ -54,8 +54,9 @@ jobs:
     permissions:
       pull-requests: read
     outputs:
-      base: ${{ steps.filter.outputs.base }}
-      common: ${{ steps.filter.outputs.common }}
+      # Note: we tie "base" and "common" outputs to the manual trigger aswell, to trigger all the image builds anytime the workflow is triggered amnually.
+      base: ${{ steps.filter.outputs.base }} || ${{ env.GITHUB_EVENT_NAME == 'workflow_dispatch' }}
+      common: ${{ steps.filter.outputs.common }} || ${{ env.GITHUB_EVENT_NAME == 'workflow_dispatch' }}
       mockup: ${{ steps.filter.outputs.mockup }}
       l0: ${{ steps.filter.outputs.l0 }}
       s1ard: ${{ steps.filter.outputs.s1ard }}
