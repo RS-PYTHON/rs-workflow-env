@@ -38,6 +38,7 @@ on:
 jobs:
   build-base-prefect-images:
     runs-on: ubuntu-latest
+    name: Build base images for Prefect
     permissions:
       contents: read
       packages: write

@@ -46,9 +46,33 @@ env:
 
 jobs:
 
+  # Enable conditional execution of workflow steps and jobs, based on the files modified
+  # by pull request, on a feature branch, or by the recently pushed commits.
+  changes:
+    runs-on: ubuntu-latest
+    name: "Check modified files for base images"
+    permissions:
+      pull-requests: read
+    outputs:
+      base: ${{ steps.filter.outputs.base }}
+    steps:
+      - uses: actions/checkout@v6
+      - uses: dorny/paths-filter@v3
+        id: filter
+        with:
+          filters: |
+            base:
+              - docker/base/build-base-images.sh
+              - docker/base/Dockerfile.jupyter
+              - docker/base/Dockerfile.python
+          list-files: 'json' # Enables listing of files matching the filter
+
   # Build base images for Jupyter only
   build-base-jupyter-images:
     runs-on: ubuntu-latest
+    name: Build base images for Jupyter and Python
+    needs: [changes]
+    if: ${{ needs.changes.outputs.base == 'true' }} || ${{ env.GITHUB_EVENT_NAME == 'workflow_dispatch' }}
     permissions:
       contents: read
       packages: write

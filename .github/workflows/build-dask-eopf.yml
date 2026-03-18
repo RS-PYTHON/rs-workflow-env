@@ -54,6 +54,7 @@ jobs:
     permissions:
       pull-requests: read
     outputs:
+      base: ${{ steps.filter.outputs.base }}
       common: ${{ steps.filter.outputs.common }}
       mockup: ${{ steps.filter.outputs.mockup }}
       l0: ${{ steps.filter.outputs.l0 }}
@@ -64,6 +65,10 @@ jobs:
         id: filter
         with:
           filters: |
+            base:
+              - docker/base/build-base-images.sh
+              - docker/base/Dockerfile.dask.k8s
+              - docker/base/Dockerfile.dask.local
             common:
               - docker/eopf/build-dask-eopf.py
               - docker/eopf/Dockerfile.dask-eopf
@@ -78,6 +83,9 @@ jobs:
   # Build base images for Dask only
   build-base-dask-images:
     runs-on: ubuntu-latest
+    name: Build base images for Dask
+    needs: [changes]
+    if: ${{ needs.changes.outputs.base == 'true' }} || ${{ env.GITHUB_EVENT_NAME == 'workflow_dispatch' }}
     permissions:
       contents: read
       packages: write
@@ -144,6 +152,7 @@ jobs:
           any_changes=false
           if [[ \
             (${common_changes} == 'true') || \
+            (${{ needs.changes.outputs.base }} == 'true') || \
             (${{ needs.changes.outputs.mockup }} == 'true') || \
             (${{ needs.changes.outputs.l0 }} == 'true') || \
             (${{ needs.changes.outputs.s1ard }} == 'true') \
@@ -162,7 +171,7 @@ jobs:
     runs-on: ubuntu-latest
     name: Build images
     needs: [changes, set-env, build-base-dask-images]
-    if: ${{ needs.set-env.outputs.any_changes == 'true' }}
+    if: ${{ needs.set-env.outputs.any_changes == 'true' }} || ${{ env.GITHUB_EVENT_NAME == 'workflow_dispatch' }}
     permissions: write-all
 
     # See: https://docs.github.com/en/actions/how-tos/write-workflows/choose-what-workflows-do/run-job-variations
@@ -176,11 +185,11 @@ jobs:
             local_cluster: "LocalCluster"
         include:
           - proc: mockup
-            condition: "${{ (needs.changes.outputs.mockup == 'true') || (needs.set-env.outputs.common_changes == 'true') }}"
+            condition: "${{ (needs.changes.outputs.mockup == 'true') || (needs.set-env.outputs.common_changes == 'true') || (github.event_name == 'workflow_dispatch') }}"
           - proc: l0
-            condition: "${{ (needs.changes.outputs.l0 == 'true') || (needs.set-env.outputs.common_changes == 'true') }}"
+            condition: "${{ (needs.changes.outputs.l0 == 'true') || (needs.set-env.outputs.common_changes == 'true') || (github.event_name == 'workflow_dispatch') }}"
           - proc: s1ard
-            condition: "${{ (needs.changes.outputs.s1ard == 'true') || (needs.set-env.outputs.common_changes == 'true') }}"
+            condition: "${{ (needs.changes.outputs.s1ard == 'true') || (needs.set-env.outputs.common_changes == 'true') || (github.event_name == 'workflow_dispatch') }}"
 
     steps:
       - name: Checkout
@@ -331,7 +340,7 @@ jobs:
     runs-on: ubuntu-latest
     name: "Test rs-demo"
     needs: [changes, set-env, build-dask-eopf]
-    if: ${{ needs.set-env.outputs.any_changes == 'true' }}
+    if: ${{ needs.set-env.outputs.any_changes == 'true' }} || ${{ env.GITHUB_EVENT_NAME == 'workflow_dispatch' }}
     steps:
       - name: Log into Docker registry
         uses: docker/login-action@v3
