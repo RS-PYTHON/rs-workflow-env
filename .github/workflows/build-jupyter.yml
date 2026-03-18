@@ -54,7 +54,7 @@ jobs:
     permissions:
       pull-requests: read
     outputs:
-      base: ${{ steps.filter.outputs.base }}
+      base: ${{ steps.filter.outputs.base || env.GITHUB_EVENT_NAME == 'workflow_dispatch' }}
     steps:
       - uses: actions/checkout@v6
       - uses: dorny/paths-filter@v3
@@ -72,7 +72,7 @@ jobs:
     runs-on: ubuntu-latest
     name: Build base images for Jupyter and Python
     needs: [changes]
-    if: ${{ needs.changes.outputs.base == 'true' || env.GITHUB_EVENT_NAME == 'workflow_dispatch' }}
+    if: ${{ needs.changes.outputs.base == 'true' }}
     permissions:
       contents: read
       packages: write
