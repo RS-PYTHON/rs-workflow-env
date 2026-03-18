@@ -120,7 +120,7 @@ jobs:
     if: github.actor != 'dependabot[bot]'
     runs-on: ubuntu-latest
     name: "Docker image for ${{ matrix.image }}"
-    needs: [set-env]
+    needs: [set-env, build-base-jupyter-images]
     permissions: write-all
     outputs:
       docker_image: ${{ steps.publish-docker.outputs.docker_image}}

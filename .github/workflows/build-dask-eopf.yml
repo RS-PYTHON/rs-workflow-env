@@ -156,7 +156,7 @@ jobs:
   build-dask-eopf:
     runs-on: ubuntu-latest
     name: Build images
-    needs: [changes, set-env]
+    needs: [changes, set-env, build-base-dask-images]
     if: ${{ needs.set-env.outputs.any_changes == 'true' }}
     permissions: write-all
 
