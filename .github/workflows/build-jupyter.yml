@@ -72,7 +72,7 @@ jobs:
     runs-on: ubuntu-latest
     name: Build base images for Jupyter and Python
     needs: [changes]
-    if: ${{ needs.changes.outputs.base == 'true' }}
+    if: ${{ needs.changes.outputs.base == 'true' }} || ${{ env.GITHUB_EVENT_NAME == 'workflow_dispatch' }}
     permissions:
       contents: read
       packages: write
