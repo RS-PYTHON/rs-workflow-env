@@ -86,7 +86,7 @@ jobs:
     runs-on: ubuntu-latest
     name: Build base images for Dask
     needs: [changes]
-    if: ${{ needs.changes.outputs.base == 'true' || (github.event_name == 'workflow_dispatch') }}
+    if: ${{ (needs.changes.outputs.base == 'true') || (github.event_name == 'workflow_dispatch') }}
     permissions:
       contents: read
       packages: write
@@ -172,7 +172,7 @@ jobs:
     runs-on: ubuntu-latest
     name: Build images
     needs: [changes, set-env, build-base-dask-images]
-    if: ${{ needs.set-env.outputs.any_changes == 'true' || (github.event_name == 'workflow_dispatch') }}
+    if: ${{ (needs.set-env.outputs.any_changes == 'true') || (github.event_name == 'workflow_dispatch') }}
     permissions: write-all
 
     # See: https://docs.github.com/en/actions/how-tos/write-workflows/choose-what-workflows-do/run-job-variations
@@ -341,7 +341,7 @@ jobs:
     runs-on: ubuntu-latest
     name: "Test rs-demo"
     needs: [changes, set-env, build-dask-eopf]
-    if: ${{ needs.set-env.outputs.any_changes == 'true' || (github.event_name == 'workflow_dispatch') }}
+    if: ${{ (needs.set-env.outputs.any_changes == 'true') || (github.event_name == 'workflow_dispatch') }}
     steps:
       - name: Log into Docker registry
         uses: docker/login-action@v3
