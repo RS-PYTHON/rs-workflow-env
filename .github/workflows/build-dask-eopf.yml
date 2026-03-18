@@ -35,6 +35,11 @@ on:
       - 'docker/scripts/**'
       - '.github/actions/publish-docker/action.yml'
       - '.github/workflows/build-dask-eopf.yml'
+  workflow_dispatch: # manual trigger
+    inputs:
+      docker_tag:
+        description: Tag the docker images as e.g. 'latest' or 'feat-rspy123'
+        required: true
 
 env:
   DOCKER_REGISTRY: ghcr.io

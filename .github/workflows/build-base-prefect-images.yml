@@ -33,6 +33,7 @@ on:
       - 'docker/scripts/**'
       - '.github/actions/publish-docker/action.yml'
       - '.github/workflows/build-base-images.yml'
+  workflow_dispatch: # manual trigger
 
 jobs:
   build-base-prefect-images:

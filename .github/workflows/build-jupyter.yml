@@ -35,6 +35,11 @@ on:
       - 'docker/scripts/**'
       - '.github/actions/publish-docker/action.yml'
       - '.github/workflows/build-jupyter.yml'
+  workflow_dispatch: # manual trigger
+    inputs:
+      docker_tag:
+        description: Tag the docker images as e.g. 'latest'
+        required: false
 
 env:
   DOCKER_REGISTRY: ghcr.io
