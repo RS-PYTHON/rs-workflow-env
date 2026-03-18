@@ -247,5 +247,3 @@ if [[ "$TARGET" == "all" || "$TARGET" == "prefect" ]]; then
         fi
     done
 fi
-
-# COMMENT TO REMOVE
