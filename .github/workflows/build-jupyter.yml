@@ -50,7 +50,7 @@ jobs:
   # by pull request, on a feature branch, or by the recently pushed commits.
   changes:
     runs-on: ubuntu-latest
-    name: "Check modified files for base images"
+    name: Check modified files for base images
     permissions:
       pull-requests: read
     outputs:
@@ -67,7 +67,7 @@ jobs:
               - docker/base/Dockerfile.python
           list-files: 'json' # Enables listing of files matching the filter
 
-  # Build base images for Jupyter only
+  # Build base image for Jupyter only
   build-base-jupyter-image:
     runs-on: ubuntu-latest
     name: Build base image for Jupyter
@@ -88,14 +88,14 @@ jobs:
   set-env:
     if: github.actor != 'dependabot[bot]' # ignore pull requests by github bot
     runs-on: ubuntu-latest
-    name: "Set environment"
+    name: Set environment
     outputs:
       branch_name: ${{ steps.set-env.outputs.branch_name }}
       docker_tag1: ${{ steps.set-env.outputs.docker_tag1 }}
       docker_tag2: ${{ steps.set-env.outputs.docker_tag2 }}
     steps:
       - id: set-env
-        name: "Set environment"
+        name: Set environment
         run: |
           set -x
 
@@ -148,7 +148,7 @@ jobs:
             image: jupyter
     if: github.actor != 'dependabot[bot]'
     runs-on: ubuntu-latest
-    name: "Docker image for ${{ matrix.image }}"
+    name: Build image for Jupyter
     needs: [set-env, build-base-jupyter-image]
     permissions: write-all
     outputs:

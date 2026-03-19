@@ -50,7 +50,7 @@ jobs:
   # by pull request, on a feature branch, or by the recently pushed commits.
   changes:
     runs-on: ubuntu-latest
-    name: "Check modified files"
+    name: Check modified files
     permissions:
       pull-requests: read
     outputs:
@@ -110,7 +110,7 @@ jobs:
       any_changes: ${{ steps.set-env.outputs.any_changes }}
     steps:
       - id: set-env
-        name: "Set environment"
+        name: Set environment
         run: |
           set -x
 
@@ -170,7 +170,7 @@ jobs:
 
   build-dask-eopf:
     runs-on: ubuntu-latest
-    name: Build images
+    name: Build images for processor
     needs: [changes, set-env, build-base-dask-images]
     if: ${{ (needs.set-env.outputs.any_changes == 'true') || (github.event_name == 'workflow_dispatch') }}
     permissions: write-all
@@ -305,7 +305,7 @@ jobs:
   # Test rs-demo with the new Docker images
   test-demo:
     runs-on: ubuntu-latest
-    name: "Test rs-demo"
+    name: Test rs-demo
     needs: [changes, set-env, build-dask-eopf]
     if: ${{ (needs.set-env.outputs.any_changes == 'true') || (github.event_name == 'workflow_dispatch') }}
     steps:
@@ -317,7 +317,7 @@ jobs:
           password: ${{ secrets.GITHUB_TOKEN }}
 
       - id: test-demos
-        name: "Test rs-demo"
+        name: Test rs-demo
         env:
           S3CFG_OVH_BUCKET: ${{ secrets.S3CFG_OVH_BUCKET }}
           BRANCH_NAME: ${{ needs.set-env.outputs.branch_name }}
