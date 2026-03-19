@@ -154,7 +154,7 @@ jobs:
         include:
           - path: jupyter
             image: jupyter
-    if: github.actor != 'dependabot[bot]'
+    if: ${{ always() && !failure() && !cancelled() && (github.actor != 'dependabot[bot]') }} # Run the job even if previous job was skipped
     runs-on: ubuntu-latest
     name: Build image for Jupyter
     needs: [set-env, build-base-jupyter-image]

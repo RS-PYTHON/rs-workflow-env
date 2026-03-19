@@ -80,7 +80,7 @@ jobs:
 
   build-requested-base-image:
     runs-on: ubuntu-latest
-    name: Build ${{ github.event.inputs.target_image }} base image for requested target
+    name: Build requested base image
     if: ${{ github.event_name == 'workflow_dispatch' }}
     permissions:
       contents: read
