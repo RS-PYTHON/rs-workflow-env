@@ -1,4 +1,4 @@
-# Copyright 2024 CS Group
+# Copyright 2023-2026 Airbus, CS Group
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -40,6 +40,34 @@ on:
       docker_tag:
         description: Tag the docker images as e.g. 'latest' or 'feat-rspy123'
         required: true
+      processor:
+        description: Which processor to build an image for
+        required: false
+        default: 'all'
+        type: choice
+        options:
+          - all
+          - l0
+          - s1ard
+          - mockup
+      build_base_image:
+        description: Build the base image before building the Dask images?
+        required: false
+        default: 'true'
+        type: choice
+        options:
+          - 'true'
+          - 'false'
+      target_system:
+        description: Whether to build images for cluster deployment, local deployment, LocalCluster mode or all of them
+        required: false
+        default: 'cluster'
+        type: choice
+        options:
+          - all
+          - cluster
+          - local
+          - localcluster
 
 env:
   DOCKER_REGISTRY: ghcr.io
@@ -86,7 +114,7 @@ jobs:
     runs-on: ubuntu-latest
     name: Build base images for Dask
     needs: [changes]
-    if: ${{ (needs.changes.outputs.base == 'true') || (github.event_name == 'workflow_dispatch') }}
+    if: ${{ (needs.changes.outputs.base == 'true') || ((github.event_name == 'workflow_dispatch') && (github.event.inputs.build_base_image == 'true')) }}
     permissions:
       contents: read
       packages: write
@@ -172,7 +200,8 @@ jobs:
     runs-on: ubuntu-latest
     name: Build images for processor
     needs: [changes, set-env, build-base-dask-images]
-    if: ${{ (needs.set-env.outputs.any_changes == 'true') || (github.event_name == 'workflow_dispatch') }}
+    # Job run when there are changes OR a manual trigger, EVEN if any previous job is skipped
+    if: ${{ always() && !failure() && !cancelled() && ((needs.set-env.outputs.any_changes == 'true') || (github.event_name == 'workflow_dispatch')) }}
     permissions: write-all
 
     # See: https://docs.github.com/en/actions/how-tos/write-workflows/choose-what-workflows-do/run-job-variations
@@ -180,18 +209,23 @@ jobs:
       fail-fast: false
       matrix:
         proc: [mockup, l0, s1ard]
-        target: ["", "Local", "LocalCluster"] # No option = main image for cluster deployment, "Local" is for local deployment and "LocalCluster" is for local debugging
+        target: ["Cluster", "Local", "LocalCluster"] # No option = main image for cluster deployment, "Local" is for local deployment and "LocalCluster" is for local debugging
         exclude:
           - proc: mockup
             target: "LocalCluster"
         include:
           - proc: mockup
-            condition: "${{ (needs.changes.outputs.mockup == 'true') || (needs.set-env.outputs.common_changes == 'true') || (needs.set-env.outputs.base == 'true') || (github.event_name == 'workflow_dispatch') }}"
+            condition: "${{ (needs.changes.outputs.mockup == 'true') || (needs.set-env.outputs.common_changes == 'true') || (needs.set-env.outputs.base == 'true') || ((github.event_name == 'workflow_dispatch') && ((github.event.inputs.processor == 'mockup') || (github.event.inputs.processor == 'all'))) }}"
           - proc: l0
-            condition: "${{ (needs.changes.outputs.l0 == 'true') || (needs.set-env.outputs.common_changes == 'true') || (needs.set-env.outputs.base == 'true') || (github.event_name == 'workflow_dispatch') }}"
+            condition: "${{ (needs.changes.outputs.l0 == 'true') || (needs.set-env.outputs.common_changes == 'true') || (needs.set-env.outputs.base == 'true') || ((github.event_name == 'workflow_dispatch') && ((github.event.inputs.processor == 'l0') || (github.event.inputs.processor == 'all'))) }}"
           - proc: s1ard
-            condition: "${{ (needs.changes.outputs.s1ard == 'true') || (needs.set-env.outputs.common_changes == 'true') || (needs.set-env.outputs.base == 'true') || (github.event_name == 'workflow_dispatch') }}"
-
+            condition: "${{ (needs.changes.outputs.s1ard == 'true') || (needs.set-env.outputs.common_changes == 'true') || (needs.set-env.outputs.base == 'true') || ((github.event_name == 'workflow_dispatch') && ((github.event.inputs.processor == 's1ard') || (github.event.inputs.processor == 'all'))) }}"
+          - target: "Cluster"
+            condition: "${{ (github.event_name != 'workflow_dispatch') || (github.event.inputs.target_system == 'cluster') || (github.event.inputs.target_system == 'all') }}"
+          - target: "Local"
+            condition: "${{ (github.event_name != 'workflow_dispatch') || (github.event.inputs.target_system == 'local') || (github.event.inputs.target_system == 'all') }}"
+          - target: "LocalCluster"
+            condition: "${{ (github.event_name != 'workflow_dispatch') || (github.event.inputs.target_system == 'localcluster') || (github.event.inputs.target_system == 'all') }}"
     steps:
       - name: Checkout
         if: ${{ matrix.condition }}
