@@ -12,7 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-name: Build the base Docker images (Python and Prefect)
+name: Build the base Docker images
 
 # Run workflow only for ...
 on:
@@ -34,11 +34,24 @@ on:
       - '.github/actions/publish-docker/action.yml'
       - '.github/workflows/build-base-images.yml'
   workflow_dispatch: # manual trigger
+    inputs:
+      target_image:
+        description: Target base image to build
+        required: false
+        default: 'all'
+        type: choice
+        options:
+          - all
+          - python
+          - jupyter
+          - dask
+          - prefect
 
 jobs:
   build-base-python-image:
     runs-on: ubuntu-latest
     name: Build base image for Python
+    if: ${{ github.event_name != 'workflow_dispatch' }}
     permissions:
       contents: read
       packages: write
@@ -53,6 +66,7 @@ jobs:
   build-base-prefect-image:
     runs-on: ubuntu-latest
     name: Build base image for Prefect
+    if: ${{ github.event_name != 'workflow_dispatch' }}
     permissions:
       contents: read
       packages: write
@@ -63,3 +77,18 @@ jobs:
         run: echo "${{ secrets.GITHUB_TOKEN }}" | docker login ghcr.io --username "${{ github.actor }}" --password-stdin
       - name: Build and push base image
         run: docker/base/build-base-images.sh -t prefect --push
+
+  build-requested-image:
+    runs-on: ubuntu-latest
+    name: Build base image for requested target
+    if: ${{ github.event_name == 'workflow_dispatch' }}
+    permissions:
+      contents: read
+      packages: write
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v6
+      - name: Login to GHCR
+        run: echo "${{ secrets.GITHUB_TOKEN }}" | docker login ghcr.io --username "${{ github.actor }}" --password-stdin
+      - name: Build and push base image
+        run: docker/base/build-base-images.sh -t ${{ github.event.inputs.target_image }} --push
