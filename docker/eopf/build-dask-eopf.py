@@ -97,6 +97,12 @@ parser.add_argument(
 )
 parser.add_argument(
     "-l",
+    "--local",
+    action="store_true",
+    help="Build the Dask local image for local deployment",
+)
+parser.add_argument(
+    "-c",
     "--local_cluster",
     action="store_true",
     help="Build the Dask LocalCluster image for local debugging",
@@ -182,34 +188,35 @@ for proc, local_cluster in procs_to_build:
 
     # Docker image name
     if local_cluster:
-        registries = [image.local_cluster_name]
+        registry = image.local_cluster_name
+    elif args.local:
+        registry = image.local_name
     else:
-        registries = [image.k8s_name, image.local_name]
+        registry = image.k8s_name
 
-    for registry in registries:
-        command = [
-            "docker",
-            "build",
-            "--build-arg",
-            f"IMAGE2BUILD={image.image2build}",
-            "--secret",
-            f"id=GITLAB_EOPF_TOKEN",
-            "-f",
-            str(get_dockerfile()),
-            "-t",
-            f"{registry}:{args.docker_tag}",
-            "--progress=plain",
-            "--build-context",
-            f"docker-scripts={str(DOCKER_SCRIPTS)}",
-            str(THIS_DIR),
-        ]
+    command = [
+        "docker",
+        "build",
+        "--build-arg",
+        f"IMAGE2BUILD={image.image2build}",
+        "--secret",
+        f"id=GITLAB_EOPF_TOKEN",
+        "-f",
+        str(get_dockerfile()),
+        "-t",
+        f"{registry}:{args.docker_tag}",
+        "--progress=plain",
+        "--build-context",
+        f"docker-scripts={str(DOCKER_SCRIPTS)}",
+        str(THIS_DIR),
+    ]
 
-        # Extract base image used from the target name (k8s or local) and add it as an argument
-        if not local_cluster:
-            command += ["--build-arg", f"BASE_IMAGE_TARGET={registry.rsplit('/', 1)[1]}"]
-        
-        # Build image
-        run_command(command + labels)
+    # Extract base image used from the target name (k8s or local) and add it as an argument
+    if not local_cluster:
+        command += ["--build-arg", f"BASE_IMAGE_TARGET={registry.rsplit('/', 1)[1]}"]
+
+    # Build image
+    run_command(command + labels)
 
     # Push to registry
     if args.push:

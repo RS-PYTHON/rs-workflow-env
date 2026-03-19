@@ -19,6 +19,7 @@ on:
   pull_request: # pull requests
     types: [opened, synchronize, reopened]
     paths:
+      - 'docker/base/**'
       - 'docker/jupyter/**'
       - 'docker/scripts/**'
       - '.github/actions/publish-docker/action.yml'
@@ -29,6 +30,7 @@ on:
     tags:
       - '**' # new git tags (including hierarchical tags like v1.0/beta)
     paths:
+      - 'docker/base/**'
       - 'docker/jupyter/**'
       - 'docker/scripts/**'
       - '.github/actions/publish-docker/action.yml'
@@ -38,23 +40,62 @@ on:
       docker_tag:
         description: Tag the docker images as e.g. 'latest'
         required: false
+
 env:
   DOCKER_REGISTRY: ghcr.io
 
 jobs:
 
+  # Enable conditional execution of workflow steps and jobs, based on the files modified
+  # by pull request, on a feature branch, or by the recently pushed commits.
+  changes:
+    runs-on: ubuntu-latest
+    name: Check modified files for base images
+    permissions:
+      pull-requests: read
+    outputs:
+      base: ${{ steps.filter.outputs.base }}
+    steps:
+      - uses: actions/checkout@v6
+      - uses: dorny/paths-filter@v3
+        id: filter
+        with:
+          filters: |
+            base:
+              - docker/base/build-base-images.sh
+              - docker/base/Dockerfile.jupyter
+              - docker/base/Dockerfile.python
+          list-files: 'json' # Enables listing of files matching the filter
+
+  # Build base image for Jupyter only
+  build-base-jupyter-image:
+    runs-on: ubuntu-latest
+    name: Build base image for Jupyter
+    needs: [changes]
+    if: ${{ (needs.changes.outputs.base == 'true') || (github.event_name == 'workflow_dispatch') }}
+    permissions:
+      contents: read
+      packages: write
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v6
+      - name: Login to GHCR
+        run: echo "${{ secrets.GITHUB_TOKEN }}" | docker login ghcr.io --username "${{ github.actor }}" --password-stdin
+      - name: Build and push base image
+        run: docker/base/build-base-images.sh -t jupyter --push
+
   # Calculate variables for this workflow
   set-env:
     if: github.actor != 'dependabot[bot]' # ignore pull requests by github bot
     runs-on: ubuntu-latest
-    name: "Set environment"
+    name: Set environment
     outputs:
       branch_name: ${{ steps.set-env.outputs.branch_name }}
       docker_tag1: ${{ steps.set-env.outputs.docker_tag1 }}
       docker_tag2: ${{ steps.set-env.outputs.docker_tag2 }}
     steps:
       - id: set-env
-        name: "Set environment"
+        name: Set environment
         run: |
           set -x
 
@@ -107,8 +148,8 @@ jobs:
             image: jupyter
     if: github.actor != 'dependabot[bot]'
     runs-on: ubuntu-latest
-    name: "Docker image for ${{ matrix.image }}"
-    needs: [set-env]
+    name: Build image for Jupyter
+    needs: [set-env, build-base-jupyter-image]
     permissions: write-all
     outputs:
       docker_image: ${{ steps.publish-docker.outputs.docker_image}}

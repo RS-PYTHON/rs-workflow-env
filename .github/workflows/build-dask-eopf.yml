@@ -19,6 +19,7 @@ on:
   pull_request: # pull requests
     types: [opened, synchronize, reopened]
     paths:
+      - 'docker/base/**'
       - 'docker/eopf/**'
       - 'docker/scripts/**'
       - '.github/actions/publish-docker/action.yml'
@@ -29,6 +30,7 @@ on:
     tags:
       - '**' # new git tags (including hierarchical tags like v1.0/beta)
     paths:
+      - 'docker/base/**'
       - 'docker/eopf/**'
       - 'docker/scripts/**'
       - '.github/actions/publish-docker/action.yml'
@@ -48,10 +50,12 @@ jobs:
   # by pull request, on a feature branch, or by the recently pushed commits.
   changes:
     runs-on: ubuntu-latest
-    name: "Check modified files"
+    name: Check modified files
     permissions:
       pull-requests: read
     outputs:
+      # Note: we tie "base" and "common" outputs to the manual trigger aswell, to trigger all the image builds anytime the workflow is triggered amnually.
+      base: ${{ steps.filter.outputs.base }}
       common: ${{ steps.filter.outputs.common }}
       mockup: ${{ steps.filter.outputs.mockup }}
       l0: ${{ steps.filter.outputs.l0 }}
@@ -62,6 +66,10 @@ jobs:
         id: filter
         with:
           filters: |
+            base:
+              - docker/base/build-base-images.sh
+              - docker/base/Dockerfile.dask.k8s
+              - docker/base/Dockerfile.dask.local
             common:
               - docker/eopf/build-dask-eopf.py
               - docker/eopf/Dockerfile.dask-eopf
@@ -72,6 +80,23 @@ jobs:
             l0: ['docker/**/*dask-l0.*', 'docker/**/l0/*']
             s1ard: ['docker/**/*dask-s1ard.*']
           list-files: 'json' # Enables listing of files matching the filter
+
+  # Build base images for Dask only
+  build-base-dask-images:
+    runs-on: ubuntu-latest
+    name: Build base images for Dask
+    needs: [changes]
+    if: ${{ (needs.changes.outputs.base == 'true') || (github.event_name == 'workflow_dispatch') }}
+    permissions:
+      contents: read
+      packages: write
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v6
+      - name: Login to GHCR
+        run: echo "${{ secrets.GITHUB_TOKEN }}" | docker login ghcr.io --username "${{ github.actor }}" --password-stdin
+      - name: Build and push base images
+        run: docker/base/build-base-images.sh -t dask --push
 
   # Calculate variables for this workflow
   set-env:
@@ -85,7 +110,7 @@ jobs:
       any_changes: ${{ steps.set-env.outputs.any_changes }}
     steps:
       - id: set-env
-        name: "Set environment"
+        name: Set environment
         run: |
           set -x
 
@@ -128,6 +153,7 @@ jobs:
           any_changes=false
           if [[ \
             (${common_changes} == 'true') || \
+            (${{ needs.changes.outputs.base }} == 'true') || \
             (${{ needs.changes.outputs.mockup }} == 'true') || \
             (${{ needs.changes.outputs.l0 }} == 'true') || \
             (${{ needs.changes.outputs.s1ard }} == 'true') \
@@ -144,9 +170,9 @@ jobs:
 
   build-dask-eopf:
     runs-on: ubuntu-latest
-    name: Build images
-    needs: [changes, set-env]
-    if: ${{ needs.set-env.outputs.any_changes == 'true' }}
+    name: Build images for processor
+    needs: [changes, set-env, build-base-dask-images]
+    if: ${{ (needs.set-env.outputs.any_changes == 'true') || (github.event_name == 'workflow_dispatch') }}
     permissions: write-all
 
     # See: https://docs.github.com/en/actions/how-tos/write-workflows/choose-what-workflows-do/run-job-variations
@@ -154,17 +180,17 @@ jobs:
       fail-fast: false
       matrix:
         proc: [mockup, l0, s1ard]
-        local_cluster: ["", "LocalCluster"] # build the Dask LocalCluster image for local debugging ?
+        target: ["", "Local", "LocalCluster"] # No option = main image for cluster deployment, "Local" is for local deployment and "LocalCluster" is for local debugging
         exclude:
           - proc: mockup
-            local_cluster: "LocalCluster"
+            target: "LocalCluster"
         include:
           - proc: mockup
-            condition: "${{ (needs.changes.outputs.mockup == 'true') || (needs.set-env.outputs.common_changes == 'true') }}"
+            condition: "${{ (needs.changes.outputs.mockup == 'true') || (needs.set-env.outputs.common_changes == 'true') || (needs.set-env.outputs.base == 'true') || (github.event_name == 'workflow_dispatch') }}"
           - proc: l0
-            condition: "${{ (needs.changes.outputs.l0 == 'true') || (needs.set-env.outputs.common_changes == 'true') }}"
+            condition: "${{ (needs.changes.outputs.l0 == 'true') || (needs.set-env.outputs.common_changes == 'true') || (needs.set-env.outputs.base == 'true') || (github.event_name == 'workflow_dispatch') }}"
           - proc: s1ard
-            condition: "${{ (needs.changes.outputs.s1ard == 'true') || (needs.set-env.outputs.common_changes == 'true') }}"
+            condition: "${{ (needs.changes.outputs.s1ard == 'true') || (needs.set-env.outputs.common_changes == 'true') || (needs.set-env.outputs.base == 'true') || (github.event_name == 'workflow_dispatch') }}"
 
     steps:
       - name: Checkout
@@ -201,8 +227,12 @@ jobs:
         run: |
           set -x
 
-          if [[ "${{ matrix.local_cluster }}" == "LocalCluster" ]]; then
+          if [[ "${{ matrix.target }}" == "LocalCluster" ]]; then
             options="--local_cluster"
+          fi
+
+          if [[ "${{ matrix.target }}" == "Local" ]]; then
+            options="--local"
           fi
 
           ./docker/eopf/build-dask-eopf.py \
@@ -220,18 +250,6 @@ jobs:
           # Save values
           echo "repository=$repository" >> $GITHUB_OUTPUT
           echo "repository_and_tag=$repository_and_tag" >> $GITHUB_OUTPUT
-
-          # If we're not in local cluster, two images are built (one for local mode and one for k8s).
-          # In this case, get the second last built image
-          if [[ "${{ matrix.local_cluster }}" != "LocalCluster" ]]; then
-            second_last_built=$(docker images | awk 'NR==3')
-            second_repository=$(echo "$second_last_built" | awk '{print $1}')
-            second_repository_and_tag=$(echo "$second_last_built" | awk '{print $1 ":" $2}')
-
-            # Save values
-            echo "second_repository=$second_repository" >> $GITHUB_OUTPUT
-            echo "second_repository_and_tag=$second_repository_and_tag" >> $GITHUB_OUTPUT
-          fi
         shell: bash
 
       - name: Run Trivy vulnerability scanner
@@ -254,27 +272,6 @@ jobs:
         with:
           sarif_file: trivy-results-docker.sarif
           category: ${{ steps.build.outputs.repository }}
-
-      - name: Run Trivy vulnerability scanner
-        if: ${{ matrix.condition && matrix.local_cluster != 'LocalCluster' }}
-        uses: aquasecurity/trivy-action@master
-        env:
-          TRIVY_DB_REPOSITORY: public.ecr.aws/aquasecurity/trivy-db:2
-        with:
-          image-ref: ${{ steps.build.outputs.second_repository_and_tag }}
-          format: sarif
-          output: trivy-results-docker.sarif
-          exit-code: 0
-          limit-severities-for-sarif: true
-          severity: HIGH,CRITICAL
-          #timeout: '30m'
-
-      - name: Upload Trivy scan results to GitHub Security tab
-        if: ${{ matrix.condition && matrix.local_cluster != 'LocalCluster' }}
-        uses: github/codeql-action/upload-sarif@v4
-        with:
-          sarif_file: trivy-results-docker.sarif
-          category: ${{ steps.build.outputs.second_repository }}
 
       - name: Display link to Trivy results
         if: ${{ matrix.condition }}
@@ -301,11 +298,6 @@ jobs:
         run: docker push ${{ steps.build.outputs.repository_and_tag }}
         shell: bash
 
-      - name: Push Docker image
-        if: ${{ matrix.condition && matrix.local_cluster != 'LocalCluster' }}
-        run: docker push ${{ steps.build.outputs.second_repository_and_tag }}
-        shell: bash
-
   ###########
   # TESTING #
   ###########
@@ -313,9 +305,9 @@ jobs:
   # Test rs-demo with the new Docker images
   test-demo:
     runs-on: ubuntu-latest
-    name: "Test rs-demo"
+    name: Test rs-demo
     needs: [changes, set-env, build-dask-eopf]
-    if: ${{ needs.set-env.outputs.any_changes == 'true' }}
+    if: ${{ (needs.set-env.outputs.any_changes == 'true') || (github.event_name == 'workflow_dispatch') }}
     steps:
       - name: Log into Docker registry
         uses: docker/login-action@v3
@@ -325,7 +317,7 @@ jobs:
           password: ${{ secrets.GITHUB_TOKEN }}
 
       - id: test-demos
-        name: "Test rs-demo"
+        name: Test rs-demo
         env:
           S3CFG_OVH_BUCKET: ${{ secrets.S3CFG_OVH_BUCKET }}
           BRANCH_NAME: ${{ needs.set-env.outputs.branch_name }}

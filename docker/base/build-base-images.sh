@@ -50,153 +50,220 @@ PREFECT_TAG=3.6.20
 
 JUPYTER_HUB_VERSION=5.4.3
 
-######################
-# Python and Jupyter #
-######################
+####################
+# Retrieve options #
+####################
 
-# For each dockerfile and associated docker image name, separated by a ;
-for params in \
-    "Dockerfile.python;python:${PYTHON_VERSION}-slim-bookworm" \
-    "Dockerfile.jupyter;quay.io/jupyter/base-notebook:hub-${JUPYTER_HUB_VERSION};-py${PYTHON_VERSION}" # see: https://quay.io/repository/jupyter/base-notebook?tab=tags
+PUSH=false
+TARGET="all"
+
+help() { 
+    echo "Usage: $0 [-p|--push] [-t|--target <target>]"
+    echo "Target can be one of: all, python, jupyter, dask, prefect"
+}
+
+while [[ $# -gt 0 ]] && [[ "$1" == "-"* ]] ;
 do
-    dockerfile=$(echo $params | cut -d ";" -f 1)
-    base=$(echo $params | cut -d ";" -f 2)
-    suffix=$(echo $params | cut -d ";" -f 3)
+    arg="$1";
+    shift;
+    case $arg in
+        "--" ) break 2;;
+        -p|--push)
+        PUSH=true
+        ;;
+        -t=*|--target=*)
+        TARGET="${arg#*=}"
+        ;;
+        -t|--target)
+        TARGET="$1"
+        shift # Remove the target value from processing
+        ;;
+        -h|--help)
+        help
+        exit 0
+        ;;
+        *)
+        echo "Invalid option: $arg" >&2
+        help
+        exit 1
+        ;;
+    esac
+done
 
-    # Add our hosting github organization to the docker image
-    target="ghcr.io/rs-python/${base}${suffix}"
+##########
+# Python #
+##########
+
+if [[ "$TARGET" == "all" || "$TARGET" == "python" ]]; then
+
+    python_dockerfile="Dockerfile.python"
+    python_base="python:${PYTHON_VERSION}-slim-bookworm"
+
+    python_target="ghcr.io/rs-python/${python_base}"
 
     # Build the docker image
     docker build \
-        --build-arg "BASE=${base}" \
+        --build-arg "BASE=${python_base}" \
         --progress plain \
-        -f "${SCRIPT_DIR}/${dockerfile}" \
-        -t "$target" \
+        -f "${SCRIPT_DIR}/${python_dockerfile}" \
+        -t "$python_target" \
         "$CUSTOM_REQ"
 
     # Push the docker image to the registry, if the --push option is specified.
-    if [[ " $@ " == *" --push "* ]]; then
-        docker push "$target"
+    if [[ "$PUSH" == "true" ]]; then
+        docker push "$python_target"
     fi
-done
+fi
+
+###########
+# Jupyter #
+###########
+
+if [[ "$TARGET" == "all" || "$TARGET" == "jupyter" ]]; then
+
+    jupyter_dockerfile="Dockerfile.jupyter"
+    jupyter_base="quay.io/jupyter/base-notebook:hub-${JUPYTER_HUB_VERSION}"
+    jupyter_suffix="-py${PYTHON_VERSION}"
+
+    # Add our hosting github organization to the docker image
+    jupyter_target="ghcr.io/rs-python/${jupyter_base}${jupyter_suffix}"
+
+    # Build the docker image
+    docker build \
+        --build-arg "BASE=${jupyter_base}" \
+        --progress plain \
+        -f "${SCRIPT_DIR}/${jupyter_dockerfile}" \
+        -t "$jupyter_target" \
+        "$CUSTOM_REQ"
+
+    # Push the docker image to the registry, if the --push option is specified.
+    if [[ "$PUSH" == "true" ]]; then
+        docker push "$jupyter_target"
+    fi
+fi
 
 ########
 # Dask #
 ########
 
-declare -a versions_list=("PROCESSOR_VERSIONS" "STAGING_VERSIONS")
-for versions_index in "${versions_list[@]}"; do
-    declare -n versions="${versions_index}"
+if [[ "$TARGET" == "all" || "$TARGET" == "dask" ]]; then
+    declare -a versions_list=("PROCESSOR_VERSIONS" "STAGING_VERSIONS")
+    for versions_index in "${versions_list[@]}"; do
+        declare -n versions="${versions_index}"
 
-    # Retrieve values from list
-    python_version=${versions[0]}
-    dask_tag=${versions[1]}
-    dask_gateway_tag=${versions[2]}
+        # Retrieve values from list
+        python_version=${versions[0]}
+        dask_tag=${versions[1]}
+        dask_gateway_tag=${versions[2]}
 
-    # Checkout the dask-gateway git repository into a local ./tmp folder
-    tmp="${SCRIPT_DIR}/tmp/dask/py${python_version}"
-    mkdir -p "$tmp"
-    cd "$tmp"
-    if [[ ! -d dask-gateway ]]; then
-      git clone https://github.com/dask/dask-gateway.git
-    fi
-    cd dask-gateway
-    git checkout "tags/$dask_gateway_tag"
-    git reset --hard
-
-    # Refreeze Dockerfile.requirements.txt files based on Dockerfile.requirements.in
-    # as in https://github.com/dask/dask-gateway/blob/main/.github/workflows/refreeze-dockerfile-requirements-txt.yaml#L34
-    for matrix_image in "dask-gateway" "dask-gateway-server"; do
-        (\
-            cd "${matrix_image}" && \
-            docker run --rm \
-                --env=DASK_GATEWAY_SERVER__NO_PROXY=1 \
-                --volume="$PWD":/opt/${matrix_image} \
-                --workdir=/opt/${matrix_image} \
-                --user=root \
-                "ghcr.io/rs-python/python:${python_version}-slim-bookworm" \
-                sh -c 'pip install pip-tools==7.* && pip-compile --allow-unsafe --strip-extras --upgrade --output-file=Dockerfile.requirements.txt Dockerfile.requirements.in' \
-        )
-        req=$(realpath "${matrix_image}/Dockerfile.requirements.txt")
-
-        # Force the dask versions (in dask-gateway)
-        sed -i "s|dask==.*|dask==${dask_tag}|g" "$req"
-        sed -i "s|distributed==.*|distributed==${dask_tag}|g" "$req"
-        sed -i "s|fsspec==.*|fsspec|g" "$req"
-
-        # Comment the line that installs dask-gateway-server from sources (in dask-gateway-server).
-        # We install it with pip from our Dockerfile instead.
-        sed -i "s|\(^\s*dask-gateway-server\)|# \1|g" "$req"
-    done
-
-    # Copy Dockerfile requirements
-    cp -t "${tmp}/dask-gateway" "${CUSTOM_REQ}/layer-cleanup.sh" "${CUSTOM_REQ}/restore-apt.sh"
-
-    # Target environments supported: local and k8s
-    localenv="local"
-    k8senv="k8s"
-    
-    # Build the docker image for each target (local and k8s)
-    for env in "$localenv" "$k8senv"; do
-        target="ghcr.io/rs-python/dask/dask-gateway:${env}-py${python_version}-${dask_tag}"
-        docker build \
-            --build-arg "PYTHON_VERSION_BASE=${python_version}" \
-            --build-arg "DASK_TAG=${dask_tag}" \
-            --build-arg "DASK_GATEWAY_TAG=${dask_gateway_tag}" \
-            -f "${SCRIPT_DIR}/Dockerfile.dask.${env}" \
-            -t "${target}" \
-            --progress=plain \
-            "${tmp}/dask-gateway"
-
-        # Push the docker image to the registry, if the --push option is specified.
-        if [[ " $@ " == *" --push "* ]]; then
-            docker push "$target"
+        # Checkout the dask-gateway git repository into a local ./tmp folder
+        tmp="${SCRIPT_DIR}/tmp/dask/py${python_version}"
+        mkdir -p "$tmp"
+        cd "$tmp"
+        if [[ ! -d dask-gateway ]]; then
+        git clone https://github.com/dask/dask-gateway.git
         fi
-    done
+        cd dask-gateway
+        git checkout "tags/$dask_gateway_tag"
+        git reset --hard
 
-done
+        # Refreeze Dockerfile.requirements.txt files based on Dockerfile.requirements.in
+        # as in https://github.com/dask/dask-gateway/blob/main/.github/workflows/refreeze-dockerfile-requirements-txt.yaml#L34
+        for matrix_image in "dask-gateway" "dask-gateway-server"; do
+            (\
+                cd "${matrix_image}" && \
+                docker run --rm \
+                    --env=DASK_GATEWAY_SERVER__NO_PROXY=1 \
+                    --volume="$PWD":/opt/${matrix_image} \
+                    --workdir=/opt/${matrix_image} \
+                    --user=root \
+                    "ghcr.io/rs-python/python:${python_version}-slim-bookworm" \
+                    sh -c 'pip install pip-tools==7.* && pip-compile --allow-unsafe --strip-extras --upgrade --output-file=Dockerfile.requirements.txt Dockerfile.requirements.in' \
+            )
+            req=$(realpath "${matrix_image}/Dockerfile.requirements.txt")
+
+            # Force the dask versions (in dask-gateway)
+            sed -i "s|dask==.*|dask==${dask_tag}|g" "$req"
+            sed -i "s|distributed==.*|distributed==${dask_tag}|g" "$req"
+            sed -i "s|fsspec==.*|fsspec|g" "$req"
+
+            # Comment the line that installs dask-gateway-server from sources (in dask-gateway-server).
+            # We install it with pip from our Dockerfile instead.
+            sed -i "s|\(^\s*dask-gateway-server\)|# \1|g" "$req"
+        done
+
+        # Copy Dockerfile requirements
+        cp -t "${tmp}/dask-gateway" "${CUSTOM_REQ}/layer-cleanup.sh" "${CUSTOM_REQ}/restore-apt.sh"
+
+        # Target environments supported: local and k8s
+        localenv="local"
+        k8senv="k8s"
+        
+        # Build the docker image for each target (local and k8s)
+        for env in "$localenv" "$k8senv"; do
+            target="ghcr.io/rs-python/dask/dask-gateway:${env}-py${python_version}-${dask_tag}"
+            docker build \
+                --build-arg "PYTHON_VERSION_BASE=${python_version}" \
+                --build-arg "DASK_TAG=${dask_tag}" \
+                --build-arg "DASK_GATEWAY_TAG=${dask_gateway_tag}" \
+                -f "${SCRIPT_DIR}/Dockerfile.dask.${env}" \
+                -t "${target}" \
+                --progress=plain \
+                "${tmp}/dask-gateway"
+
+            # Push the docker image to the registry, if the --push option is specified.
+            if [[ "$PUSH" == "true" ]]; then
+                docker push "$target"
+            fi
+        done
+
+    done
+fi
 
 ###########
 # Prefect #
 ###########
 
-# Checkout the prefect git repository into a local ./tmp folder
-tmp="${SCRIPT_DIR}/tmp/prefect"
-mkdir -p "$tmp"
-cd "$tmp"
-if [[ ! -d prefect ]]; then
-  git clone https://github.com/PrefectHQ/prefect.git
-fi
-cd prefect
-git checkout "tags/$PREFECT_TAG"
-git reset --hard
+if [[ "$TARGET" == "all" || "$TARGET" == "prefect" ]]; then
 
-# NOTE: build the image as in /prefect/.github/workflows/docker-images.yaml
-
-# For each suffix and extra packages, separated by a ;
-for params in \
-    "-k8s;--build-arg PREFECT_EXTRAS=[redis,kubernetes]" \
-    ""
-do
-    suffix=$(echo "$params" | cut -d ";" -f 1)
-    prefect_extras=$(echo "$params" | cut -d ";" -f 2)
-
-    # Add our hosting github organization to the docker image
-    target="ghcr.io/rs-python/prefecthq/prefect:${PREFECT_TAG}-py${PYTHON_VERSION}${suffix}"
-
-    # Build the docker image
-    prefect_root="${SCRIPT_DIR}/tmp/prefect/prefect"
-    docker build \
-        --build-arg "PYTHON_VERSION=${PYTHON_VERSION}" \
-        --build-arg "NODE_VERSION=$(cat .nvmrc)" \
-        $prefect_extras \
-        --progress plain \
-        -f "${prefect_root}/Dockerfile" \
-        -t "$target" \
-        "$prefect_root"
-
-    # Push the docker image to the registry, if the --push option is specified.
-    if [[ " $@ " == *" --push "* ]]; then
-        docker push "$target"
+    # Checkout the prefect git repository into a local ./tmp folder
+    tmp="${SCRIPT_DIR}/tmp/prefect"
+    mkdir -p "$tmp"
+    cd "$tmp"
+    if [[ ! -d prefect ]]; then
+    git clone https://github.com/PrefectHQ/prefect.git
     fi
-done
+    cd prefect
+    git checkout "tags/$PREFECT_TAG"
+    git reset --hard
+
+    # NOTE: build the image as in /prefect/.github/workflows/docker-images.yaml
+
+    # For each suffix and extra packages, separated by a ;
+    for params in \
+        "-k8s;--build-arg PREFECT_EXTRAS=[redis,kubernetes]" \
+        ""
+    do
+        suffix=$(echo "$params" | cut -d ";" -f 1)
+        prefect_extras=$(echo "$params" | cut -d ";" -f 2)
+
+        # Add our hosting github organization to the docker image
+        target="ghcr.io/rs-python/prefecthq/prefect:${PREFECT_TAG}-py${PYTHON_VERSION}${suffix}"
+
+        # Build the docker image
+        prefect_root="${SCRIPT_DIR}/tmp/prefect/prefect"
+        docker build \
+            --build-arg "PYTHON_VERSION=${PYTHON_VERSION}" \
+            --build-arg "NODE_VERSION=$(cat .nvmrc)" \
+            $prefect_extras \
+            --progress plain \
+            -f "${prefect_root}/Dockerfile" \
+            -t "$target" \
+            "$prefect_root"
+
+        # Push the docker image to the registry, if the --push option is specified.
+        if [[ "$PUSH" == "true" ]]; then
+            docker push "$target"
+        fi
+    done
+fi

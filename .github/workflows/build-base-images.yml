@@ -12,7 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-name: Build the base Docker images
+name: Build the base Docker images (Python and Prefect)
 
 # Run workflow only for ...
 on:
@@ -33,10 +33,12 @@ on:
       - 'docker/scripts/**'
       - '.github/actions/publish-docker/action.yml'
       - '.github/workflows/build-base-images.yml'
+  workflow_dispatch: # manual trigger
 
 jobs:
-  build-base-images:
+  build-base-python-image:
     runs-on: ubuntu-latest
+    name: Build base image for Python
     permissions:
       contents: read
       packages: write
@@ -45,5 +47,19 @@ jobs:
         uses: actions/checkout@v6
       - name: Login to GHCR
         run: echo "${{ secrets.GITHUB_TOKEN }}" | docker login ghcr.io --username "${{ github.actor }}" --password-stdin
-      - name: Build and push base images
-        run: docker/base/build-base-images.sh --push
+      - name: Build and push base image
+        run: docker/base/build-base-images.sh -t python --push
+
+  build-base-prefect-image:
+    runs-on: ubuntu-latest
+    name: Build base image for Prefect
+    permissions:
+      contents: read
+      packages: write
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v6
+      - name: Login to GHCR
+        run: echo "${{ secrets.GITHUB_TOKEN }}" | docker login ghcr.io --username "${{ github.actor }}" --password-stdin
+      - name: Build and push base image
+        run: docker/base/build-base-images.sh -t prefect --push
