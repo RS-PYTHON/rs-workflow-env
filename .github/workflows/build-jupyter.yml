@@ -40,6 +40,14 @@ on:
       docker_tag:
         description: Tag the docker images as e.g. 'latest'
         required: false
+      build_base_image:
+        description: Build the base image before building the Jupyter image?
+        required: false
+        default: 'true'
+        type: choice
+        options:
+          - 'true'
+          - 'false'
 
 env:
   DOCKER_REGISTRY: ghcr.io
@@ -72,7 +80,7 @@ jobs:
     runs-on: ubuntu-latest
     name: Build base image for Jupyter
     needs: [changes]
-    if: ${{ (needs.changes.outputs.base == 'true') || (github.event_name == 'workflow_dispatch') }}
+    if: ${{ (needs.changes.outputs.base == 'true') || ((github.event_name == 'workflow_dispatch') && (github.event.inputs.build_base_image == 'true')) }}
     permissions:
       contents: read
       packages: write
