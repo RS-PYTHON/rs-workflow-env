@@ -50,7 +50,7 @@ on:
           - l0
           - s1ard
           - mockup
-      build_base_image:
+      build_base_images:
         description: Build the base image before building the Dask images?
         required: false
         default: 'true'
@@ -114,7 +114,7 @@ jobs:
     runs-on: ubuntu-latest
     name: Build base images for Dask
     needs: [changes]
-    if: ${{ (needs.changes.outputs.base == 'true') || ((github.event_name == 'workflow_dispatch') && (github.event.inputs.build_base_image == 'true')) }}
+    if: ${{ (needs.changes.outputs.base == 'true') || ((github.event_name == 'workflow_dispatch') && (github.event.inputs.build_base_images == 'true')) }}
     permissions:
       contents: read
       packages: write
