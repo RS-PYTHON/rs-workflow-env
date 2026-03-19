@@ -68,9 +68,9 @@ jobs:
           list-files: 'json' # Enables listing of files matching the filter
 
   # Build base images for Jupyter only
-  build-base-jupyter-images:
+  build-base-jupyter-image:
     runs-on: ubuntu-latest
-    name: Build base images for Jupyter and Python
+    name: Build base image for Jupyter
     needs: [changes]
     if: ${{ (needs.changes.outputs.base == 'true') || (github.event_name == 'workflow_dispatch') }}
     permissions:
@@ -81,7 +81,7 @@ jobs:
         uses: actions/checkout@v6
       - name: Login to GHCR
         run: echo "${{ secrets.GITHUB_TOKEN }}" | docker login ghcr.io --username "${{ github.actor }}" --password-stdin
-      - name: Build and push base images
+      - name: Build and push base image
         run: docker/base/build-base-images.sh -t jupyter --push
 
   # Calculate variables for this workflow
@@ -149,7 +149,7 @@ jobs:
     if: github.actor != 'dependabot[bot]'
     runs-on: ubuntu-latest
     name: "Docker image for ${{ matrix.image }}"
-    needs: [set-env, build-base-jupyter-images]
+    needs: [set-env, build-base-jupyter-image]
     permissions: write-all
     outputs:
       docker_image: ${{ steps.publish-docker.outputs.docker_image}}

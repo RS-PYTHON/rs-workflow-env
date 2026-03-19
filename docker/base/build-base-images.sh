@@ -90,36 +90,56 @@ do
     esac
 done
 
-######################
-# Python and Jupyter #
-######################
+##########
+# Python #
+##########
 
-if [[ "$TARGET" == "all" || "$TARGET" == "python" || "$TARGET" == "jupyter" ]]; then
-    # For each dockerfile and associated docker image name, separated by a ;
-    for params in \
-        "Dockerfile.python;python:${PYTHON_VERSION}-slim-bookworm" \
-        "Dockerfile.jupyter;quay.io/jupyter/base-notebook:hub-${JUPYTER_HUB_VERSION};-py${PYTHON_VERSION}" # see: https://quay.io/repository/jupyter/base-notebook?tab=tags
-    do
-        dockerfile=$(echo $params | cut -d ";" -f 1)
-        base=$(echo $params | cut -d ";" -f 2)
-        suffix=$(echo $params | cut -d ";" -f 3)
+if [[ "$TARGET" == "all" || "$TARGET" == "python" ]]; then
 
-        # Add our hosting github organization to the docker image
-        target="ghcr.io/rs-python/${base}${suffix}"
+    python_dockerfile="Dockerfile.python"
+    python_base="python:${PYTHON_VERSION}-slim-bookworm"
 
-        # Build the docker image
-        docker build \
-            --build-arg "BASE=${base}" \
-            --progress plain \
-            -f "${SCRIPT_DIR}/${dockerfile}" \
-            -t "$target" \
-            "$CUSTOM_REQ"
+    python_target="ghcr.io/rs-python/${python_base}"
 
-        # Push the docker image to the registry, if the --push option is specified.
-        if [[ "$PUSH" == "true" ]]; then
-            docker push "$target"
-        fi
-    done
+    # Build the docker image
+    docker build \
+        --build-arg "BASE=${python_base}" \
+        --progress plain \
+        -f "${SCRIPT_DIR}/${python_dockerfile}" \
+        -t "$python_target" \
+        "$CUSTOM_REQ"
+
+    # Push the docker image to the registry, if the --push option is specified.
+    if [[ "$PUSH" == "true" ]]; then
+        docker push "$python_target"
+    fi
+fi
+
+###########
+# Jupyter #
+###########
+
+if [[ "$TARGET" == "all" || "$TARGET" == "jupyter" ]]; then
+
+    jupyter_dockerfile="Dockerfile.jupyter"
+    jupyter_base="quay.io/jupyter/base-notebook:hub-${JUPYTER_HUB_VERSION}"
+    jupyter_suffix="-py${PYTHON_VERSION}"
+
+    # Add our hosting github organization to the docker image
+    jupyter_target="ghcr.io/rs-python/${jupyter_base}${jupyter_suffix}"
+
+    # Build the docker image
+    docker build \
+        --build-arg "BASE=${jupyter_base}" \
+        --progress plain \
+        -f "${SCRIPT_DIR}/${jupyter_dockerfile}" \
+        -t "$jupyter_target" \
+        "$CUSTOM_REQ"
+
+    # Push the docker image to the registry, if the --push option is specified.
+    if [[ "$PUSH" == "true" ]]; then
+        docker push "$jupyter_target"
+    fi
 fi
 
 ########
