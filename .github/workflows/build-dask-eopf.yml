@@ -220,23 +220,7 @@ jobs:
             condition: "${{ (needs.changes.outputs.l0 == 'true') || (needs.set-env.outputs.common_changes == 'true') || (needs.set-env.outputs.base == 'true') || ((github.event_name == 'workflow_dispatch') && ((github.event.inputs.processor == 'l0') || (github.event.inputs.processor == 'all'))) }}"
           - proc: s1ard
             condition: "${{ (needs.changes.outputs.s1ard == 'true') || (needs.set-env.outputs.common_changes == 'true') || (needs.set-env.outputs.base == 'true') || ((github.event_name == 'workflow_dispatch') && ((github.event.inputs.processor == 's1ard') || (github.event.inputs.processor == 'all'))) }}"
-          - target: "Cluster"
-            condition: "${{ (github.event_name != 'workflow_dispatch') || (github.event.inputs.target_system == 'cluster') || (github.event.inputs.target_system == 'all') }}"
-          - target: "Local"
-            condition: "${{ (github.event_name != 'workflow_dispatch') || (github.event.inputs.target_system == 'local') || (github.event.inputs.target_system == 'all') }}"
-          - target: "LocalCluster"
-            condition: "${{ (github.event_name != 'workflow_dispatch') || (github.event.inputs.target_system == 'localcluster') || (github.event.inputs.target_system == 'all') }}"
     steps:
-      - name: Display build info
-        run: |
-          echo "Building image for processor ${{ matrix.proc }} and target ${{ matrix.target }}"
-          echo "Triggered by event: ${{ github.event_name }}"
-          echo "Branch name: ${{ needs.set-env.outputs.branch_name }}"
-          echo "Docker tag: ${{ needs.set-env.outputs.docker_tag }}"
-          echo "Common changes: ${{ needs.set-env.outputs.common_changes }}"
-          echo "Any changes: ${{ needs.set-env.outputs.any_changes }}"
-          echo "Processor changes: mockup=${{ needs.changes.outputs.mockup }}, l0=${{ needs.changes.outputs.l0 }}, s1ard=${{ needs.changes.outputs.s1ard }}"
-        shell: bash
 
       - name: Checkout
         if: ${{ matrix.condition }}
