@@ -209,10 +209,10 @@ jobs:
       fail-fast: false
       matrix:
         proc: [mockup, l0, s1ard]
-        target: ["Cluster", "Local", "LocalCluster"] # No option = main image for cluster deployment, "Local" is for local deployment and "LocalCluster" is for local debugging
+        target: [cluster, local, localcluster] # No option = main image for cluster deployment, "local" is for local deployment and "localcluster" is for local debugging
         exclude:
           - proc: mockup
-            target: "LocalCluster"
+            target: localcluster
         include:
           - proc: mockup
             condition: "${{ (needs.changes.outputs.mockup == 'true') || (needs.set-env.outputs.common_changes == 'true') || (needs.set-env.outputs.base == 'true') || ((github.event_name == 'workflow_dispatch') && ((github.event.inputs.processor == 'mockup') || (github.event.inputs.processor == 'all'))) }}"
@@ -268,11 +268,11 @@ jobs:
         run: |
           set -x
 
-          if [[ "${{ matrix.target }}" == "LocalCluster" ]]; then
+          if [[ "${{ matrix.target }}" == "localcluster" ]]; then
             options="--local_cluster"
           fi
 
-          if [[ "${{ matrix.target }}" == "Local" ]]; then
+          if [[ "${{ matrix.target }}" == "local" ]]; then
             options="--local"
           fi
 
