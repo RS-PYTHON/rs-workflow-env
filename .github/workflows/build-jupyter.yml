@@ -12,6 +12,17 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+# === Worklow behavior ===
+#
+# On automatic triggers (push or pull):
+# - Check for changes in the files related the base images
+# - Build the base images for Dask if there are changes in the base files
+# - Set environment for images build
+# - Build the Jupyter image
+#
+# On manual trigger: same workflow but the user can choose to build the base image or not.
+# However, if changes are detected in the base images files, it will be built whatever the user choice
+
 name: Build the Jupyter Docker image
 
 # Run workflow only for ...
@@ -40,6 +51,14 @@ on:
       docker_tag:
         description: Tag the docker images as e.g. 'latest'
         required: false
+      build_base_image:
+        description: Build the base image before building the Jupyter image?
+        required: false
+        default: 'true'
+        type: choice
+        options:
+          - 'true'
+          - 'false'
 
 env:
   DOCKER_REGISTRY: ghcr.io
@@ -72,7 +91,7 @@ jobs:
     runs-on: ubuntu-latest
     name: Build base image for Jupyter
     needs: [changes]
-    if: ${{ (needs.changes.outputs.base == 'true') || (github.event_name == 'workflow_dispatch') }}
+    if: ${{ (needs.changes.outputs.base == 'true') || ((github.event_name == 'workflow_dispatch') && (github.event.inputs.build_base_image == 'true')) }}
     permissions:
       contents: read
       packages: write
@@ -146,7 +165,7 @@ jobs:
         include:
           - path: jupyter
             image: jupyter
-    if: github.actor != 'dependabot[bot]'
+    if: ${{ always() && !failure() && !cancelled() && (github.actor != 'dependabot[bot]') }} # Run the job even if previous job was skipped
     runs-on: ubuntu-latest
     name: Build image for Jupyter
     needs: [set-env, build-base-jupyter-image]

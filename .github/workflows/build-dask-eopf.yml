@@ -1,4 +1,4 @@
-# Copyright 2024 CS Group
+# Copyright 2023-2026 Airbus, CS Group
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -11,6 +11,22 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
+
+# === Worklow behavior ===
+#
+# On automatic triggers (push or pull):
+# - Check for changes in the files related to the Dask images and the base images
+# - Build the base images for Dask if there are changes in the base files
+# - Set environment for images build
+# - Build only the Dask image linked to the detected changes, or all images if there are changes in the common files or if the base images are rebuilt
+#   Each image is always built for all three target systems (cluster, local and localcluster)
+# - Test rs-demo with the newly built images
+#
+# On manual trigger:
+# - The user chooses which processor to build (l0, s1ard, mockup or all) and for which target system (cluster, local, localcluster or all), and also to rebuild the base images or not
+# - Changes are checked like in automatic mode
+# - The images built are the ones for the detected changes like in automatic mode AND the ones requested by the user
+# - rs-demo tests are run like in automatic mode
 
 name: Build the Dask EOPF/DPR Docker images
 
@@ -40,6 +56,34 @@ on:
       docker_tag:
         description: Tag the docker images as e.g. 'latest' or 'feat-rspy123'
         required: true
+      processor:
+        description: Which processor to build an image for
+        required: false
+        default: 'all'
+        type: choice
+        options:
+          - all
+          - l0
+          - s1ard
+          - mockup
+      build_base_images:
+        description: Build the base image before building the Dask images?
+        required: false
+        default: 'true'
+        type: choice
+        options:
+          - 'true'
+          - 'false'
+      target_system:
+        description: Whether to build images for cluster deployment, local deployment, LocalCluster mode or all of them
+        required: false
+        default: 'cluster'
+        type: choice
+        options:
+          - all
+          - cluster
+          - local
+          - localcluster
 
 env:
   DOCKER_REGISTRY: ghcr.io
@@ -86,7 +130,7 @@ jobs:
     runs-on: ubuntu-latest
     name: Build base images for Dask
     needs: [changes]
-    if: ${{ (needs.changes.outputs.base == 'true') || (github.event_name == 'workflow_dispatch') }}
+    if: ${{ (needs.changes.outputs.base == 'true') || ((github.event_name == 'workflow_dispatch') && (github.event.inputs.build_base_images == 'true')) }}
     permissions:
       contents: read
       packages: write
@@ -143,11 +187,7 @@ jobs:
           docker_tag=$(sed "s/[^a-zA-Z0-9]/-/g" <<< "$docker_tag")
 
           # We always trigger the image builds if the common files have changed
-          # or if the job was triggered manually
-          common_changes=false
-          if [[ (${{ github.event_name }} == workflow_dispatch) || (${{ needs.changes.outputs.common }} == true) ]]; then
-            common_changes=true
-          fi
+          common_changes=${{ needs.changes.outputs.common }}
 
           # Do we have any changes in the processor files or was the job triggered manually ?
           any_changes=false
@@ -172,7 +212,8 @@ jobs:
     runs-on: ubuntu-latest
     name: Build images for processor
     needs: [changes, set-env, build-base-dask-images]
-    if: ${{ (needs.set-env.outputs.any_changes == 'true') || (github.event_name == 'workflow_dispatch') }}
+    # Job run when there are changes OR a manual trigger, EVEN if any previous job is skipped
+    if: ${{ always() && !failure() && !cancelled() && ((needs.set-env.outputs.any_changes == 'true') || (github.event_name == 'workflow_dispatch')) }}
     permissions: write-all
 
     # See: https://docs.github.com/en/actions/how-tos/write-workflows/choose-what-workflows-do/run-job-variations
@@ -180,33 +221,46 @@ jobs:
       fail-fast: false
       matrix:
         proc: [mockup, l0, s1ard]
-        target: ["", "Local", "LocalCluster"] # No option = main image for cluster deployment, "Local" is for local deployment and "LocalCluster" is for local debugging
+        target: [cluster, local, localcluster] # No option = main image for cluster deployment, "local" is for local deployment and "localcluster" is for local debugging
         exclude:
           - proc: mockup
-            target: "LocalCluster"
+            target: localcluster
         include:
           - proc: mockup
-            condition: "${{ (needs.changes.outputs.mockup == 'true') || (needs.set-env.outputs.common_changes == 'true') || (needs.set-env.outputs.base == 'true') || (github.event_name == 'workflow_dispatch') }}"
+            proccondition: "${{ (needs.changes.outputs.mockup == 'true') || (needs.set-env.outputs.common_changes == 'true') || (needs.set-env.outputs.base == 'true') || ((github.event_name == 'workflow_dispatch') && ((github.event.inputs.processor == 'mockup') || (github.event.inputs.processor == 'all'))) }}"
           - proc: l0
-            condition: "${{ (needs.changes.outputs.l0 == 'true') || (needs.set-env.outputs.common_changes == 'true') || (needs.set-env.outputs.base == 'true') || (github.event_name == 'workflow_dispatch') }}"
+            proccondition: "${{ (needs.changes.outputs.l0 == 'true') || (needs.set-env.outputs.common_changes == 'true') || (needs.set-env.outputs.base == 'true') || ((github.event_name == 'workflow_dispatch') && ((github.event.inputs.processor == 'l0') || (github.event.inputs.processor == 'all'))) }}"
           - proc: s1ard
-            condition: "${{ (needs.changes.outputs.s1ard == 'true') || (needs.set-env.outputs.common_changes == 'true') || (needs.set-env.outputs.base == 'true') || (github.event_name == 'workflow_dispatch') }}"
-
+            proccondition: "${{ (needs.changes.outputs.s1ard == 'true') || (needs.set-env.outputs.common_changes == 'true') || (needs.set-env.outputs.base == 'true') || ((github.event_name == 'workflow_dispatch') && ((github.event.inputs.processor == 's1ard') || (github.event.inputs.processor == 'all'))) }}"
+          - target: cluster
+            targetcondition: "${{ (github.event_name != 'workflow_dispatch') || (github.event.inputs.target_system == 'cluster') || (github.event.inputs.target_system == 'all') }}"
+          - target: local
+            targetcondition: "${{ (github.event_name != 'workflow_dispatch') || ( github.event.inputs.target_system == 'local') || (github.event.inputs.target_system == 'all') }}"
+          - target: localcluster
+            targetcondition: "${{ (github.event_name != 'workflow_dispatch') || ( github.event.inputs.target_system == 'localcluster') || (github.event.inputs.target_system == 'all') }}"
     steps:
+
+      - name: Display build info
+        run: |
+          echo "Building image for processor ${{ matrix.proc }} and target ${{ matrix.target }}"
+          echo "Processor condition: ${{ matrix.proccondition }}"
+          echo "Target condition: ${{ matrix.targetcondition }}"
+        shell: bash
+
       - name: Checkout
-        if: ${{ matrix.condition }}
+        if: matrix.proccondition && matrix.targetcondition
         uses: actions/checkout@v6
 
       # Login to Docker Hub to increase pull quota from 100 to 200 per 6 hours
       - name: Log into Docker Hub
-        if: ${{ matrix.condition }}
+        if: matrix.proccondition && matrix.targetcondition
         uses: docker/login-action@v3
         with:
           username: ${{ vars.DOCKERHUB_USERNAME }}
           password: ${{ secrets.DOCKERHUB_TOKEN }}
 
       - name: Log into GitHub Container Registry
-        if: ${{ matrix.condition }}
+        if: matrix.proccondition && matrix.targetcondition
         uses: docker/login-action@v3
         with:
           registry: ${{ env.DOCKER_REGISTRY }}
@@ -216,22 +270,22 @@ jobs:
       # Extract metadata from Git reference and GitHub events
       - name: Extract Docker metadata
         id: meta
-        if: ${{ matrix.condition }}
+        if: matrix.proccondition && matrix.targetcondition
         uses: docker/metadata-action@v5
         with:
           images: ${{ env.DOCKER_REGISTRY }}/${{ github.repository }} # ghcr.io/RS-PYTHON/rs-workflow-env
 
       - id: build
         name: Build the Dask images
-        if: ${{ matrix.condition }}
+        if: matrix.proccondition && matrix.targetcondition
         run: |
           set -x
 
-          if [[ "${{ matrix.target }}" == "LocalCluster" ]]; then
+          if [[ "${{ matrix.target }}" == "localcluster" ]]; then
             options="--local_cluster"
           fi
 
-          if [[ "${{ matrix.target }}" == "Local" ]]; then
+          if [[ "${{ matrix.target }}" == "local" ]]; then
             options="--local"
           fi
 
@@ -253,7 +307,7 @@ jobs:
         shell: bash
 
       - name: Run Trivy vulnerability scanner
-        if: ${{ matrix.condition }}
+        if: matrix.proccondition && matrix.targetcondition
         uses: aquasecurity/trivy-action@master
         env:
           TRIVY_DB_REPOSITORY: public.ecr.aws/aquasecurity/trivy-db:2
@@ -267,14 +321,14 @@ jobs:
           #timeout: '30m'
 
       - name: Upload Trivy scan results to GitHub Security tab
-        if: ${{ matrix.condition }}
+        if: matrix.proccondition && matrix.targetcondition
         uses: github/codeql-action/upload-sarif@v4
         with:
           sarif_file: trivy-results-docker.sarif
           category: ${{ steps.build.outputs.repository }}
 
       - name: Display link to Trivy results
-        if: ${{ matrix.condition }}
+        if: matrix.proccondition && matrix.targetcondition
         run: |
 
             set -x
@@ -294,7 +348,7 @@ jobs:
         shell: bash
 
       - name: Push Docker image
-        if: ${{ matrix.condition }}
+        if: matrix.proccondition && matrix.targetcondition
         run: docker push ${{ steps.build.outputs.repository_and_tag }}
         shell: bash
 
@@ -307,7 +361,7 @@ jobs:
     runs-on: ubuntu-latest
     name: Test rs-demo
     needs: [changes, set-env, build-dask-eopf]
-    if: ${{ (needs.set-env.outputs.any_changes == 'true') || (github.event_name == 'workflow_dispatch') }}
+    if: ${{ always() && !failure() && !cancelled() && ((needs.set-env.outputs.any_changes == 'true') || (github.event_name == 'workflow_dispatch')) }}
     steps:
       - name: Log into Docker registry
         uses: docker/login-action@v3
