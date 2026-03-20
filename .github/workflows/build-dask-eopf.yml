@@ -220,12 +220,12 @@ jobs:
             condition: "${{ (needs.changes.outputs.l0 == 'true') || (needs.set-env.outputs.common_changes == 'true') || (needs.set-env.outputs.base == 'true') || ((github.event_name == 'workflow_dispatch') && ((github.event.inputs.processor == 'l0') || (github.event.inputs.processor == 'all'))) }}"
           - proc: s1ard
             condition: "${{ (needs.changes.outputs.s1ard == 'true') || (needs.set-env.outputs.common_changes == 'true') || (needs.set-env.outputs.base == 'true') || ((github.event_name == 'workflow_dispatch') && ((github.event.inputs.processor == 's1ard') || (github.event.inputs.processor == 'all'))) }}"
-          - target: "Cluster"
-            condition: "${{ (github.event_name != 'workflow_dispatch') || (github.event.inputs.target_system == 'cluster') || (github.event.inputs.target_system == 'all') }}"
-          - target: "Local"
-            condition: "${{ (github.event_name != 'workflow_dispatch') || (github.event.inputs.target_system == 'local') || (github.event.inputs.target_system == 'all') }}"
-          - target: "LocalCluster"
-            condition: "${{ (github.event_name != 'workflow_dispatch') || (github.event.inputs.target_system == 'localcluster') || (github.event.inputs.target_system == 'all') }}"
+    #       - target: "Cluster"
+    #         condition: "${{ (github.event_name != 'workflow_dispatch') || (github.event.inputs.target_system == 'cluster') || (github.event.inputs.target_system == 'all') }}"
+    #       - target: "Local"
+    #         condition: "${{ (github.event_name != 'workflow_dispatch') || (github.event.inputs.target_system == 'local') || (github.event.inputs.target_system == 'all') }}"
+    #       - target: "LocalCluster"
+    #         condition: "${{ (github.event_name != 'workflow_dispatch') || (github.event.inputs.target_system == 'localcluster') || (github.event.inputs.target_system == 'all') }}"
     steps:
       - name: Checkout
         if: ${{ matrix.condition }}
@@ -341,7 +341,7 @@ jobs:
     runs-on: ubuntu-latest
     name: Test rs-demo
     needs: [changes, set-env, build-dask-eopf]
-    if: ${{ (needs.set-env.outputs.any_changes == 'true') || (github.event_name == 'workflow_dispatch') }}
+    if: ${{ always() && !failure() && !cancelled() && ((needs.set-env.outputs.any_changes == 'true') || (github.event_name == 'workflow_dispatch')) }}
     steps:
       - name: Log into Docker registry
         uses: docker/login-action@v3
