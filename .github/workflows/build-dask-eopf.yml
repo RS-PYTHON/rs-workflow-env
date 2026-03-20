@@ -171,11 +171,7 @@ jobs:
           docker_tag=$(sed "s/[^a-zA-Z0-9]/-/g" <<< "$docker_tag")
 
           # We always trigger the image builds if the common files have changed
-          # or if the job was triggered manually
-          common_changes=false
-          if [[ (${{ github.event_name }} == workflow_dispatch) || (${{ needs.changes.outputs.common }} == true) ]]; then
-            common_changes=true
-          fi
+          common_changes=${{ needs.changes.outputs.common }}
 
           # Do we have any changes in the processor files or was the job triggered manually ?
           any_changes=false
