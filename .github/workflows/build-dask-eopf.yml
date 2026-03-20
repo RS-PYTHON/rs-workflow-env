@@ -236,19 +236,19 @@ jobs:
         shell: bash
 
       - name: Checkout
-        if: ${{ matrix.proccondition }} && ${{ matrix.targetcondition }}
+        if: matrix.proccondition && matrix.targetcondition
         uses: actions/checkout@v6
 
       # Login to Docker Hub to increase pull quota from 100 to 200 per 6 hours
       - name: Log into Docker Hub
-        if: ${{ matrix.proccondition }} && ${{ matrix.targetcondition }}
+        if: matrix.proccondition && matrix.targetcondition
         uses: docker/login-action@v3
         with:
           username: ${{ vars.DOCKERHUB_USERNAME }}
           password: ${{ secrets.DOCKERHUB_TOKEN }}
 
       - name: Log into GitHub Container Registry
-        if: ${{ matrix.proccondition }} && ${{ matrix.targetcondition }}
+        if: matrix.proccondition && matrix.targetcondition
         uses: docker/login-action@v3
         with:
           registry: ${{ env.DOCKER_REGISTRY }}
@@ -258,14 +258,14 @@ jobs:
       # Extract metadata from Git reference and GitHub events
       - name: Extract Docker metadata
         id: meta
-        if: ${{ matrix.proccondition }} && ${{ matrix.targetcondition }}
+        if: matrix.proccondition && matrix.targetcondition
         uses: docker/metadata-action@v5
         with:
           images: ${{ env.DOCKER_REGISTRY }}/${{ github.repository }} # ghcr.io/RS-PYTHON/rs-workflow-env
 
       - id: build
         name: Build the Dask images
-        if: ${{ matrix.proccondition }} && ${{ matrix.targetcondition }}
+        if: matrix.proccondition && matrix.targetcondition
         run: |
           set -x
 
@@ -295,7 +295,7 @@ jobs:
         shell: bash
 
       - name: Run Trivy vulnerability scanner
-        if: ${{ matrix.proccondition }} && ${{ matrix.targetcondition }}
+        if: matrix.proccondition && matrix.targetcondition
         uses: aquasecurity/trivy-action@master
         env:
           TRIVY_DB_REPOSITORY: public.ecr.aws/aquasecurity/trivy-db:2
@@ -309,14 +309,14 @@ jobs:
           #timeout: '30m'
 
       - name: Upload Trivy scan results to GitHub Security tab
-        if: ${{ matrix.proccondition }} && ${{ matrix.targetcondition }}
+        if: matrix.proccondition && matrix.targetcondition
         uses: github/codeql-action/upload-sarif@v4
         with:
           sarif_file: trivy-results-docker.sarif
           category: ${{ steps.build.outputs.repository }}
 
       - name: Display link to Trivy results
-        if: ${{ matrix.proccondition }} && ${{ matrix.targetcondition }}
+        if: matrix.proccondition && matrix.targetcondition
         run: |
 
             set -x
@@ -336,7 +336,7 @@ jobs:
         shell: bash
 
       - name: Push Docker image
-        if: ${{ matrix.proccondition }} && ${{ matrix.targetcondition }}
+        if: matrix.proccondition && matrix.targetcondition
         run: docker push ${{ steps.build.outputs.repository_and_tag }}
         shell: bash
 
