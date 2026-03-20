@@ -232,7 +232,7 @@ jobs:
               (github.event.inputs.target_system == matrix.target)
             )
           )
-        run: echo "Running job for processor ${matrix.proc} and target ${matrix.target}"
+        run: echo "Running job for processor ${{ matrix.proc }} and target ${{ matrix.target }}"
 
       - name: Checkout
         if: ${{ matrix.condition }}
