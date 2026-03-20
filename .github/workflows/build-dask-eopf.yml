@@ -222,6 +222,18 @@ jobs:
             condition: "${{ (needs.changes.outputs.s1ard == 'true') || (needs.set-env.outputs.common_changes == 'true') || (needs.set-env.outputs.base == 'true') || ((github.event_name == 'workflow_dispatch') && ((github.event.inputs.processor == 's1ard') || (github.event.inputs.processor == 'all'))) }}"
     steps:
 
+      - name: Skip job if target is not the one requested
+        if: >
+          ( 
+            matrix.condition &&
+            (
+              (github.event_name != 'workflow_dispatch') ||
+              (github.event.inputs.target_system == 'all') ||
+              (github.event.inputs.target_system == matrix.target)
+            )
+          )
+        run: echo "Running job for processor ${matrix.proc} and target ${matrix.target}"
+
       - name: Checkout
         if: ${{ matrix.condition }}
         uses: actions/checkout@v6
