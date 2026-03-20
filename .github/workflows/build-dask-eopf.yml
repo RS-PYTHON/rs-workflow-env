@@ -228,8 +228,15 @@ jobs:
             targetcondition: "${{ (github.event_name != 'workflow_dispatch') || ( github.event.inputs.target_system == 'localcluster') || (github.event.inputs.target_system == 'all') }}"
     steps:
 
+      - name: Display build info
+        run: |
+          echo "Building image for processor ${{ matrix.proc }} and target ${{ matrix.target }}"
+          echo "Processor condition: ${{ matrix.proccondition }}"
+          echo "Target condition: ${{ matrix.targetcondition }}"
+        shell: bash
+
       - name: Checkout
-        if: ${{ matrix.proccondition }} && ${{ steps.skip_job.outputs.requested_target == 'true' }}
+        if: ${{ matrix.proccondition }} && ${{ matrix.targetcondition }}
         uses: actions/checkout@v6
 
       # Login to Docker Hub to increase pull quota from 100 to 200 per 6 hours
