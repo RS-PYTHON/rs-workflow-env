@@ -12,6 +12,17 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+# === Worklow behavior ===
+#
+# On automatic triggers (push or pull):
+# - Check for changes in the files related the base images
+# - Build the base images for Dask if there are changes in the base files
+# - Set environment for images build
+# - Build the Jupyter image
+#
+# On manual trigger: same workflow but the user can choose to build the base image or not.
+# However, if changes are detected in the base images files, it will be built whatever the user choice
+
 name: Build the Jupyter Docker image
 
 # Run workflow only for ...

@@ -12,6 +12,22 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+# === Worklow behavior ===
+#
+# On automatic triggers (push or pull):
+# - Check for changes in the files related to the Dask images and the base images
+# - Build the base images for Dask if there are changes in the base files
+# - Set environment for images build
+# - Build only the Dask image linked to the detected changes, or all images if there are changes in the common files or if the base images are rebuilt
+#   Each image is always built for all three target systems (cluster, local and localcluster)
+# - Test rs-demo with the newly built images
+#
+# On manual trigger:
+# - The user chooses which processor to build (l0, s1ard, mockup or all) and for which target system (cluster, local, localcluster or all), and also to rebuild the base images or not
+# - Changes are checked like in automatic mode
+# - The images built are the ones for the detected changes like in automatic mode AND the ones requested by the user
+# - rs-demo tests are run like in automatic mode
+
 name: Build the Dask EOPF/DPR Docker images
 
 # Run workflow only for ...
