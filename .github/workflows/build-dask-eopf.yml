@@ -369,7 +369,7 @@ jobs:
             -H "Authorization: Bearer ${TRIGGER_WORKFLOWS_TOKEN}" \
             -H "X-GitHub-Api-Version: 2026-03-10" \
             https://api.github.com/repos/RS-PYTHON/rs-testmeans/actions/workflows/publish-docker.yml/dispatches \
-            -d '{"ref":"${{ needs.set-env.outputs.branch_name }}","inputs":{"docker-tag":"${docker_tag}","build_only_mockup_images":"true"}}'
+            -d '{"ref":"${{ needs.set-env.outputs.branch_name }}","inputs":{"docker_tag":"${docker_tag}","build_only_mockup_images":"true"}}'
         shell: bash
 
   ###########
