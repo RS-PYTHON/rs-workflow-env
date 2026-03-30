@@ -37,13 +37,10 @@ USER root
 
 COPY ./layer-cleanup.sh ./restore-apt.sh /usr/local/bin/
 RUN chmod 755 /usr/local/bin/layer-cleanup.sh /usr/local/bin/restore-apt.sh
-RUN apt update && apt upgrade -y && pip install -U pip && layer-cleanup.sh
+RUN apt update && apt upgrade -y && layer-cleanup.sh
 
 # Install python version and dependencies
-RUN conda update -n base -c conda-forge conda && \
-    conda install --yes conda-forge::python="${PYTHON_VERSION}" && \
-    python -V && \
-    pip install -U pip && \
+RUN python -V && \
     pip install \
         dask[complete]=="${DASK_TAG}" \
         distributed=="${DASK_TAG}" \
@@ -52,7 +49,6 @@ RUN conda update -n base -c conda-forge conda && \
         ipywidgets \
         s3fs \
         boto3 && \
-    conda clean --all --yes && \
     layer-cleanup.sh
 
 # Install packages
