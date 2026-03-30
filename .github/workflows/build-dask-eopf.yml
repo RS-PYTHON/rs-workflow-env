@@ -360,16 +360,13 @@ jobs:
           else
             docker_tag=${{ needs.set-env.outputs.docker_tag }}
           fi
-          echo Sending Request
-          echo "curl -L -H \"Accept: application/vnd.github+json\" -H \"Authorization: Bearer XXX\" -H \"X-GitHub-Api-Version: 2026-03-10\" URL"
-          echo "-d '{\"ref\":\"${{ needs.set-env.outputs.branch_name }}\",\"inputs\":{\"docker_tag\":\"${docker_tag}\",\"build_only_mockup_images\":\"true\"}}'"
           curl -L \
             -X POST \
             -H "Accept: application/vnd.github+json" \
             -H "Authorization: Bearer ${TRIGGER_WORKFLOWS_TOKEN}" \
             -H "X-GitHub-Api-Version: 2026-03-10" \
             https://api.github.com/repos/RS-PYTHON/rs-testmeans/actions/workflows/publish-docker.yml/dispatches \
-            -d '{"ref":"${{ needs.set-env.outputs.branch_name }}","inputs":{"docker_tag":"${docker_tag}","build_only_mockup_images":"true"}}'
+            -d '{"ref":"${{ needs.set-env.outputs.branch_name }}","inputs":{"docker_tag":"'"$docker_tag"'","build_only_mockup_images":"true"}}'
         shell: bash
 
   ###########
