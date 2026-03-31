@@ -311,7 +311,9 @@ jobs:
         uses: aquasecurity/trivy-action@master
         env:
           TRIVY_DB_REPOSITORY: public.ecr.aws/aquasecurity/trivy-db:2
+          TRIVY_JAVA_DB_REPOSITORY: public.ecr.aws/aquasecurity/trivy-java-db:1
         with:
+          version: v0.69.3
           image-ref: ${{ steps.build.outputs.repository_and_tag }}
           format: sarif
           output: trivy-results-docker.sarif
