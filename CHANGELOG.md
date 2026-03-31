@@ -13,6 +13,23 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/) 
 >- **Fixed** for any bug fixes.
 >- **Security** in case of vulnerabilities.
 
+## [1.0a8] - 2026-03-30
+
+### Changed
+
+- [RSPY-900](https://github.com/RS-PYTHON/rs-workflow-env/pull/58) : Decouple and update Dask versions
+- [RSPY-970](https://github.com/RS-PYTHON/rs-workflow-env/pull/78) : Improve the CI/CDs for the Dask images - Part 2
+- [RSPY-970](https://github.com/RS-PYTHON/rs-workflow-env/pull/75) : Improve the CI/CDs for the Dask images - Part 1
+- [PR#66](https://github.com/RS-PYTHON/rs-workflow-env/pull/66) : Use rs-demo test script
+- [PR#69](https://github.com/RS-PYTHON/rs-workflow-env/pull/69) : Welcome back S1 ARD
+- [PR#68](https://github.com/RS-PYTHON/rs-workflow-env/pull/68) : Update to Python 3.13.12 / Prefect 3.6.20
+- [PR#70](https://github.com/RS-PYTHON/rs-workflow-env/pull/70) : Cleanup OpenTelemetry dependencies
+- [PR#71](https://github.com/RS-PYTHON/rs-workflow-env/pull/71) : Install opentelemetry-instrumentation-eopf
+- [PR#72](https://github.com/RS-PYTHON/rs-workflow-env/pull/72) : Update Prefect Helm chart to 2026.2.27173158
+- [PR#76](https://github.com/RS-PYTHON/rs-workflow-env/pull/76) : fix: remove fixed version from values.yaml for dask gateway
+- [PR#77](https://github.com/RS-PYTHON/rs-workflow-env/pull/77) : Include aiobotocore-otel in EOPF dask image
+
+
 ## [1.0a7] - 2026-03-02
 
 ### Changed
@@ -23,7 +40,6 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/) 
 - [PR#64](https://github.com/RS-PYTHON/rs-workflow-env/pull/64) : CI: allow to specify rs-infra-core ref to use
 - [PR#60](https://github.com/RS-PYTHON/rs-workflow-env/pull/60) : Update copyright year to 2026, disable S1 ARD
 - [RSPY-876](https://github.com/RS-PYTHON/rs-workflow-env/pull/67) : Move JupyterHub image to rs-workflow-env
-
 - update jupyter env with docker image tag 1.0a7
 
 ### Removed
