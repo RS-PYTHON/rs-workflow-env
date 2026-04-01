@@ -101,7 +101,6 @@ jobs:
       # Note: we tie "base" and "common" outputs to the manual trigger aswell, to trigger all the image builds anytime the workflow is triggered amnually.
       base: ${{ steps.filter.outputs.base }}
       common: ${{ steps.filter.outputs.common }}
-      mockup: ${{ steps.filter.outputs.mockup }}
       l0: ${{ steps.filter.outputs.l0 }}
       s1ard: ${{ steps.filter.outputs.s1ard }}
     steps:
@@ -120,7 +119,6 @@ jobs:
               - docker/eopf/Dockerfile.dask-eopf-localcluster
               - docker/eopf/resources/layer-cleanup.sh
               - docker/eopf/resources/restore-apt.sh
-            mockup: [docker/eopf/Dockerfile.dask-eopf-mockup]
             l0: ['docker/**/*dask-l0.*', 'docker/**/l0/*']
             s1ard: ['docker/**/*dask-s1ard.*']
           list-files: 'json' # Enables listing of files matching the filter
@@ -194,7 +192,6 @@ jobs:
           if [[ \
             (${common_changes} == 'true') || \
             (${{ needs.changes.outputs.base }} == 'true') || \
-            (${{ needs.changes.outputs.mockup }} == 'true') || \
             (${{ needs.changes.outputs.l0 }} == 'true') || \
             (${{ needs.changes.outputs.s1ard }} == 'true') \
           ]]; then
@@ -220,14 +217,9 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        proc: [mockup, l0, s1ard]
+        proc: [l0, s1ard]
         target: [cluster, local, localcluster] # No option = main image for cluster deployment, "local" is for local deployment and "localcluster" is for local debugging
-        exclude:
-          - proc: mockup
-            target: localcluster
         include:
-          - proc: mockup
-            proccondition: "${{ (needs.changes.outputs.mockup == 'true') || (needs.set-env.outputs.common_changes == 'true') || (needs.set-env.outputs.base == 'true') || ((github.event_name == 'workflow_dispatch') && ((github.event.inputs.processor == 'mockup') || (github.event.inputs.processor == 'all'))) }}"
           - proc: l0
             proccondition: "${{ (needs.changes.outputs.l0 == 'true') || (needs.set-env.outputs.common_changes == 'true') || (needs.set-env.outputs.base == 'true') || ((github.event_name == 'workflow_dispatch') && ((github.event.inputs.processor == 'l0') || (github.event.inputs.processor == 'all'))) }}"
           - proc: s1ard
@@ -350,6 +342,31 @@ jobs:
       - name: Push Docker image
         if: matrix.proccondition && matrix.targetcondition
         run: docker push ${{ steps.build.outputs.repository_and_tag }}
+        shell: bash
+
+  trigger-dask-mockup-images-build:
+    runs-on: ubuntu-latest
+    name: Trigger rs-testmeans CI to build the Dask mockup image
+    needs: [changes, set-env, build-base-dask-images]
+    # Trigger CI for mockup images only if base images are changed OR if asked by manual trigger
+    if: ${{ always() && !failure() && !cancelled() && ((needs.set-env.outputs.base == 'true') || ((github.event_name == 'workflow_dispatch') && ((github.event.inputs.processor == 'mockup') || (github.event.inputs.processor == 'all')))) }}
+    steps:
+      - env:
+          TRIGGER_WORKFLOWS_TOKEN: ${{ secrets.TRIGGER_WORKFLOWS }}
+        run: |
+          set -x
+          if [[ ${{ needs.set-env.outputs.branch_name }} == develop ]]; then
+            docker_tag=latest
+          else
+            docker_tag=${{ needs.set-env.outputs.docker_tag }}
+          fi
+          curl -L \
+            -X POST \
+            -H "Accept: application/vnd.github+json" \
+            -H "Authorization: Bearer ${TRIGGER_WORKFLOWS_TOKEN}" \
+            -H "X-GitHub-Api-Version: 2026-03-10" \
+            https://api.github.com/repos/RS-PYTHON/rs-testmeans/actions/workflows/publish-docker.yml/dispatches \
+            -d '{"ref":"${{ needs.set-env.outputs.branch_name }}","inputs":{"docker_tag":"'"$docker_tag"'","build_only_mockup_images":"true"}}'
         shell: bash
 
   ###########
