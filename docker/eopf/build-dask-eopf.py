@@ -66,6 +66,12 @@ all_procs = {
         "ghcr.io/rs-python/dask/s1ard/localcluster",
         "dask-s1ard",
     ),
+    "s3olci": Image(
+        "ghcr.io/rs-python/dask/s3olci/k8s",
+        "ghcr.io/rs-python/dask/s3olci/local",
+        "ghcr.io/rs-python/dask/s3olci/localcluster",
+        "dask-s3olci",
+    ),
 }
 
 ######################

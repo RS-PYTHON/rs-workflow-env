@@ -23,7 +23,7 @@
 # - Test rs-demo with the newly built images
 #
 # On manual trigger:
-# - The user chooses which processor to build (l0, s1ard, mockup or all) and for which target system (cluster, local, localcluster or all), and also to rebuild the base images or not
+# - The user chooses which processor to build (l0, s1ard, s3olci, mockup or all) and for which target system (cluster, local, localcluster or all), and also to rebuild the base images or not
 # - Changes are checked like in automatic mode
 # - The images built are the ones for the detected changes like in automatic mode AND the ones requested by the user
 # - rs-demo tests are run like in automatic mode
@@ -65,6 +65,7 @@ on:
           - all
           - l0
           - s1ard
+          - s3olci
           - mockup
       build_base_images:
         description: Build the base image before building the Dask images?
@@ -103,6 +104,7 @@ jobs:
       common: ${{ steps.filter.outputs.common }}
       l0: ${{ steps.filter.outputs.l0 }}
       s1ard: ${{ steps.filter.outputs.s1ard }}
+      s3olci: ${{ steps.filter.outputs.s3olci }}
     steps:
       - uses: actions/checkout@v6
       - uses: dorny/paths-filter@v3
@@ -121,6 +123,7 @@ jobs:
               - docker/eopf/resources/restore-apt.sh
             l0: ['docker/**/*dask-l0.*', 'docker/**/l0/*']
             s1ard: ['docker/**/*dask-s1ard.*']
+            s3olci: ['docker/**/*dask-s3olci.*']
           list-files: 'json' # Enables listing of files matching the filter
 
   # Build base images for Dask only
@@ -193,7 +196,8 @@ jobs:
             (${common_changes} == 'true') || \
             (${{ needs.changes.outputs.base }} == 'true') || \
             (${{ needs.changes.outputs.l0 }} == 'true') || \
-            (${{ needs.changes.outputs.s1ard }} == 'true') \
+            (${{ needs.changes.outputs.s1ard }} == 'true') || \
+            (${{ needs.changes.outputs.s3olci }} == 'true') \
           ]]; then
             any_changes=true
           fi
@@ -217,13 +221,15 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        proc: [l0, s1ard]
+        proc: [l0, s1ard, s3olci]
         target: [cluster, local, localcluster] # No option = main image for cluster deployment, "local" is for local deployment and "localcluster" is for local debugging
         include:
           - proc: l0
             proccondition: "${{ (needs.changes.outputs.l0 == 'true') || (needs.set-env.outputs.common_changes == 'true') || (needs.set-env.outputs.base == 'true') || ((github.event_name == 'workflow_dispatch') && ((github.event.inputs.processor == 'l0') || (github.event.inputs.processor == 'all'))) }}"
           - proc: s1ard
             proccondition: "${{ (needs.changes.outputs.s1ard == 'true') || (needs.set-env.outputs.common_changes == 'true') || (needs.set-env.outputs.base == 'true') || ((github.event_name == 'workflow_dispatch') && ((github.event.inputs.processor == 's1ard') || (github.event.inputs.processor == 'all'))) }}"
+          - proc: s3olci
+            proccondition: "${{ (needs.changes.outputs.s3olci == 'true') || (needs.set-env.outputs.common_changes == 'true') || (needs.set-env.outputs.base == 'true') || ((github.event_name == 'workflow_dispatch') && ((github.event.inputs.processor == 's3olci') || (github.event.inputs.processor == 'all'))) }}"
           - target: cluster
             targetcondition: "${{ (github.event_name != 'workflow_dispatch') || (github.event.inputs.target_system == 'cluster') || (github.event.inputs.target_system == 'all') }}"
           - target: local

@@ -18,6 +18,7 @@
 # Target Docker image name:
 # ghcr.io/rs-python/dask/l0
 # ghcr.io/rs-python/dask/s1ard
+# ghcr.io/rs-python/dask/s3olci
 #
 
 # Base image type: can be "k8s" for cluster usage or "local" for local usage.
