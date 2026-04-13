@@ -68,9 +68,7 @@ RUN pip install dask[complete] && layer-cleanup.sh
 RUN restore-apt.sh && apt update && apt install -y python3-pydot graphviz && layer-cleanup.sh
 
 # Install and auto configure opentelemetry
-# TODO: remove aiobotocore-otel once opentelemetry-instrumentation-aiobotocore is released
-# See https://github.com/open-telemetry/opentelemetry-python-contrib/issues/4048
-RUN pip install opentelemetry-distro opentelemetry-exporter-otlp opentelemetry-instrumentation-eopf aiobotocore-otel && \
+RUN pip install opentelemetry-distro opentelemetry-exporter-otlp "opentelemetry-instrumentation-eopf>=0.2.3" && \
     opentelemetry-bootstrap -a install && \
     layer-cleanup.sh
 
