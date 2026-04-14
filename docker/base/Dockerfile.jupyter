@@ -18,7 +18,7 @@
 # ghcr.io/rs-python/quay.io/jupyter/base-notebook:hub-xxx
 #
 
-# shellcheck disable=SC2102
+# shellcheck disable=SC2102,SC1091
 
 # quay.io/jupyter/base-notebook:hub-<tag>-py<python_version>
 ARG BASE=xxx
