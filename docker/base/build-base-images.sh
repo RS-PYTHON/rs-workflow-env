@@ -23,7 +23,7 @@
 # ghcr.io/rs-python/prefecthq/prefect:xxx-pyzzz-k8s
 #
 
-# shellcheck disable=SC2199,SC2086
+# shellcheck disable=SC2199,SC2086,SC2034,SC2206
 
 set -euo pipefail
 set -x
@@ -57,7 +57,7 @@ JUPYTER_HUB_VERSION=5.4.3
 PUSH=false
 TARGET="all"
 
-help() { 
+help() {
     echo "Usage: $0 [-p|--push] [-t|--target <target>]"
     echo "Target can be one of: all, python, jupyter, dask, prefect"
 }
@@ -198,7 +198,7 @@ if [[ "$TARGET" == "all" || "$TARGET" == "dask" ]]; then
         # Target environments supported: local and k8s
         localenv="local"
         k8senv="k8s"
-        
+
         # Build the docker image for each target (local and k8s)
         for env in "$localenv" "$k8senv"; do
             target="ghcr.io/rs-python/dask/dask-gateway:${env}-py${python_version}-${dask_tag}"

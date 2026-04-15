@@ -1,0 +1,38 @@
+# Copyright 2023-2026 Airbus, CS Group
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+name: Check code quality
+
+on:
+  push:
+    branches: [develop, main] # pushes on the 'develop' or 'main' branches
+    tags: ['**'] # new git tags (including hierarchical tags like v1.0/beta)
+  pull_request:
+    types: [opened, synchronize, reopened]
+  workflow_dispatch:
+
+jobs:
+  call-reusable-workflow:
+    name: _
+    uses: RS-PYTHON/actions/.github/workflows/reusable-check-quality.yml@develop
+    with:
+        caller-repository: ${{ github.repository }}
+        caller-ref: ${{ github.ref }}
+        caller-ref_name: ${{ github.ref_name }}
+    secrets:
+      SAFETY_API_KEY: ${{ secrets.SAFETY_API_KEY }}
+      SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+    permissions:
+      contents: write # for apache/skywalking-eyes/header
+      pull-requests: write # for apache/skywalking-eyes/header and phwt/sonarqube-quality-gate-action

@@ -41,10 +41,8 @@ on:
       - '.github/actions/publish-docker/action.yml'
       - '.github/workflows/build-dask-eopf.yml'
   push:
-    branches:
-      - develop # pushes on the 'develop' branch
-    tags:
-      - '**' # new git tags (including hierarchical tags like v1.0/beta)
+    branches: [develop, main] # pushes on the 'develop' or 'main' branches
+    tags: ['**'] # new git tags (including hierarchical tags like v1.0/beta)
     paths:
       - 'docker/base/**'
       - 'docker/eopf/**'
@@ -309,7 +307,9 @@ jobs:
         uses: aquasecurity/trivy-action@master
         env:
           TRIVY_DB_REPOSITORY: public.ecr.aws/aquasecurity/trivy-db:2
+          TRIVY_JAVA_DB_REPOSITORY: public.ecr.aws/aquasecurity/trivy-java-db:1
         with:
+          version: v0.69.3
           image-ref: ${{ steps.build.outputs.repository_and_tag }}
           format: sarif
           output: trivy-results-docker.sarif
@@ -396,7 +396,6 @@ jobs:
       - id: test-demos
         name: Test rs-demo
         env:
-          S3CFG_OVH_BUCKET: ${{ secrets.S3CFG_OVH_BUCKET }}
           BRANCH_NAME: ${{ needs.set-env.outputs.branch_name }}
           DOCKER_TAG: ${{ needs.set-env.outputs.docker_tag }}
         run: |
