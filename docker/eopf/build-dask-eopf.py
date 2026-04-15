@@ -54,10 +54,6 @@ class Image:
 
 # All possible processor images
 all_procs = {
-    "mockup": Image(
-        "ghcr.io/rs-python/dask/mockup/k8s",
-        "ghcr.io/rs-python/dask/mockup/local"
-    ),
     "l0": Image(
         "ghcr.io/rs-python/dask/l0/k8s",
         "ghcr.io/rs-python/dask/l0/local",
@@ -69,6 +65,12 @@ all_procs = {
         "ghcr.io/rs-python/dask/s1ard/local",
         "ghcr.io/rs-python/dask/s1ard/localcluster",
         "dask-s1ard",
+    ),
+    "s3olci": Image(
+        "ghcr.io/rs-python/dask/s3olci/k8s",
+        "ghcr.io/rs-python/dask/s3olci/local",
+        "ghcr.io/rs-python/dask/s3olci/localcluster",
+        "dask-s3olci",
     ),
 }
 
@@ -149,16 +151,8 @@ else:
 
 for proc, local_cluster in procs_to_build:
 
-    # Handle special cases
-    if (proc == "mockup") and local_cluster:
-        if build_all:
-            continue
-        raise RuntimeError("No LocalCluster image for mockup")
-
     def get_dockerfile() -> Path:
         """Return Dockerfile to use"""
-        if proc == "mockup":
-            return THIS_DIR / "Dockerfile.dask-eopf-mockup"
         if local_cluster:
             return THIS_DIR / "Dockerfile.dask-eopf-localcluster"
         # default
