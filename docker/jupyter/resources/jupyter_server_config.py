@@ -12,11 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import os
-import stat
-import subprocess
-from pathlib import Path
 
-from jupyter_core.paths import jupyter_data_dir
+"""Jupyter config file: https://jupyter-server.readthedocs.io/en/latest/users/configuration.html"""
 
-c.ContentsManager.allow_hidden = True
+c.ContentsManager.allow_hidden = True  # type: ignore[name-defined] # pylint: disable=undefined-variable # noqa: F821

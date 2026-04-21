@@ -18,12 +18,12 @@
 
 import argparse
 import itertools
-import subprocess
+import subprocess  # nosec
 import sys
 from dataclasses import dataclass
 from pathlib import Path
 
-# NOTE: run "./build-dask-eopf.py -h" to display help.
+# NOTE: run "./build_dask_eopf.py -h" to display help.
 
 # This script directory
 THIS_DIR = Path(__file__).parent
@@ -55,8 +55,8 @@ class Image:
 # All possible processor images
 all_procs = {
     "cpm": Image(
-        k8s_name = "ghcr.io/rs-python/dask/cpm/k8s",
-        image2build = "dask-cpm",
+        k8s_name="ghcr.io/rs-python/dask/cpm/k8s",
+        image2build="dask-cpm",
     ),
     "l0": Image(
         "ghcr.io/rs-python/dask/l0/k8s",
@@ -151,34 +151,35 @@ if not build_all:
 
 # Build all the processors, with and without local cluster
 else:
-    procs_to_build = list(itertools.product(all_procs.keys(), [False, True]))
+    procs_to_build = list(itertools.product(all_procs.keys(), [False, True]))  # type: ignore[arg-type]
 
 for proc, local_cluster in procs_to_build:
 
-    def get_dockerfile() -> Path:
+    def get_dockerfile(localcluster) -> Path:
         """Return Dockerfile to use"""
-        if local_cluster:
+        if localcluster:
             return THIS_DIR / "Dockerfile.dask-eopf-localcluster"
         # default
         return THIS_DIR / "Dockerfile.dask-eopf"
 
-    def run_command(command: list[str]):
+    def run_command(cmd: list[str]):
         """Run command line"""
         print(f"""
 #########
 # BUILD #
 #########
 
-{' '.join(command)}
+{' '.join(cmd)}
 """)
 
-        if code := subprocess.run(
-            command,
+        if code := subprocess.run(  # nosec
+            cmd,
+            check=False,
             env={"GITLAB_EOPF_TOKEN": args.gitlab_eopf_token},
         ).returncode:
             joined = "' '"
             raise RuntimeError(
-                f"Error running command:\n'{joined.join(command)}'\nReturn code: {code}",
+                f"Error running command:\n'{joined.join(cmd)}'\nReturn code: {code}",
             )
 
     # Docker image information
@@ -198,9 +199,9 @@ for proc, local_cluster in procs_to_build:
         "--build-arg",
         f"IMAGE2BUILD={image.image2build}",
         "--secret",
-        f"id=GITLAB_EOPF_TOKEN",
+        "id=GITLAB_EOPF_TOKEN",
         "-f",
-        str(get_dockerfile()),
+        str(get_dockerfile(local_cluster)),
         "-t",
         f"{registry}:{args.docker_tag}",
         "--progress=plain",

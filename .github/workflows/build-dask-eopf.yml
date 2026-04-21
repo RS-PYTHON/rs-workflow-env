@@ -116,7 +116,7 @@ jobs:
               - docker/base/Dockerfile.dask.k8s
               - docker/base/Dockerfile.dask.local
             common:
-              - docker/eopf/build-dask-eopf.py
+              - docker/eopf/build_dask_eopf.py
               - docker/eopf/Dockerfile.dask-eopf
               - docker/eopf/Dockerfile.dask-eopf-localcluster
               - docker/eopf/resources/layer-cleanup.sh
@@ -295,7 +295,7 @@ jobs:
             options="--local"
           fi
 
-          ./docker/eopf/build-dask-eopf.py \
+          ./docker/eopf/build_dask_eopf.py \
             --gitlab_eopf_token "${{ secrets.GITLAB_EOPF_TOKEN }}" \
             --docker_tag ${{ needs.set-env.outputs.docker_tag }} \
             --labels "${{ steps.meta.outputs.labels }}" \
