@@ -43,7 +43,7 @@ class Image:
     k8s_name: str
 
     # Docker image name for local mode usage (registry)
-    local_name: str
+    local_name: str = ""
 
     # Name of the LocalCluster image (for debugging)
     local_cluster_name: str = ""
@@ -54,6 +54,10 @@ class Image:
 
 # All possible processor images
 all_procs = {
+    "cpm": Image(
+        k8s_name = "ghcr.io/rs-python/dask/cpm/k8s",
+        image2build = "dask-cpm",
+    ),
     "l0": Image(
         "ghcr.io/rs-python/dask/l0/k8s",
         "ghcr.io/rs-python/dask/l0/local",
