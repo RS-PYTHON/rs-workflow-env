@@ -27,9 +27,9 @@ ARG BASE_IMAGE_TARGET=xxx
 
 # Versions used: currently all processors use Dask 2024.5.2 with Python 3.11.7, and the base images are all built with dask-gateway 2025.4.0
 # Base images for local mode also include dask-gateway-server with the same version as dask-gateway
-# ANY VERSION CHANGE MUST BE UPDATED IN THE BASE IMAGES SCRIPT GENERATOR (docker/base/build-base-images.sh) AND IN THIS FILE.
-ARG PYTHON_VERSION_DPR=3.11.7
-ARG DASK_TAG=2024.5.2
+# ANY VERSION CHANGE MUST BE UPDATED IN THE BASE IMAGES SCRIPT GENERATOR (docker/base/build-base-images.sh and docker/eopf/build_dask_eopf.py).
+ARG PYTHON_VERSION_DPR=xxx
+ARG DASK_TAG=xxx
 
 FROM ghcr.io/rs-python/dask/dask-gateway:${BASE_IMAGE_TARGET}-py${PYTHON_VERSION_DPR}-${DASK_TAG}
 

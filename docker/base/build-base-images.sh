@@ -35,15 +35,18 @@ CUSTOM_REQ=$(realpath "${SCRIPT_DIR}/../scripts")
 
 # We use a different python version in eopf + the dpr processors + rs-dpr-service
 PYTHON_VERSION=3.13.12
+PYTHON_VERSION_CPM=3.11.7
 PYTHON_VERSION_DPR=3.11.7
 
 # Different versions of dask and dask-gateway used (must be declared here to use update_framework_versions.sh script)
 DASK_TAG=2024.5.2
+DASK_TAG_CPM=2026.1.2
 DASK_TAG_STAGING=2026.1.2
 DASK_GATEWAY_TAG=2025.4.0
 
 # Versions used: format is [PYTHON_VERSION DASK_TAG DASK_GATEWAY_TAG]
 declare -a STAGING_VERSIONS=($PYTHON_VERSION $DASK_TAG_STAGING $DASK_GATEWAY_TAG)
+declare -a CPM_VERSIONS=($PYTHON_VERSION_CPM $DASK_TAG_CPM $DASK_GATEWAY_TAG)
 declare -a PROCESSOR_VERSIONS=($PYTHON_VERSION_DPR $DASK_TAG $DASK_GATEWAY_TAG)
 
 PREFECT_TAG=3.6.20
@@ -147,7 +150,7 @@ fi
 ########
 
 if [[ "$TARGET" == "all" || "$TARGET" == "dask" ]]; then
-    declare -a versions_list=("PROCESSOR_VERSIONS" "STAGING_VERSIONS")
+    declare -a versions_list=("PROCESSOR_VERSIONS" "CPM_VERSIONS" "STAGING_VERSIONS")
     for versions_index in "${versions_list[@]}"; do
         declare -n versions="${versions_index}"
 

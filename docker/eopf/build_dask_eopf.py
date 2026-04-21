@@ -214,6 +214,11 @@ for proc, local_cluster in procs_to_build:
     if not local_cluster:
         command += ["--build-arg", f"BASE_IMAGE_TARGET={registry.rsplit('/', 1)[1]}"]
 
+    if proc == 'cpm':
+        command += ["--build-arg", "PYTHON_VERSION_DPR=3.11.7", "--build-arg", "DASK_TAG=2026.1.2"]
+    else:
+        command += ["--build-arg", "PYTHON_VERSION_DPR=3.11.7", "--build-arg", "DASK_TAG=2024.5.2"]
+
     # Build image
     run_command(command + labels)
 
