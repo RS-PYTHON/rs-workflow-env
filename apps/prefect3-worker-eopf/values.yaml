@@ -249,8 +249,8 @@ worker:
                             "memory": "256Mi"
                             },
                           "limits": {
-                            "cpu": "300m",
-                            "memory": "512Mi"
+                            "cpu": 1,
+                            "memory": "8Gi"
                           }
                         }
                       }
