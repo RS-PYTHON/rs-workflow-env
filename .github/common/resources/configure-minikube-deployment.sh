@@ -24,3 +24,12 @@ sed -i 's!: "150m"!: "1m"!g'\
   "${APPS}/prefect3-worker-eopf/values.yaml"\
   "${APPS}/prefect3-worker-general/values.yaml"\
   "${APPS}/prefect3-worker-staging/values.yaml"
+
+# Lower jupyter specs
+yq -i '.scheduling.userScheduler.replicas = 1' "${APPS}/jupyterhub/values.yaml
+yq -i '.singleuser.profileList = .singleuser.profileList[:1]' "${APPS}/jupyterhub/values.yaml
+
+# Lower prefect specs
+yq -i '.worker.replicaCount = 1' "${APPS}/prefect3-worker-general/values.yaml
+yq -i '.worker.replicaCount = 1' "${APPS}/prefect3-worker-staging/values.yaml
+yq -i '.worker.replicaCount = 1' "${APPS}/prefect3-worker-eopf/values.yaml
