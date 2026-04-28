@@ -43,10 +43,6 @@ jobs:
 #            deploy_monitoring: false
     name: ${{ matrix.name }}
     steps:
-      - name: Debug yq
-        run: |
-          which yq
-          yq --version
       - name: Check if branch exists in rs-infra-core
         id: check_branch
         env:

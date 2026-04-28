@@ -20,9 +20,9 @@ APPS=rs-workflow-env/apps
 # Lower the CPU requests
 sed -i 's!: 0.1!: 0.001!g' "${APPS}/jupyterhub/values.yaml"
 sed -i 's!: 500m!: 1m!g' "${APPS}/prefect3-server/values.yaml"
-sed -i 's!: "150m"!: "1m"!g'\
-  "${APPS}/prefect3-worker-eopf/values.yaml"\
-  "${APPS}/prefect3-worker-general/values.yaml"\
+sed -i 's!: "150m"!: "1m"!g' \
+  "${APPS}/prefect3-worker-eopf/values.yaml" \
+  "${APPS}/prefect3-worker-general/values.yaml" \
   "${APPS}/prefect3-worker-staging/values.yaml"
 
 # Lower jupyter specs
