@@ -130,6 +130,7 @@ jobs:
       - name: Deploy the workflow-env apps (for real)
         run: |
           sed -i 's!debug: false!debug: true!g' roles/app-installer/defaults/main.yaml
+          sed -i 's!\(ghcr.io/rs-python/rs-workflow-env-jupyter\):[^[:space:]]*!\1:latest!' ./rs-workflow-env/apps/jupyterhub/values.yaml
           ./rs-workflow-env/.github/common/resources/configure-minikube-deployment.sh
           conda run -n rspy --no-capture-output env PYTHONUNBUFFERED=1 ANSIBLE_FORCE_COLOR=1 ansible-playbook apps.yaml -i inventory/mycluster/hosts.yaml -e '{"package_paths": ["./rs-workflow-env/apps/"]}'
       - name: 🩺 Kubernetes failure diagnostics
