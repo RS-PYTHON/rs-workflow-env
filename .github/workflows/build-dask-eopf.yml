@@ -38,7 +38,6 @@ on:
       - 'docker/base/**'
       - 'docker/eopf/**'
       - 'docker/scripts/**'
-      - '.github/actions/publish-docker/action.yml'
       - '.github/workflows/build-dask-eopf.yml'
   push:
     branches: [develop, main] # pushes on the 'develop' or 'main' branches
@@ -47,7 +46,6 @@ on:
       - 'docker/base/**'
       - 'docker/eopf/**'
       - 'docker/scripts/**'
-      - '.github/actions/publish-docker/action.yml'
       - '.github/workflows/build-dask-eopf.yml'
   workflow_dispatch: # manual trigger
     inputs:
@@ -226,13 +224,13 @@ jobs:
         target: [cluster, local, localcluster] # No option = main image for cluster deployment, "local" is for local deployment and "localcluster" is for local debugging
         include:
           - proc: cpm
-            proccondition: "${{ (needs.changes.outputs.cpm == 'true') || (needs.set-env.outputs.common_changes == 'true') || (needs.set-env.outputs.base == 'true') || ((github.event_name == 'workflow_dispatch') && ((github.event.inputs.processor == 'cpm') || (github.event.inputs.processor == 'all'))) }}"
+            proccondition: "${{ (needs.changes.outputs.cpm == 'true') || (needs.set-env.outputs.common_changes == 'true') || (needs.changes.outputs.base == 'true') || ((github.event_name == 'workflow_dispatch') && ((github.event.inputs.processor == 'cpm') || (github.event.inputs.processor == 'all'))) }}"
           - proc: l0
-            proccondition: "${{ (needs.changes.outputs.l0 == 'true') || (needs.set-env.outputs.common_changes == 'true') || (needs.set-env.outputs.base == 'true') || ((github.event_name == 'workflow_dispatch') && ((github.event.inputs.processor == 'l0') || (github.event.inputs.processor == 'all'))) }}"
+            proccondition: "${{ (needs.changes.outputs.l0 == 'true') || (needs.set-env.outputs.common_changes == 'true') || (needs.changes.outputs.base == 'true') || ((github.event_name == 'workflow_dispatch') && ((github.event.inputs.processor == 'l0') || (github.event.inputs.processor == 'all'))) }}"
           - proc: s1ard
-            proccondition: "${{ (needs.changes.outputs.s1ard == 'true') || (needs.set-env.outputs.common_changes == 'true') || (needs.set-env.outputs.base == 'true') || ((github.event_name == 'workflow_dispatch') && ((github.event.inputs.processor == 's1ard') || (github.event.inputs.processor == 'all'))) }}"
+            proccondition: "${{ (needs.changes.outputs.s1ard == 'true') || (needs.set-env.outputs.common_changes == 'true') || (needs.changes.outputs.base == 'true') || ((github.event_name == 'workflow_dispatch') && ((github.event.inputs.processor == 's1ard') || (github.event.inputs.processor == 'all'))) }}"
           - proc: s3olci
-            proccondition: "${{ (needs.changes.outputs.s3olci == 'true') || (needs.set-env.outputs.common_changes == 'true') || (needs.set-env.outputs.base == 'true') || ((github.event_name == 'workflow_dispatch') && ((github.event.inputs.processor == 's3olci') || (github.event.inputs.processor == 'all'))) }}"
+            proccondition: "${{ (needs.changes.outputs.s3olci == 'true') || (needs.set-env.outputs.common_changes == 'true') || (needs.changes.outputs.base == 'true') || ((github.event_name == 'workflow_dispatch') && ((github.event.inputs.processor == 's3olci') || (github.event.inputs.processor == 'all'))) }}"
           - target: cluster
             targetcondition: "${{ (github.event_name != 'workflow_dispatch') || (github.event.inputs.target_system == 'cluster') || (github.event.inputs.target_system == 'all') }}"
           - target: local
@@ -365,7 +363,7 @@ jobs:
     name: Trigger rs-testmeans CI to build the Dask mockup image
     needs: [changes, set-env, build-base-dask-images]
     # Trigger CI for mockup images only if base images are changed OR if asked by manual trigger
-    if: ${{ always() && !failure() && !cancelled() && ((needs.set-env.outputs.base == 'true') || ((github.event_name == 'workflow_dispatch') && ((github.event.inputs.processor == 'mockup') || (github.event.inputs.processor == 'all')))) }}
+    if: ${{ always() && !failure() && !cancelled() && ((needs.changes.outputs.base == 'true') || ((github.event_name == 'workflow_dispatch') && ((github.event.inputs.processor == 'mockup') || (github.event.inputs.processor == 'all')))) }}
     steps:
       - env:
           TRIGGER_WORKFLOWS_TOKEN: ${{ secrets.TRIGGER_WORKFLOWS }}
@@ -381,7 +379,7 @@ jobs:
             -H "Accept: application/vnd.github+json" \
             -H "Authorization: Bearer ${TRIGGER_WORKFLOWS_TOKEN}" \
             -H "X-GitHub-Api-Version: 2026-03-10" \
-            https://api.github.com/repos/RS-PYTHON/rs-testmeans/actions/workflows/publish-docker.yml/dispatches \
+            https://api.github.com/repos/RS-PYTHON/rs-testmeans/actions/workflows/publish-binaries.yml/dispatches \
             -d '{"ref":"${{ needs.set-env.outputs.branch_name }}","inputs":{"docker_tag":"'"$docker_tag"'","build_only_mockup_images":"true"}}'
         shell: bash
 

@@ -33,7 +33,6 @@ on:
       - 'docker/base/**'
       - 'docker/jupyter/**'
       - 'docker/scripts/**'
-      - '.github/actions/publish-docker/action.yml'
       - '.github/workflows/build-jupyter.yml'
   push:
     branches: [develop, main] # pushes on the 'develop' or 'main' branches
@@ -42,7 +41,6 @@ on:
       - 'docker/base/**'
       - 'docker/jupyter/**'
       - 'docker/scripts/**'
-      - '.github/actions/publish-docker/action.yml'
       - '.github/workflows/build-jupyter.yml'
   workflow_dispatch: # manual trigger
     inputs:
@@ -101,8 +99,23 @@ jobs:
       - name: Build and push base image
         run: docker/base/build-base-images.sh -t jupyter --push
 
-  # Calculate variables for this workflow
   set-env:
+    name: Set environment
+    if: github.actor != 'dependabot[bot]' # ignore pull requests by github bot
+    runs-on: ubuntu-latest
+    outputs:
+      branch_name: ${{ steps.set-binary-env.outputs.branch_name }}
+      docker_tags: ${{ steps.set-binary-env.outputs.docker_tags }}
+    steps:
+      - id: set-binary-env
+        name: Call action 'set-binary-env'
+        uses: RS-PYTHON/actions/.github/actions/set-binary-env@feat-rspy964/push-latest-after-tests
+        with:
+          wheel_version_name: ${{  }} # branch name
+          manual_tag: ${{ github.event.inputs.docker_tag }}
+
+  # Calculate variables for this workflow
+  set-env2:
     if: github.actor != 'dependabot[bot]' # ignore pull requests by github bot
     runs-on: ubuntu-latest
     name: Set environment
@@ -155,21 +168,12 @@ jobs:
           echo "docker_tag2=$docker_tag2" >> $GITHUB_OUTPUT
         shell: bash
 
-  publish-docker-matrix:
-    strategy:
-      matrix:
-        # path: relative path on disk where to find resources and Dockerfile
-        # image: used for the name of the docker image to build
-        include:
-          - path: jupyter
-            image: jupyter
+  publish-docker:
     if: ${{ always() && !failure() && !cancelled() && (github.actor != 'dependabot[bot]') }} # Run the job even if previous job was skipped
     runs-on: ubuntu-latest
     name: Build image for Jupyter
     needs: [set-env, build-base-jupyter-image]
     permissions: write-all
-    outputs:
-      docker_image: ${{ steps.publish-docker.outputs.docker_image}}
     steps:
       - uses: actions/checkout@v6
 
@@ -177,25 +181,19 @@ jobs:
         id: copy_common_req
         shell: bash
         run: |
-          mkdir -p ./docker/${{ matrix.path }}/resources/
-          cp ./docker/scripts/*.* ./docker/${{ matrix.path }}/resources/
+          mkdir -p ./docker/jupyter/resources/
+          cp ./docker/scripts/*.* ./docker/jupyter/resources/
 
-      - name: Get latest run ID from rs-server
-        if: matrix.image == 'jupyter'
+      - id: rs-client-run-id
+        name: Get latest run ID from rs-client-libraries
         env:
           REPO_OWNER: ${{ github.repository_owner }}
+          REPO_NAME: rs-client-libraries
           RS_SERVER_PAT: ${{ secrets.RS_SERVER_PAT }}
           WORKFLOW_FILE: "publish-binaries.yml"
           CURRENT_BRANCH: ${{ needs.set-env.outputs.branch_name }}
         run: |
-
-          # Other parameters depend on the docker image to build
           set -x
-          if [[ ${{ matrix.image }} == "jupyter" ]]; then
-            REPO_NAME="rs-client-libraries"
-            VAR_RUN_ID="rs_client_libraries_run_id"
-          fi
-          set +x
 
           # Test to download from the current branch name, or develop
           if [[ $CURRENT_BRANCH == develop ]]; then
@@ -216,7 +214,7 @@ jobs:
                   echo "No workflow run found for branch $BRANCH in $REPO_OWNER/$REPO_NAME"
               else
                   echo "Latest run ID from $BRANCH: $RUN_ID"
-                  echo "$VAR_RUN_ID=$RUN_ID" >> $GITHUB_ENV
+                  echo "run-id=$RUN_ID" >> $GITHUB_OUTPUT
                   exit 0
               fi
           done
@@ -226,26 +224,25 @@ jobs:
 
       - name: Download rs-client-libraries-wheels
         uses: actions/download-artifact@v4
-        if: matrix.image == 'jupyter'
         with:
-          path: ./docker/${{ matrix.path }}
+          path: ./docker/jupyter
           pattern: rs_client_libraries-*-py3-none-any.whl
           merge-multiple: true
           github-token: ${{ secrets.RS_SERVER_PAT }}
           repository: RS-PYTHON/rs-client-libraries
-          run-id: ${{ env.rs_client_libraries_run_id }}
+          run-id: ${{ steps.rs-client-run-id.outputs.run-id }}
 
       - id: publish-docker
-        name: Publish docker
-        if: matrix.image == 'jupyter'
-        uses: ./.github/actions/publish-docker
+        uses: RS-PYTHON/actions/.github/actions/publish-docker@feat-rspy964/push-latest-after-tests
         with:
-          dockerfile: ./docker/${{ matrix.path }}/Dockerfile
-          build_context_path: ./docker/${{ matrix.path }}
-          image_suffix: -${{ matrix.image }}
-          version_name: ${{ needs.set-env.outputs.docker_tag1 }}
-          docker_tag: ${{ needs.set-env.outputs.docker_tag2 }}
+          dockerfile: ./docker/jupyter/Dockerfile
+          build_context_path: ./docker/jupyter
+          image_suffix: -jupyter
+          image_tags: ${{ needs.set-env.outputs.docker_tag1 }},${{ needs.set-env.outputs.docker_tag2 }}
+          dockerhub_username: ${{ vars.DOCKERHUB_USERNAME }}
+          dockerhub_token: ${{ secrets.DOCKERHUB_TOKEN }}
           github_token: ${{ secrets.GITHUB_TOKEN }}
-          image2build: ${{ matrix.image }}
-          secrets: |
-            "GITLAB_EOPF_TOKEN=${{ secrets.GITLAB_EOPF_TOKEN }}"
+          build-args: "IMAGE2BUILD=jupyter"
+          secrets: "GITLAB_EOPF_TOKEN=${{ secrets.GITLAB_EOPF_TOKEN }}"
+          trivy-skip-dirs: /opt/conda/pkgs/cache
+          trivy-skip-files: /opt/conda/lib/python3.*/site-packages/bokeh/server/static/js/compiler.js,/opt/conda/lib/python3.*/site-packages/prefect/server/ui/assets/index-CCNfsmcm.js.map
