@@ -111,62 +111,7 @@ jobs:
         name: Call action 'set-binary-env'
         uses: RS-PYTHON/actions/.github/actions/set-binary-env@feat-rspy964/push-latest-after-tests
         with:
-          wheel_version_name: ${{  }} # branch name
           manual_tag: ${{ github.event.inputs.docker_tag }}
-
-  # Calculate variables for this workflow
-  set-env2:
-    if: github.actor != 'dependabot[bot]' # ignore pull requests by github bot
-    runs-on: ubuntu-latest
-    name: Set environment
-    outputs:
-      branch_name: ${{ steps.set-env.outputs.branch_name }}
-      docker_tag1: ${{ steps.set-env.outputs.docker_tag1 }}
-      docker_tag2: ${{ steps.set-env.outputs.docker_tag2 }}
-    steps:
-      - id: set-env
-        name: Set environment
-        run: |
-          set -x
-
-          # Get the current branch name (or source branch for a pull request)
-          if [[ ${{ github.event_name }} == pull_request ]]; then
-            branch_name=${{ github.event.pull_request.head.ref }}
-          else
-            branch_name=${{ github.ref_name }}
-          fi
-
-          # Determine the docker tags to set to new docker images.
-          # For a pull request, use the branch name
-          if [[ ${{ github.event_name }} == pull_request ]]; then
-            docker_tag1="$branch_name"
-
-          # For a push on develop or a tag, use the branch name and :latest
-          elif [[ ${{ github.event_name }} == push ]]; then
-            docker_tag1="$branch_name"
-            docker_tag2=latest
-
-          # For a manual trigger, use the user-defined tag, or latest if empty
-          elif [[ ${{ github.event_name }} == workflow_dispatch ]]; then
-            docker_tag1=${{ github.event.inputs.docker_tag }}
-            if [[ -z "$docker_tag1" ]]; then
-              docker_tag1=latest
-            fi
-
-          else
-            >&2 echo "Unknown trigger"
-            exit 1
-          fi
-
-          # Replace special characters by -
-          docker_tag1=$(sed "s/[^a-zA-Z0-9]/-/g" <<< "$docker_tag1")
-          docker_tag2=$(sed "s/[^a-zA-Z0-9]/-/g" <<< "$docker_tag2")
-
-          # Save values
-          echo "branch_name=$branch_name" >> $GITHUB_OUTPUT
-          echo "docker_tag1=$docker_tag1" >> $GITHUB_OUTPUT
-          echo "docker_tag2=$docker_tag2" >> $GITHUB_OUTPUT
-        shell: bash
 
   publish-docker:
     if: ${{ always() && !failure() && !cancelled() && (github.actor != 'dependabot[bot]') }} # Run the job even if previous job was skipped
@@ -238,7 +183,7 @@ jobs:
           dockerfile: ./docker/jupyter/Dockerfile
           build_context_path: ./docker/jupyter
           image_suffix: -jupyter
-          image_tags: ${{ needs.set-env.outputs.docker_tag1 }},${{ needs.set-env.outputs.docker_tag2 }}
+          image_tags: ${{ needs.set-env.outputs.docker_tags }}
           dockerhub_username: ${{ vars.DOCKERHUB_USERNAME }}
           dockerhub_token: ${{ secrets.DOCKERHUB_TOKEN }}
           github_token: ${{ secrets.GITHUB_TOKEN }}
