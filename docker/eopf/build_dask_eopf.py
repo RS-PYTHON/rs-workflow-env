@@ -55,8 +55,10 @@ class Image:
 # All possible processor images
 all_procs = {
     "cpm": Image(
-        k8s_name="ghcr.io/rs-python/dask/cpm/k8s",
-        image2build="dask-cpm",
+        "ghcr.io/rs-python/dask/cpm/k8s",
+        "ghcr.io/rs-python/dask/cpm/local",
+        "ghcr.io/rs-python/dask/cpm/localcluster",
+        "dask-cpm",
     ),
     "l0": Image(
         "ghcr.io/rs-python/dask/l0/k8s",
