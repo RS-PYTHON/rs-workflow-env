@@ -115,9 +115,9 @@ parser.add_argument(
 )
 parser.add_argument(
     "-d",
-    "--docker_tag",
+    "--docker_tags",
     default="latest",
-    help="Docker tag to use (default: latest)",
+    help="Docker tag(s) to use, as a comma-separated list e.g. 'tag1,tag2' (default: latest)",
 )
 parser.add_argument(
     "--labels",
@@ -202,8 +202,11 @@ for proc, local_cluster in procs_to_build:
         "id=GITLAB_EOPF_TOKEN",
         "-f",
         str(get_dockerfile(local_cluster)),
-        "-t",
-        f"{registry}:{args.docker_tag}",
+    ]
+    for tag in args.docker_tags.split(","):
+        if tag:
+            command += ["-t", f"{registry}:{tag}"]
+    command += [
         "--progress=plain",
         "--build-context",
         f"docker-scripts={str(DOCKER_SCRIPTS)}",
@@ -224,10 +227,12 @@ for proc, local_cluster in procs_to_build:
 
     # Push to registry
     if args.push:
-        run_command(
-            [
-                "/bin/sh",
-                "-c",
-                f"docker login https://ghcr.io/v2/rs-python && docker push '{registry}:{args.docker_tag}'",
-            ],
-        )
+        for tag in args.docker_tags.split(","):
+            if tag:
+                run_command(
+                    [
+                        "/bin/sh",
+                        "-c",
+                        f"docker login https://ghcr.io/v2/rs-python && docker push '{registry}:{tag}'",
+                    ],
+                )
