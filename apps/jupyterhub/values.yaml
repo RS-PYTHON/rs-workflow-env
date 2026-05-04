@@ -67,10 +67,8 @@ hub:
         state: state
       auth_state_groups_key: oauth_user
       claim_groups_key: realm_access.roles
-      allowed_groups:
-        {{ jupyterhub.ops.allowedGroups | indent( width=8, first=False) }}
-      admin_groups:
-        {{ jupyterhub.ops.adminGroups | indent( width=8, first=False) }}
+      allowed_groups: {{ jupyterhub.ops.allowedGroups | to_yaml }}
+      admin_groups: {{ jupyterhub.ops.adminGroups | to_yaml }}
       scope:
         - openid
       enable_auth_state: true

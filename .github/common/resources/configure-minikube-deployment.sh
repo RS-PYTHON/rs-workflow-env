@@ -1,7 +1,7 @@
 #!/bin/bash
 # Copyright 2023-2026 Airbus, CS Group
 #
-# Licensed under the Apache License, Version 2.0 (the "License");
+# Licen nder the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
 # You may obtain a copy of the License at
 #
@@ -27,7 +27,7 @@ sed -i 's!: "150m"!: "1m"!g' \
 
 # Lower jupyter specs
 yq -i '.scheduling.userScheduler.replicas = 1' "${APPS}/jupyterhub/values.yaml"
-# yq -i '.singleuser.profileList = [ .singleuser.profileList[0] ]' "${APPS}/jupyterhub/values.yaml"
+yq -i '.singleuser.profileList = [ .singleuser.profileList[0] ]' "${APPS}/jupyterhub/values.yaml"
 
 # Lower prefect specs
 yq -i '.worker.replicaCount = 1' "${APPS}/prefect3-worker-general/values.yaml"
