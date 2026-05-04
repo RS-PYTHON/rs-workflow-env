@@ -190,7 +190,6 @@ jobs:
           dockerhub_username: ${{ vars.DOCKERHUB_USERNAME }}
           dockerhub_token: ${{ secrets.DOCKERHUB_TOKEN }}
           github_token: ${{ secrets.GITHUB_TOKEN }}
-          build-args: "IMAGE2BUILD=jupyter"
           secrets: "GITLAB_EOPF_TOKEN=${{ secrets.GITLAB_EOPF_TOKEN }}"
-          trivy-skip-dirs: /opt/conda/pkgs/cache
-          trivy-skip-files: /opt/conda/lib/python3.*/site-packages/bokeh/server/static/js/compiler.js,/opt/conda/lib/python3.*/site-packages/prefect/server/ui/assets/index-CCNfsmcm.js.map
+          trivy_skip_dirs: /opt/conda/pkgs/cache
+          trivy_skip_files: /opt/conda/lib/python3.*/site-packages/bokeh/server/static/js/compiler.js,/opt/conda/lib/python3.*/site-packages/prefect/server/ui/assets/index-CCNfsmcm.js.map

@@ -51,7 +51,7 @@ on:
     inputs:
       docker_tag:
         description: Tag the docker images as e.g. 'latest' or 'feat-rspy123'
-        required: true
+        required: false
       processor:
         description: Which processor to build an image for
         required: false
@@ -356,7 +356,7 @@ jobs:
           set -x
 
           # Keep last tag (after the last ',')
-          docker_tag=${docker_tags##*,}
+          docker_tag=${DOCKER_TAGS##*,}
 
           curl -L \
             -X POST \
