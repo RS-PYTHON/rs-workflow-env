@@ -158,7 +158,7 @@ jobs:
     steps:
       - id: set-binary-env
         name: Call action 'set-binary-env'
-        uses: RS-PYTHON/actions/.github/actions/set-binary-env@feat-rspy964/push-latest-after-tests
+        uses: RS-PYTHON/actions/.github/actions/set-binary-env@develop
         with:
           manual_tag: ${{ github.event.inputs.docker_tag }}
       - id: other-env
