@@ -28,6 +28,7 @@ ARG BASE=xxx
 ENV PATH="/home/jovyan/.local/bin:${PATH}"
 
 ARG PYTHON_VERSION=3.13.12
+ARG PYTHON_VERSION_CPM=3.11.7
 ARG DASK_TAG=2024.5.2
 ARG DASK_TAG_CPM=2026.1.2
 ARG DASK_TAG_STAGING=2026.1.2
@@ -68,11 +69,11 @@ RUN python -m venv /opt/venv/dask-staging && \
         distributed=="${DASK_TAG_STAGING}" \
         dask-gateway=="${DASK_GATEWAY_TAG}"
 
-# Install specific Python environment for CPM (needs Dask v.2026.1.2)
-RUN python -m venv /opt/venv/dask-cpm && \
-    source /opt/venv/dask-cpm/bin/activate && \
-    pip install -U pip && \
-    pip install \
+# Install specific Python environment for CPM (needs Python v.3.11.7 and Dask v.2026.1.2)
+RUN conda create --yes -p /opt/venv/dask-cpm python="${PYTHON_VERSION_CPM}" && \
+    /opt/venv/dask-cpm/bin/python -V && \
+    /opt/venv/dask-cpm/bin/pip install -U pip && \
+    /opt/venv/dask-cpm/bin/pip install \
         dask[complete]=="${DASK_TAG_CPM}" \
         distributed=="${DASK_TAG_CPM}" \
         dask-gateway=="${DASK_GATEWAY_TAG}"
