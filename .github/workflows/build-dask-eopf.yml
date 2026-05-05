@@ -38,7 +38,6 @@ on:
       - 'docker/base/**'
       - 'docker/eopf/**'
       - 'docker/scripts/**'
-      - '.github/actions/publish-docker/action.yml'
       - '.github/workflows/build-dask-eopf.yml'
   push:
     branches: [develop, main] # pushes on the 'develop' or 'main' branches
@@ -47,13 +46,12 @@ on:
       - 'docker/base/**'
       - 'docker/eopf/**'
       - 'docker/scripts/**'
-      - '.github/actions/publish-docker/action.yml'
       - '.github/workflows/build-dask-eopf.yml'
   workflow_dispatch: # manual trigger
     inputs:
       docker_tag:
         description: Tag the docker images as e.g. 'latest' or 'feat-rspy123'
-        required: true
+        required: false
       processor:
         description: Which processor to build an image for
         required: false
@@ -150,43 +148,23 @@ jobs:
     name: Set environment
     needs: [changes]
     outputs:
-      docker_tag: ${{ steps.set-env.outputs.docker_tag }}
-      branch_name: ${{ steps.set-env.outputs.branch_name }}
-      common_changes: ${{ steps.set-env.outputs.common_changes }}
-      any_changes: ${{ steps.set-env.outputs.any_changes }}
+      branch_name: ${{ steps.set-binary-env.outputs.branch_name }}
+      docker_tags: ${{ case(
+        steps.set-binary-env.outputs.docker_final_tags != '',
+        steps.set-binary-env.outputs.docker_final_tags,
+        steps.set-binary-env.outputs.docker_tags) }} # don't use temp tags, take directly the final tags
+      common_changes: ${{ steps.other-env.outputs.common_changes }}
+      any_changes: ${{ steps.other-env.outputs.any_changes }}
     steps:
-      - id: set-env
+      - id: set-binary-env
+        name: Call action 'set-binary-env'
+        uses: RS-PYTHON/actions/.github/actions/set-binary-env@develop
+        with:
+          manual_tag: ${{ github.event.inputs.docker_tag }}
+      - id: other-env
         name: Set environment
         run: |
           set -x
-
-          # Get the current branch name (or source branch for a pull request)
-          if [[ ${{ github.event_name }} == pull_request ]]; then
-            branch_name=${{ github.event.pull_request.head.ref }}
-          else
-            branch_name=${{ github.ref_name }}
-          fi
-
-          # Determine the docker tag to set to new docker images.
-          # For a pull request, use the branch name
-          if [[ ${{ github.event_name }} == pull_request ]]; then
-            docker_tag="$branch_name"
-
-          # For a push on develop or a tag, use the docker tag :latest
-          elif [[ ${{ github.event_name }} == push ]]; then
-            docker_tag=latest
-
-          # For a manual trigger, use the user-defined tag
-          elif [[ ${{ github.event_name }} == workflow_dispatch ]]; then
-            docker_tag=${{ github.event.inputs.docker_tag }}
-
-          else
-            >&2 echo "Unknown trigger"
-            exit 1
-          fi
-
-          # Replace special characters by -
-          docker_tag=$(sed "s/[^a-zA-Z0-9]/-/g" <<< "$docker_tag")
 
           # We always trigger the image builds if the common files have changed
           common_changes=${{ needs.changes.outputs.common }}
@@ -204,8 +182,6 @@ jobs:
           fi
 
           # Save values
-          echo "branch_name=$branch_name" >> $GITHUB_OUTPUT
-          echo "docker_tag=$docker_tag" >> $GITHUB_OUTPUT
           echo "common_changes=$common_changes" >> $GITHUB_OUTPUT
           echo "any_changes=$any_changes" >> $GITHUB_OUTPUT
         shell: bash
@@ -217,6 +193,8 @@ jobs:
     # Job run when there are changes OR a manual trigger, EVEN if any previous job is skipped
     if: ${{ always() && !failure() && !cancelled() && ((needs.set-env.outputs.any_changes == 'true') || (github.event_name == 'workflow_dispatch')) }}
     permissions: write-all
+    env:
+      DOCKER_TAGS: ${{ needs.set-env.outputs.docker_tags }}
 
     # See: https://docs.github.com/en/actions/how-tos/write-workflows/choose-what-workflows-do/run-job-variations
     strategy:
@@ -226,13 +204,13 @@ jobs:
         target: [cluster, local, localcluster] # No option = main image for cluster deployment, "local" is for local deployment and "localcluster" is for local debugging
         include:
           - proc: cpm
-            proccondition: "${{ (needs.changes.outputs.cpm == 'true') || (needs.set-env.outputs.common_changes == 'true') || (needs.set-env.outputs.base == 'true') || ((github.event_name == 'workflow_dispatch') && ((github.event.inputs.processor == 'cpm') || (github.event.inputs.processor == 'all'))) }}"
+            proccondition: "${{ (needs.changes.outputs.cpm == 'true') || (needs.set-env.outputs.common_changes == 'true') || (needs.changes.outputs.base == 'true') || ((github.event_name == 'workflow_dispatch') && ((github.event.inputs.processor == 'cpm') || (github.event.inputs.processor == 'all'))) }}"
           - proc: l0
-            proccondition: "${{ (needs.changes.outputs.l0 == 'true') || (needs.set-env.outputs.common_changes == 'true') || (needs.set-env.outputs.base == 'true') || ((github.event_name == 'workflow_dispatch') && ((github.event.inputs.processor == 'l0') || (github.event.inputs.processor == 'all'))) }}"
+            proccondition: "${{ (needs.changes.outputs.l0 == 'true') || (needs.set-env.outputs.common_changes == 'true') || (needs.changes.outputs.base == 'true') || ((github.event_name == 'workflow_dispatch') && ((github.event.inputs.processor == 'l0') || (github.event.inputs.processor == 'all'))) }}"
           - proc: s1ard
-            proccondition: "${{ (needs.changes.outputs.s1ard == 'true') || (needs.set-env.outputs.common_changes == 'true') || (needs.set-env.outputs.base == 'true') || ((github.event_name == 'workflow_dispatch') && ((github.event.inputs.processor == 's1ard') || (github.event.inputs.processor == 'all'))) }}"
+            proccondition: "${{ (needs.changes.outputs.s1ard == 'true') || (needs.set-env.outputs.common_changes == 'true') || (needs.changes.outputs.base == 'true') || ((github.event_name == 'workflow_dispatch') && ((github.event.inputs.processor == 's1ard') || (github.event.inputs.processor == 'all'))) }}"
           - proc: s3olci
-            proccondition: "${{ (needs.changes.outputs.s3olci == 'true') || (needs.set-env.outputs.common_changes == 'true') || (needs.set-env.outputs.base == 'true') || ((github.event_name == 'workflow_dispatch') && ((github.event.inputs.processor == 's3olci') || (github.event.inputs.processor == 'all'))) }}"
+            proccondition: "${{ (needs.changes.outputs.s3olci == 'true') || (needs.set-env.outputs.common_changes == 'true') || (needs.changes.outputs.base == 'true') || ((github.event_name == 'workflow_dispatch') && ((github.event.inputs.processor == 's3olci') || (github.event.inputs.processor == 'all'))) }}"
           - target: cluster
             targetcondition: "${{ (github.event_name != 'workflow_dispatch') || (github.event.inputs.target_system == 'cluster') || (github.event.inputs.target_system == 'all') }}"
           - target: local
@@ -297,7 +275,7 @@ jobs:
 
           ./docker/eopf/build_dask_eopf.py \
             --gitlab_eopf_token "${{ secrets.GITLAB_EOPF_TOKEN }}" \
-            --docker_tag ${{ needs.set-env.outputs.docker_tag }} \
+            --docker_tags $DOCKER_TAGS \
             --labels "${{ steps.meta.outputs.labels }}" \
             $options \
             ${{ matrix.proc }}
@@ -357,7 +335,11 @@ jobs:
 
       - name: Push Docker image
         if: matrix.proccondition && matrix.targetcondition
-        run: docker push ${{ steps.build.outputs.repository_and_tag }}
+        run: |
+          set -x
+          for tag in ${DOCKER_TAGS//,/ }; do
+            docker push ${{ steps.build.outputs.repository }}:${tag}
+          done
         shell: bash
 
   trigger-dask-mockup-images-build:
@@ -365,56 +347,22 @@ jobs:
     name: Trigger rs-testmeans CI to build the Dask mockup image
     needs: [changes, set-env, build-base-dask-images]
     # Trigger CI for mockup images only if base images are changed OR if asked by manual trigger
-    if: ${{ always() && !failure() && !cancelled() && ((needs.set-env.outputs.base == 'true') || ((github.event_name == 'workflow_dispatch') && ((github.event.inputs.processor == 'mockup') || (github.event.inputs.processor == 'all')))) }}
+    if: ${{ always() && !failure() && !cancelled() && ((needs.changes.outputs.base == 'true') || ((github.event_name == 'workflow_dispatch') && ((github.event.inputs.processor == 'mockup') || (github.event.inputs.processor == 'all')))) }}
     steps:
       - env:
+          DOCKER_TAGS: ${{ needs.set-env.outputs.docker_tags }}
           TRIGGER_WORKFLOWS_TOKEN: ${{ secrets.TRIGGER_WORKFLOWS }}
         run: |
           set -x
-          if [[ ${{ needs.set-env.outputs.branch_name }} == develop ]]; then
-            docker_tag=latest
-          else
-            docker_tag=${{ needs.set-env.outputs.docker_tag }}
-          fi
+
+          # Keep last tag (after the last ',')
+          docker_tag=${DOCKER_TAGS##*,}
+
           curl -L \
             -X POST \
             -H "Accept: application/vnd.github+json" \
             -H "Authorization: Bearer ${TRIGGER_WORKFLOWS_TOKEN}" \
             -H "X-GitHub-Api-Version: 2026-03-10" \
-            https://api.github.com/repos/RS-PYTHON/rs-testmeans/actions/workflows/publish-docker.yml/dispatches \
+            https://api.github.com/repos/RS-PYTHON/rs-testmeans/actions/workflows/publish-binaries.yml/dispatches \
             -d '{"ref":"${{ needs.set-env.outputs.branch_name }}","inputs":{"docker_tag":"'"$docker_tag"'","build_only_mockup_images":"true"}}'
-        shell: bash
-
-  ###########
-  # TESTING #
-  ###########
-
-  # Test rs-demo with the new Docker images
-  test-demo:
-    runs-on: ubuntu-latest
-    name: Test rs-demo
-    needs: [changes, set-env, build-dask-eopf]
-    if: ${{ always() && !failure() && !cancelled() && ((needs.set-env.outputs.any_changes == 'true') || (github.event_name == 'workflow_dispatch')) }}
-    steps:
-      - name: Log into Docker registry
-        uses: docker/login-action@v3
-        with:
-          registry: ${{ env.DOCKER_REGISTRY }}
-          username: ${{ github.actor }}
-          password: ${{ secrets.GITHUB_TOKEN }}
-
-      - id: test-demos
-        name: Test rs-demo
-        env:
-          BRANCH_NAME: ${{ needs.set-env.outputs.branch_name }}
-          DOCKER_TAG: ${{ needs.set-env.outputs.docker_tag }}
-        run: |
-          set -x
-
-          # Clone the rs-demo repository
-          git clone https://github.com/RS-PYTHON/rs-demo.git
-          cd rs-demo
-
-          # Run the rs-demo local mode using the newly created docker images
-          ./test-rs-demo.sh
         shell: bash

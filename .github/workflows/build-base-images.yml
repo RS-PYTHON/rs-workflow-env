@@ -24,7 +24,6 @@ on:
     paths:
       - 'docker/base/**'
       - 'docker/scripts/**'
-      - '.github/actions/publish-docker/action.yml'
       - '.github/workflows/build-base-images.yml'
   push:
     branches: [develop, main] # pushes on the 'develop' or 'main' branches
@@ -32,7 +31,6 @@ on:
     paths:
       - 'docker/base/**'
       - 'docker/scripts/**'
-      - '.github/actions/publish-docker/action.yml'
       - '.github/workflows/build-base-images.yml'
   workflow_dispatch: # manual trigger
     inputs:
