@@ -24,7 +24,7 @@
 eopf==2.5.9
 
 # Install s1 ard.
-git+https://__token__:${GITLAB_EOPF_TOKEN}@gitlab.eopf.copernicus.eu/S1/s1-ard@main
+git+https://__token__:${GITLAB_EOPF_TOKEN}@gitlab.eopf.copernicus.eu/S1/s1-ard@1.1.0rc1
 
 # other python dependencies
 graphviz
