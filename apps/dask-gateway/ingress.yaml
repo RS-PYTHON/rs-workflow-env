@@ -28,7 +28,7 @@ metadata:
 spec:
   ingressClassName: nginx
   rules:
-  - host: dash-dask.{{ platform_domain_name }}
+  - host: dash-dask.{{ jupyterhub.ops.subDomain }}.{{ platform_domain_name }} ### rajouter sous domaine dask
     http:
       paths:
       - path: /clusters/dask-gateway.[0-9a-z]{32}/
