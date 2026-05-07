@@ -109,6 +109,23 @@ RUN curl -L -o /tmp/firefox.tar.xz "https://download.mozilla.org/?product=firefo
     ln -s /opt/firefox/firefox /usr/bin/firefox && \
     rm /tmp/firefox.tar.xz
 
+# Desktop + X11
+RUN apt update && apt install -y \
+    xfce4 \
+    xfce4-goodies \
+    xvfb \
+    dbus-x11 \
+    xterm \
+    x11-utils \
+    && apt-get clean
+
+# Jupyter desktop proxy
+RUN pip install jupyter-remote-desktop-proxy
+
+# Clone rs-demo repository
+RUN cd /opt && \
+    git clone https://github.com/RS-PYTHON/rs-demo.git
+
 COPY --chown=rspy:rspy ./resources/00-read-env.py /tmp/00-read-env.py
 COPY --chown=rspy:rspy ./resources/jupyter_server_config.py /tmp/jupyter_server_config.py
 
