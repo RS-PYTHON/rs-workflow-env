@@ -21,10 +21,12 @@
 
 # s1 needs "eopf>=2.5.8" but we have errors with the latest versions.
 # So we force this old version which is the same as in the uv.lock file at the root of the git repo.
-eopf==2.5.9
+#eopf==2.5.9
+eopf==2.6.4
 
 # Install s1 ard.
-git+https://__token__:${GITLAB_EOPF_TOKEN}@gitlab.eopf.copernicus.eu/S1/s1-ard@1.1.0rc1
+#git+https://__token__:${GITLAB_EOPF_TOKEN}@gitlab.eopf.copernicus.eu/S1/s1-ard@1.1.0rc1
+git+https://__token__:${GITLAB_EOPF_TOKEN}@gitlab.eopf.copernicus.eu/vincent.privat/s1-ard@1.1.0_eopf_2.6.4
 
 # other python dependencies
 graphviz
