@@ -104,15 +104,24 @@ RUN curl -L -o /tmp/firefox.tar.xz "https://download.mozilla.org/?product=firefo
     ln -s /opt/firefox/firefox /usr/bin/firefox && \
     rm /tmp/firefox.tar.xz
 
+ENV MOZ_DISABLE_CONTENT_SANDBOX=1
+
 # Desktop + X11
-RUN DEBIAN_FRONTEND=noninteractive restore-apt.sh && apt update && apt install -y \
-    xfce4 \
-    xfce4-goodies \
-    xvfb \
-    dbus-x11 \
-    xterm \
-    x11-utils \
-    && layer-cleanup.sh
+RUN DEBIAN_FRONTEND=noninteractive restore-apt.sh && \
+    apt-get update && \
+    apt-get install -y \
+        xfce4 \
+        xvfb \
+        dbus-x11 \
+        xterm \
+        x11-utils \
+        tigervnc-standalone-server \
+        tigervnc-common \
+        websockify && \
+    layer-cleanup.sh
+
+RUN mkdir -p /etc/jupyter && \
+    echo "xfce4-session" > /etc/jupyter/desktop-command
 
 # Jupyter desktop proxy
 RUN pip install jupyter-remote-desktop-proxy
