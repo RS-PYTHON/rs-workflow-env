@@ -105,7 +105,7 @@ RUN curl -L -o /tmp/firefox.tar.xz "https://download.mozilla.org/?product=firefo
     rm /tmp/firefox.tar.xz
 
 # Desktop + X11
-RUN apt update && apt install -y \
+RUN DEBIAN_FRONTEND=noninteractive restore-apt.sh && apt update && apt install -y \
     xfce4 \
     xfce4-goodies \
     xvfb \
