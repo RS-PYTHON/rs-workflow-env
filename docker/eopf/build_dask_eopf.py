@@ -219,6 +219,8 @@ for proc, local_cluster in procs_to_build:
 
     if proc == 'cpm':
         command += ["--build-arg", "PYTHON_VERSION_DPR=3.11.7", "--build-arg", "DASK_TAG=2026.1.2"]
+    elif proc == 's1ard':
+        command += ["--build-arg", "PYTHON_VERSION_DPR=3.13.12", "--build-arg", "DASK_TAG=2026.1.2"]
     else:
         command += ["--build-arg", "PYTHON_VERSION_DPR=3.11.7", "--build-arg", "DASK_TAG=2024.5.2"]
 
