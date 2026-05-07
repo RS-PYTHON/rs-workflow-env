@@ -112,7 +112,7 @@ RUN apt update && apt install -y \
     dbus-x11 \
     xterm \
     x11-utils \
-    && apt-get clean
+    && layer-cleanup.sh
 
 # Jupyter desktop proxy
 RUN pip install jupyter-remote-desktop-proxy
