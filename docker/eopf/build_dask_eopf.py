@@ -54,9 +54,13 @@ class Image:
 
 # All possible processor images
 all_procs = {
-    "cpm": Image(
-        k8s_name="ghcr.io/rs-python/dask/cpm/k8s",
-        image2build="dask-cpm",
+    "cpm2": Image(
+        k8s_name="ghcr.io/rs-python/dask/cpm2/k8s",
+        image2build="dask-cpm2",
+    ),
+    "cpm3": Image(
+        k8s_name="ghcr.io/rs-python/dask/cpm3/k8s",
+        image2build="dask-cpm3",
     ),
     "l0": Image(
         "ghcr.io/rs-python/dask/l0/k8s",
@@ -217,9 +221,15 @@ for proc, local_cluster in procs_to_build:
     if not local_cluster:
         command += ["--build-arg", f"BASE_IMAGE_TARGET={registry.rsplit('/', 1)[1]}"]
 
-    if proc == 'cpm':
+    if proc == 'cpm2':
+        # Image for CPM >=2.7.0,<3
         command += ["--build-arg", "PYTHON_VERSION_DPR=3.11.7", "--build-arg", "DASK_TAG=2026.1.2"]
+    elif proc == 'cpm3':
+        # Image for CPM >=3
+        # WARNING: Up to first official relase, release-candidate revision is hard-coded in requirements-dask-cpm3.txt
+        command += ["--build-arg", "PYTHON_VERSION_DPR=3.13.12", "--build-arg", "DASK_TAG=2026.1.2"]
     else:
+        # Image for CPM =<2.6.4
         command += ["--build-arg", "PYTHON_VERSION_DPR=3.11.7", "--build-arg", "DASK_TAG=2024.5.2"]
 
     # Build image
