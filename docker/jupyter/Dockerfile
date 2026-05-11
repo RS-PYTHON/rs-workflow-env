@@ -58,7 +58,15 @@ RUN DEBIAN_FRONTEND=noninteractive restore-apt.sh && apt update && \
     graphviz \
     python3-pydot \
     texlive-xetex texlive-fonts-recommended texlive-plain-generic \
-    xz-utils && \
+    xz-utils \ 
+    dbus-x11 \
+    xfce4 \
+    xfce4-panel \
+    xfce4-session \
+    xfce4-settings \
+    xorg \
+    xubuntu-icon-theme \
+    tigervnc-standalone-server && \
     layer-cleanup.sh
 
 # Install python dependencies
@@ -104,24 +112,24 @@ RUN curl -L -o /tmp/firefox.tar.xz "https://download.mozilla.org/?product=firefo
     ln -s /opt/firefox/firefox /usr/bin/firefox && \
     rm /tmp/firefox.tar.xz
 
-ENV MOZ_DISABLE_CONTENT_SANDBOX=1
+#ENV MOZ_DISABLE_CONTENT_SANDBOX=1
 
 # Desktop + X11
-RUN DEBIAN_FRONTEND=noninteractive restore-apt.sh && \
-    apt-get update && \
-    apt-get install -y \
-        xfce4 \
-        xvfb \
-        dbus-x11 \
-        xterm \
-        x11-utils \
-        tigervnc-standalone-server \
-        tigervnc-common \
-        websockify && \
-    layer-cleanup.sh
+#RUN DEBIAN_FRONTEND=noninteractive restore-apt.sh && \
+#    apt-get update && \
+#    apt-get install -y \
+#        xfce4 \
+#        xvfb \
+#        dbus-x11 \
+#        xterm \
+#        x11-utils \
+#        tigervnc-standalone-server \
+#        tigervnc-common \
+#        websockify && \
+#    layer-cleanup.sh
 
-RUN mkdir -p /etc/jupyter && \
-    echo "xfce4-session" > /etc/jupyter/desktop-command
+#RUN mkdir -p /etc/jupyter && \
+#    echo "xfce4-session" > /etc/jupyter/desktop-command
 
 # Jupyter desktop proxy
 RUN pip install jupyter-remote-desktop-proxy
