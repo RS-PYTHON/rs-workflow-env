@@ -3,17 +3,14 @@
     "note": "This file is also used by the rs-dpr-service ci/cd",
     "deps": [
         {
-            "dep_name": "py3.11.7-2024.5.2",
             "python_version": "3.11.7",
             "dask_version": "2024.5.2"
         },
         {
-            "dep_name": "py3.11.7-2026.1.2",
             "python_version": "3.11.7",
             "dask_version": "2026.1.2"
         },
         {
-            "dep_name": "py3.13.12-2026.1.2",
             "python_version": "3.13.12",
             "dask_version": "2026.1.2"
         }

@@ -139,17 +139,17 @@ if [[ "$TARGET" == "all" || "$TARGET" == "dask" ]]; then
     # We read the json file that contains the sets of dependency versions needed by the different processors.
     # Its content should be something like:
     # {"deps": [
-    # {"dep_name": "py3.11.7-2024.5.2", "python_version": "3.11.7", "dask_version": "2024.5.2" },
-    # {"dep_name": "py3.11.7-2026.1.2", ...
+    # {"python_version": "3.11.7", "dask_version": "2024.5.2"},
+    # {"python_version": "3.13.12", "dask_version": "2026.1.2"},
     # ...
     deps_file="${SCRIPT_DIR}/../eopf/resources/dask-eopf-versions.json"
     cat $deps_file
 
     # For each set of versions
     for dep in $(jq -c '.deps[]' $deps_file); do
-        dep_name=$(jq -r '."dep_name"' <<< $dep)
         python_version=$(jq -r '."python_version"' <<< $dep)
         dask_tag=$(jq -r '."dask_version"' <<< $dep)
+        dep_name="py${python_version}-${dask_tag}"
 
         # Checkout the dask-gateway git repository into a local ./tmp folder
         tmp="${SCRIPT_DIR}/tmp/dask/py${python_version}"
