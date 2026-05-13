@@ -39,6 +39,10 @@ DOCKER_SCRIPTS = THIS_DIR.parent / "scripts"
 class Image:
     """Docker image information. Each Docker image is specific to a single processor."""
 
+    # Versions used by the processor
+    python_version: str
+    dask_version: str
+
     # Docker image name for cluster usage (registry)
     k8s_name: str
 
@@ -53,42 +57,38 @@ class Image:
     # But it's not used in the name of the docker image itself.
     image2build: str = ""
 
-    # Versions used by the processor
-    python_version: str
-    dask_version: str
-
 
 # All possible processor images
 all_procs = {
     "cpm": Image(
-        k8s_name="ghcr.io/rs-python/dask/cpm/k8s",
-        image2build="dask-cpm",
         python_version="3.11.7",
         dask_version="2026.1.2",
+        k8s_name="ghcr.io/rs-python/dask/cpm/k8s",
+        image2build="dask-cpm",
     ),
     "l0": Image(
+        python_version="3.11.7",
+        dask_version="2024.5.2",
         k8s_name="ghcr.io/rs-python/dask/l0/k8s",
         local_name="ghcr.io/rs-python/dask/l0/local",
         local_cluster_name="ghcr.io/rs-python/dask/l0/localcluster",
         image2build="dask-l0",
-        python_version="3.11.7",
-        dask_version="2024.5.2",
     ),
     "s1ard": Image(
+        python_version="3.13.12",
+        dask_version="2026.1.2",
         k8s_name="ghcr.io/rs-python/dask/s1ard/k8s",
         local_name="ghcr.io/rs-python/dask/s1ard/local",
         local_cluster_name="ghcr.io/rs-python/dask/s1ard/localcluster",
         image2build="dask-s1ard",
-        python_version="3.13.12",
-        dask_version="2026.1.2",
     ),
     "s3olci": Image(
+        python_version="3.11.7",
+        dask_version="2024.5.2",
         k8s_name="ghcr.io/rs-python/dask/s3olci/k8s",
         local_name="ghcr.io/rs-python/dask/s3olci/local",
         local_cluster_name="ghcr.io/rs-python/dask/s3olci/localcluster",
         image2build="dask-s3olci",
-        python_version="3.11.7",
-        dask_version="2024.5.2",
     ),
 }
 
