@@ -33,25 +33,10 @@ SCRIPT_DIR=$( cd -- "$( dirname -- "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )
 # Directory that contains custom requirements for the docker images
 CUSTOM_REQ=$(realpath "${SCRIPT_DIR}/../scripts")
 
-# We use a different python version in eopf + the dpr processors + rs-dpr-service
 PYTHON_VERSION=3.13.12
-PYTHON_VERSION_CPM=3.11.7
-PYTHON_VERSION_DPR=3.11.7
-
-# Different versions of dask and dask-gateway used (must be declared here to use update_framework_versions.sh script)
-DASK_TAG=2024.5.2
-DASK_TAG_CPM=2026.1.2
-DASK_TAG_STAGING=2026.1.2
-DASK_GATEWAY_TAG=2025.4.0
-
-# Versions used: format is [PYTHON_VERSION DASK_TAG DASK_GATEWAY_TAG]
-declare -a STAGING_VERSIONS=($PYTHON_VERSION $DASK_TAG_STAGING $DASK_GATEWAY_TAG)
-declare -a CPM_VERSIONS=($PYTHON_VERSION_CPM $DASK_TAG_CPM $DASK_GATEWAY_TAG)
-declare -a PROCESSOR_VERSIONS=($PYTHON_VERSION_DPR $DASK_TAG $DASK_GATEWAY_TAG)
-
-PREFECT_TAG=3.6.20
-
 JUPYTER_HUB_VERSION=5.4.3
+DASK_GATEWAY_TAG=2025.4.0
+PREFECT_TAG=3.6.20
 
 ####################
 # Retrieve options #
@@ -150,14 +135,21 @@ fi
 ########
 
 if [[ "$TARGET" == "all" || "$TARGET" == "dask" ]]; then
-    declare -a versions_list=("PROCESSOR_VERSIONS" "CPM_VERSIONS" "STAGING_VERSIONS")
-    for versions_index in "${versions_list[@]}"; do
-        declare -n versions="${versions_index}"
 
-        # Retrieve values from list
-        python_version=${versions[0]}
-        dask_tag=${versions[1]}
-        dask_gateway_tag=${versions[2]}
+    # We read the json file that contains the sets of dependency versions needed by the different processors.
+    # Its content should be something like:
+    # {"deps": [
+    # {"dep_name": "py3.11.7-2024.5.2", "python_version": "3.11.7", "dask_version": "2024.5.2" },
+    # {"dep_name": "py3.11.7-2026.1.2", ...
+    # ...
+    deps_file="${SCRIPT_DIR}/../eopf/resources/dask-eopf-versions.json"
+    cat $deps_file
+
+    # For each set of versions
+    for dep in $(jq -c '.deps[]' $deps_file); do
+        dep_name=$(jq -r '."dep_name"' <<< $dep)
+        python_version=$(jq -r '."python_version"' <<< $dep)
+        dask_tag=$(jq -r '."dask_version"' <<< $dep)
 
         # Checkout the dask-gateway git repository into a local ./tmp folder
         tmp="${SCRIPT_DIR}/tmp/dask/py${python_version}"
@@ -167,7 +159,7 @@ if [[ "$TARGET" == "all" || "$TARGET" == "dask" ]]; then
         git clone https://github.com/dask/dask-gateway.git
         fi
         cd dask-gateway
-        git checkout "tags/$dask_gateway_tag"
+        git checkout "tags/$DASK_GATEWAY_TAG"
         git reset --hard
 
         # Refreeze Dockerfile.requirements.txt files based on Dockerfile.requirements.in
@@ -208,7 +200,7 @@ if [[ "$TARGET" == "all" || "$TARGET" == "dask" ]]; then
             docker build \
                 --build-arg "PYTHON_VERSION_BASE=${python_version}" \
                 --build-arg "DASK_TAG=${dask_tag}" \
-                --build-arg "DASK_GATEWAY_TAG=${dask_gateway_tag}" \
+                --build-arg "DASK_GATEWAY_TAG=${DASK_GATEWAY_TAG}" \
                 -f "${SCRIPT_DIR}/Dockerfile.dask.${env}" \
                 -t "${target}" \
                 --progress=plain \
