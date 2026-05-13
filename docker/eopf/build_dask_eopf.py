@@ -37,7 +37,7 @@ DOCKER_SCRIPTS = THIS_DIR.parent / "scripts"
 
 @dataclass
 class Image:
-    """Docker image information"""
+    """Docker image information. Each Docker image is specific to a single processor."""
 
     # Docker image name for cluster usage (registry)
     k8s_name: str
@@ -48,8 +48,14 @@ class Image:
     # Name of the LocalCluster image (for debugging)
     local_cluster_name: str = ""
 
-    # Used to identify the image to build
+    # This is used mainly to identify the files that are specific to the processor:
+    # requirements-${IMAGE2BUILD}.txt, post-install-${IMAGE2BUILD}.sh, ...
+    # But it's not used in the name of the docker image itself.
     image2build: str = ""
+
+    # Versions used by the processor
+    python_version: str
+    dask_version: str
 
 
 # All possible processor images
@@ -57,24 +63,32 @@ all_procs = {
     "cpm": Image(
         k8s_name="ghcr.io/rs-python/dask/cpm/k8s",
         image2build="dask-cpm",
+        python_version="3.11.7",
+        dask_version="2026.1.2",
     ),
     "l0": Image(
-        "ghcr.io/rs-python/dask/l0/k8s",
-        "ghcr.io/rs-python/dask/l0/local",
-        "ghcr.io/rs-python/dask/l0/localcluster",
-        "dask-l0",
+        k8s_name="ghcr.io/rs-python/dask/l0/k8s",
+        local_name="ghcr.io/rs-python/dask/l0/local",
+        local_cluster_name="ghcr.io/rs-python/dask/l0/localcluster",
+        image2build="dask-l0",
+        python_version="3.11.7",
+        dask_version="2024.5.2",
     ),
     "s1ard": Image(
-        "ghcr.io/rs-python/dask/s1ard/k8s",
-        "ghcr.io/rs-python/dask/s1ard/local",
-        "ghcr.io/rs-python/dask/s1ard/localcluster",
-        "dask-s1ard",
+        k8s_name="ghcr.io/rs-python/dask/s1ard/k8s",
+        local_name="ghcr.io/rs-python/dask/s1ard/local",
+        local_cluster_name="ghcr.io/rs-python/dask/s1ard/localcluster",
+        image2build="dask-s1ard",
+        python_version="3.13.12",
+        dask_version="2026.1.2",
     ),
     "s3olci": Image(
-        "ghcr.io/rs-python/dask/s3olci/k8s",
-        "ghcr.io/rs-python/dask/s3olci/local",
-        "ghcr.io/rs-python/dask/s3olci/localcluster",
-        "dask-s3olci",
+        k8s_name="ghcr.io/rs-python/dask/s3olci/k8s",
+        local_name="ghcr.io/rs-python/dask/s3olci/local",
+        local_cluster_name="ghcr.io/rs-python/dask/s3olci/localcluster",
+        image2build="dask-s3olci",
+        python_version="3.11.7",
+        dask_version="2024.5.2",
     ),
 }
 
@@ -183,7 +197,7 @@ for proc, local_cluster in procs_to_build:
             )
 
     # Docker image information
-    image = all_procs[proc]
+    image: Image = all_procs[proc]
 
     # Docker image name
     if local_cluster:
@@ -211,18 +225,13 @@ for proc, local_cluster in procs_to_build:
         "--build-context",
         f"docker-scripts={str(DOCKER_SCRIPTS)}",
         str(THIS_DIR),
+        "--build-arg", f"PYTHON_VERSION={image.python_version}",
+        "--build-arg", f"DASK_TAG={image.dask_version}"
     ]
 
     # Extract base image used from the target name (k8s or local) and add it as an argument
     if not local_cluster:
         command += ["--build-arg", f"BASE_IMAGE_TARGET={registry.rsplit('/', 1)[1]}"]
-
-    if proc == 'cpm':
-        command += ["--build-arg", "PYTHON_VERSION_DPR=3.11.7", "--build-arg", "DASK_TAG=2026.1.2"]
-    elif proc == 's1ard':
-        command += ["--build-arg", "PYTHON_VERSION_DPR=3.13.12", "--build-arg", "DASK_TAG=2026.1.2"]
-    else:
-        command += ["--build-arg", "PYTHON_VERSION_DPR=3.11.7", "--build-arg", "DASK_TAG=2024.5.2"]
 
     # Build image
     run_command(command + labels)

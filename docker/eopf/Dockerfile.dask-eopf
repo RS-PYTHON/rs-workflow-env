@@ -25,13 +25,14 @@
 # Base image type: can be "k8s" for cluster usage or "local" for local usage.
 ARG BASE_IMAGE_TARGET=xxx
 
-# Versions used: currently all processors use Dask 2024.5.2 with Python 3.11.7, and the base images are all built with dask-gateway 2025.4.0
+# Python and Dask versions depend on each processor.
+# The base images are all built with dask-gateway 2025.4.0
 # Base images for local mode also include dask-gateway-server with the same version as dask-gateway
 # ANY VERSION CHANGE MUST BE UPDATED IN THE BASE IMAGES SCRIPT GENERATOR (docker/base/build-base-images.sh and docker/eopf/build_dask_eopf.py).
-ARG PYTHON_VERSION_DPR=xxx
+ARG PYTHON_VERSION=xxx
 ARG DASK_TAG=xxx
 
-FROM ghcr.io/rs-python/dask/dask-gateway:${BASE_IMAGE_TARGET}-py${PYTHON_VERSION_DPR}-${DASK_TAG}
+FROM ghcr.io/rs-python/dask/dask-gateway:${BASE_IMAGE_TARGET}-py${PYTHON_VERSION}-${DASK_TAG}
 
 ARG IMAGE2BUILD
 
