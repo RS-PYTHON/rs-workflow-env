@@ -23,7 +23,7 @@
 # - Test rs-demo with the newly built images
 #
 # On manual trigger:
-# - The user chooses which processor to build (cpm, l0, s1ard, s3olci, mockup or all) and for which target system (cluster, local, localcluster or all), and also to rebuild the base images or not
+# - The user chooses which processor to build (cpm2, cpm3, l0, s1ard, s3olci, mockup or all) and for which target system (cluster, local, localcluster or all), and also to rebuild the base images or not
 # - Changes are checked like in automatic mode
 # - The images built are the ones for the detected changes like in automatic mode AND the ones requested by the user
 # - rs-demo tests are run like in automatic mode
@@ -59,7 +59,8 @@ on:
         type: choice
         options:
           - all
-          - cpm
+          - cpm2
+          - cpm3
           - l0
           - s1ard
           - s3olci
@@ -99,7 +100,8 @@ jobs:
       # Note: we tie "base" and "common" outputs to the manual trigger as well, to trigger all the image builds anytime the workflow is triggered manually.
       base: ${{ steps.filter.outputs.base }}
       common: ${{ steps.filter.outputs.common }}
-      cpm: ${{ steps.filter.outputs.cpm }}
+      cpm2: ${{ steps.filter.outputs.cpm2 }}
+      cpm3: ${{ steps.filter.outputs.cpm3 }}
       l0: ${{ steps.filter.outputs.l0 }}
       s1ard: ${{ steps.filter.outputs.s1ard }}
       s3olci: ${{ steps.filter.outputs.s3olci }}
@@ -119,7 +121,8 @@ jobs:
               - docker/eopf/Dockerfile.dask-eopf-localcluster
               - docker/eopf/resources/layer-cleanup.sh
               - docker/eopf/resources/restore-apt.sh
-            cpm: ['docker/**/*dask-cpm.*']
+            cpm2: ['docker/**/*dask-cpm.*']
+            cpm3: ['docker/**/*dask-cpm.*']
             l0: ['docker/**/*dask-l0.*', 'docker/**/l0/*']
             s1ard: ['docker/**/*dask-s1ard.*']
             s3olci: ['docker/**/*dask-s3olci.*']
@@ -200,11 +203,13 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        proc: [cpm, l0, s1ard, s3olci]
+        proc: [cpm2, cpm3, l0, s1ard, s3olci]
         target: [cluster, local, localcluster] # No option = main image for cluster deployment, "local" is for local deployment and "localcluster" is for local debugging
         include:
-          - proc: cpm
-            proccondition: "${{ (needs.changes.outputs.cpm == 'true') || (needs.set-env.outputs.common_changes == 'true') || (needs.changes.outputs.base == 'true') || ((github.event_name == 'workflow_dispatch') && ((github.event.inputs.processor == 'cpm') || (github.event.inputs.processor == 'all'))) }}"
+          - proc: cpm2
+            proccondition: "${{ (needs.changes.outputs.cpm2 == 'true') || (needs.set-env.outputs.common_changes == 'true') || (needs.changes.outputs.base == 'true') || ((github.event_name == 'workflow_dispatch') && ((github.event.inputs.processor == 'cpm2') || (github.event.inputs.processor == 'all'))) }}"
+          - proc: cpm3
+            proccondition: "${{ (needs.changes.outputs.cpm3 == 'true') || (needs.set-env.outputs.common_changes == 'true') || (needs.changes.outputs.base == 'true') || ((github.event_name == 'workflow_dispatch') && ((github.event.inputs.processor == 'cpm3') || (github.event.inputs.processor == 'all'))) }}"
           - proc: l0
             proccondition: "${{ (needs.changes.outputs.l0 == 'true') || (needs.set-env.outputs.common_changes == 'true') || (needs.changes.outputs.base == 'true') || ((github.event_name == 'workflow_dispatch') && ((github.event.inputs.processor == 'l0') || (github.event.inputs.processor == 'all'))) }}"
           - proc: s1ard
@@ -218,9 +223,13 @@ jobs:
           - target: localcluster
             targetcondition: "${{ (github.event_name != 'workflow_dispatch') || ( github.event.inputs.target_system == 'localcluster') || (github.event.inputs.target_system == 'all') }}"
         exclude:
-          - proc: cpm
+          - proc: cpm2
             target: local
-          - proc: cpm
+          - proc: cpm2
+            target: localcluster
+          - proc: cpm3
+            target: local
+          - proc: cpm3
             target: localcluster
     steps:
 
