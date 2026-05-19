@@ -137,16 +137,16 @@ fi
 if [[ "$TARGET" == "all" || "$TARGET" == "dask" ]]; then
 
     # We read the json file that contains the sets of dependency versions needed by the different processors.
-    # Its content should be something like:
+    # After conversion to json, its content should be something like:
     # {"deps": [
     # {"python_version": "3.11.7", "dask_version": "2024.5.2"},
     # {"python_version": "3.13.12", "dask_version": "2026.1.2"},
     # ...
-    deps_file="${SCRIPT_DIR}/../eopf/resources/dask-eopf-versions.json"
+    deps_file="${SCRIPT_DIR}/dask-cluster-versions.yml"
     cat $deps_file
 
     # For each set of versions
-    for dep in $(jq -c '.deps[]' $deps_file); do
+    for dep in $(yq -o json $deps_file | jq -c '.deps[]'); do
         python_version=$(jq -r '."python_version"' <<< $dep)
         dask_tag=$(jq -r '."dask_version"' <<< $dep)
         dep_name="py${python_version}-${dask_tag}"

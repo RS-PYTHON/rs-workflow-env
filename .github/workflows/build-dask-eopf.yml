@@ -113,6 +113,7 @@ jobs:
           filters: |
             base:
               - docker/base/build-base-images.sh
+              - docker/base/dask-cluster-versions.yml
               - docker/base/Dockerfile.dask.k8s
               - docker/base/Dockerfile.dask.local
             common:
