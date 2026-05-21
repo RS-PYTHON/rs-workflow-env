@@ -14,7 +14,7 @@
 
 ## Common parameters
 # -- fully override common.names.fullname
-fullnameOverride: "{{ prefect3worker.staging.name }}"
+fullnameOverride: "{{ prefect3worker.monitoring.name }}"
 
 worker:
   clusterUid: "rspy"
@@ -24,10 +24,10 @@ worker:
     pullPolicy: IfNotPresent
   apiConfig: selfHostedServer
   config:
-    workPool: "{{ prefect3worker.staging.name }}"
+    workPool: "{{ prefect3worker.monitoring.name }}"
     limit: 200
     baseJobTemplate:
-      name: "{{ prefect3worker.staging.name }}-base-job-template"
+      name: "{{ prefect3worker.monitoring.name }}-base-job-template"
       configuration: |
         {
           "variables": {
@@ -57,7 +57,7 @@ worker:
                     "type": "null"
                   }
                 ],
-                "title": "{{ prefect3worker.staging.name }}",
+                "title": "{{ prefect3worker.monitoring.name }}",
                 "description": "Name given to infrastructure created by a worker."
               },
               "image": {
@@ -98,7 +98,7 @@ worker:
               "namespace": {
                 "type": "string",
                 "title": "Namespace",
-                "default": "{{ prefect3worker.staging.namespace }}",
+                "default": "{{ prefect3worker.monitoring.namespace }}",
                 "description": "The Kubernetes namespace to create jobs within."
               },
               "stream_output": {
@@ -122,7 +122,7 @@ worker:
                 "anyOf": [
                   {
                     "type": "integer"
-                  },
+                  },eopf
                   {
                     "type": "null"
                   }
@@ -142,7 +142,7 @@ worker:
                 "default": "IfNotPresent",
                 "description": "The Kubernetes image pull policy to use for job containers."
               },
-              "service_account_name": {
+              "service_account_name": {eopf
                 "anyOf": [
                   {
                     "type": "string"
@@ -162,7 +162,7 @@ worker:
                   {
                     "type": "null"
                   }
-                ],
+                ],eopf
                 "title": "Job Watch Timeout Seconds",
                 "description": "Number of seconds to wait for each event emitted by a job before timing out. If not set, the worker will wait for each event indefinitely."
               },
@@ -203,10 +203,10 @@ worker:
           },
           "job_configuration": {
             "env": "{% raw %}{{ env }}{% endraw %}",
-            "name": "{{ prefect3worker.staging.name }}-job-",
+            "name": "{{ prefect3worker.monitoring.name }}-job-",
             "labels": "{% raw %}{{ labels }}{% endraw %}",
             "command": "{% raw %}{{ command }}{% endraw %}",
-            "namespace": "{{ prefect3worker.staging.namespace }}",
+            "namespace": "{{ prefect3worker.monitoring.namespace }}",
             "job_manifest": {
               "kind": "Job",
               "spec": {
@@ -258,7 +258,7 @@ worker:
                     "completions": 1,
                     "parallelism": 1,
                     "restartPolicy": "Never",
-                    "serviceAccountName": "{{ prefect3worker.staging.name }}"
+                    "serviceAccountName": "{{ prefect3worker.monitoring.name }}"
                   }
                 },
                 "backoffLimit": 0,
@@ -266,8 +266,8 @@ worker:
               },
               "metadata": {
                 "labels": "{% raw %}{{ labels }}{% endraw %}",
-                "namespace": "{{ prefect3worker.staging.namespace }}",
-                "generateName": "{{ prefect3worker.staging.name }}-run-"
+                "namespace": "{{ prefect3worker.monitoring.namespace }}",
+                "generateName": "{{ prefect3worker.monitoring.name }}-run-"
               },
               "apiVersion": "batch/v1"
             },
@@ -297,4 +297,4 @@ worker:
   livenessProbe:
     enabled: true
 
-  replicaCount: {{ prefect3worker.staging.number | default(2) }}
+  replicaCount: {{ prefect3worker.monitoring.number | default(2) }}
