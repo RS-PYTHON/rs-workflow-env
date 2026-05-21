@@ -223,17 +223,8 @@ jobs:
             targetcondition: "${{ (github.event_name != 'workflow_dispatch') || ( github.event.inputs.target_system == 'local') || (github.event.inputs.target_system == 'all') }}"
           - target: localcluster
             targetcondition: "${{ (github.event_name != 'workflow_dispatch') || ( github.event.inputs.target_system == 'localcluster') || (github.event.inputs.target_system == 'all') }}"
-        exclude:
-          - proc: cpm2
-            target: local
-          - proc: cpm2
-            target: localcluster
-          - proc: cpm3
-            target: local
-          - proc: cpm3
-            target: localcluster
-    steps:
 
+    steps:
       - name: Display build info
         run: |
           echo "Building image for processor ${{ matrix.proc }} and target ${{ matrix.target }}"

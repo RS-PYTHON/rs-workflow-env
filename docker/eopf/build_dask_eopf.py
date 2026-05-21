@@ -65,6 +65,8 @@ all_procs = {
         python_version="3.11.7",
         dask_version="2026.1.2",
         k8s_name="ghcr.io/rs-python/dask/cpm2/k8s",
+        local_name="ghcr.io/rs-python/dask/cpm2/local",
+        local_cluster_name="ghcr.io/rs-python/dask/cpm2/localcluster",
         image2build="dask-cpm2",
     ),
     # Image for CPM >=3
@@ -73,6 +75,8 @@ all_procs = {
         python_version="3.13.12",
         dask_version="2026.1.2",
         k8s_name="ghcr.io/rs-python/dask/cpm3/k8s",
+        local_name="ghcr.io/rs-python/dask/cpm3/local",
+        local_cluster_name="ghcr.io/rs-python/dask/cpm3/localcluster",
         image2build="dask-cpm3",
     ),
     "l0": Image(
