@@ -142,11 +142,11 @@ if [[ "$TARGET" == "all" || "$TARGET" == "dask" ]]; then
     # {"python_version": "3.11.7", "dask_version": "2024.5.2"},
     # {"python_version": "3.13.12", "dask_version": "2026.1.2"},
     # ...
-    deps_file="${SCRIPT_DIR}/dask-cluster-versions.yml"
-    cat $deps_file
+    deps_file="${CUSTOM_REQ}/dask-cluster-versions.yml"
 
-    # For each set of versions
-    for dep in $(yq -o json $deps_file | jq -c '.deps[]'); do
+    # For each set of python/dask versions
+    deps=$(yq -o json $deps_file | jq -c '.deps[]')
+    for dep in $deps; do
         python_version=$(jq -r '."python_version"' <<< $dep)
         dask_tag=$(jq -r '."dask_version"' <<< $dep)
         dep_name="py${python_version}-${dask_tag}"
