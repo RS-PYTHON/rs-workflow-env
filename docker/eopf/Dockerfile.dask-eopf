@@ -16,7 +16,8 @@
 
 #
 # Target Docker image name:
-# ghcr.io/rs-python/dask/cpm
+# ghcr.io/rs-python/dask/cpm2
+# ghcr.io/rs-python/dask/cpm3
 # ghcr.io/rs-python/dask/l0
 # ghcr.io/rs-python/dask/s1ard
 # ghcr.io/rs-python/dask/s3olci

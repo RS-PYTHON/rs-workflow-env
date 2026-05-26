@@ -49,7 +49,7 @@ for dep in $deps; do
     dep_name="py${python_version}-${dask_version}"
 
     # Create the conda environment
-    conda create -n "$dep_name" python="$python_version"
+    conda create -y -n "$dep_name" python="$python_version"
     # shellcheck source=/dev/null
     conda init bash zsh && source ~/.zshrc # note: sourcing ~/.bashrc doesn't work because we're in non-interactive mode
     conda activate "$dep_name"
