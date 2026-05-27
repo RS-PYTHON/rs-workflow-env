@@ -142,7 +142,7 @@ worker:
                 "default": "IfNotPresent",
                 "description": "The Kubernetes image pull policy to use for job containers."
               },
-              "service_account_name": {eopf
+              "service_account_name": {
                 "anyOf": [
                   {
                     "type": "string"
@@ -162,7 +162,7 @@ worker:
                   {
                     "type": "null"
                   }
-                ],eopf
+                ],
                 "title": "Job Watch Timeout Seconds",
                 "description": "Number of seconds to wait for each event emitted by a job before timing out. If not set, the worker will wait for each event indefinitely."
               },
