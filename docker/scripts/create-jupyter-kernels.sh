@@ -59,7 +59,8 @@ for dep in $deps; do
     pip install \
         ipykernel \
         "dask[complete]==${dask_version}" \
-        dask-gateway=="${DASK_GATEWAY_TAG}"
+        dask-gateway=="${DASK_GATEWAY_TAG}" \
+        ipywidgets
 
     # Install the Jupyter kernel
     python -m ipykernel install --name "$dep_name"
