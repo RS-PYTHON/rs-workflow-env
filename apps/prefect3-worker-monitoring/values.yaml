@@ -122,7 +122,7 @@ worker:
                 "anyOf": [
                   {
                     "type": "integer"
-                  },eopf
+                  },
                   {
                     "type": "null"
                   }
