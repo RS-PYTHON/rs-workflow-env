@@ -19,7 +19,7 @@ helmCharts:
 - name: prefect-worker
   repo: https://prefecthq.github.io/prefect-helm
   releaseName: "{{ app_name }}"
-  version: 2026.2.27173158
+  version: 2026.5.1223020
   namespace: "{{ prefect3worker.integrated.namespace }}"
   valuesFile: values.yaml
 apiVersion: kustomize.config.k8s.io/v1beta1
