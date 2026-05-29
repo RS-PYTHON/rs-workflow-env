@@ -21,7 +21,10 @@
 # ghcr.io/rs-python/dask/s1ard/localcluster
 #
 
-FROM ghcr.io/rs-python/rs-dpr-service:latest
+ARG PYTHON_VERSION=xxx
+ARG DASK_TAG=xxx
+
+FROM ghcr.io/rs-python/rs-dpr-service_py${PYTHON_VERSION}-${DASK_TAG}:latest
 
 ARG IMAGE2BUILD
 

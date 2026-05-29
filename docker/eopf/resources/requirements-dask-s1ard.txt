@@ -18,13 +18,11 @@
 # --extra-index-url https://gitlab.eopf.copernicus.eu/api/v4/projects/52/packages/pypi/simple # asgard
 # --extra-index-url https://gitlab.eopf.copernicus.eu/api/v4/projects/14/packages/pypi/simple # eopf cpm
 --extra-index-url https://__token__:${GITLAB_EOPF_TOKEN}@gitlab.eopf.copernicus.eu/api/v4/projects/114/packages/pypi/simple # s1-ard-core
-
-# s1 needs "eopf>=2.5.8" but we have errors with the latest versions.
-# So we force this old version which is the same as in the uv.lock file at the root of the git repo.
-eopf==2.5.9
+--extra-index-url https://__token__:${GITLAB_EOPF_TOKEN}@gitlab.eopf.copernicus.eu/api/v4/projects/201/packages/pypi/simple # s1-ard
 
 # Install s1 ard.
-git+https://__token__:${GITLAB_EOPF_TOKEN}@gitlab.eopf.copernicus.eu/S1/s1-ard@1.1.0rc1
+#git+https://__token__:${GITLAB_EOPF_TOKEN}@gitlab.eopf.copernicus.eu/S1/s1-ard@1.2.0rc1
+s1-ard==1.2.0rc1
 
 # other python dependencies
-graphviz
+#graphviz

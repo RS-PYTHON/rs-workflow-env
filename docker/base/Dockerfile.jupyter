@@ -29,7 +29,6 @@ ENV PATH="/home/jovyan/.local/bin:${PATH}"
 
 ARG PYTHON_VERSION=3.13.12
 ARG DASK_TAG=2024.5.2
-ARG DASK_TAG_STAGING=2026.1.2
 ARG DASK_GATEWAY_TAG=2025.4.0
 ARG PREFECT_TAG=3.6.29
 
@@ -58,14 +57,14 @@ RUN conda update -n base -c conda-forge conda && \
 # Install packages
 RUN restore-apt.sh && apt update && apt install -y python3-pydot graphviz && layer-cleanup.sh
 
-# Install specific Python environment for staging (needs Dask v.2026.1.2)
-RUN python -m venv /opt/venv/dask-staging && \
-    source /opt/venv/dask-staging/bin/activate && \
-    pip install -U pip && \
-    pip install \
-        dask[complete]=="${DASK_TAG_STAGING}" \
-        distributed=="${DASK_TAG_STAGING}" \
-        dask-gateway=="${DASK_GATEWAY_TAG}"
+# Create Jupyter kernels
+COPY ./create-jupyter-kernels.sh ./dask-cluster-versions.yml /opt/
+RUN \
+    restore-apt.sh && \
+    /opt/create-jupyter-kernels.sh /opt/dask-cluster-versions.yml && \
+    conda clean --all --yes && \
+    layer-cleanup.sh && \
+    rm -f /opt/create-jupyter-kernels.sh /opt/dask-cluster-versions.yml
 
 RUN chown -R jovyan /home/jovyan
 RUN rm -f /usr/local/bin/layer-cleanup.sh /usr/local/bin/restore-apt.sh
