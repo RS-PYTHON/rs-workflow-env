@@ -80,6 +80,8 @@ jobs:
               - docker/base/build-base-images.sh
               - docker/base/Dockerfile.jupyter
               - docker/base/Dockerfile.python
+              - docker/scripts/create-jupyter-kernels.sh
+              - docker/scripts/dask-cluster-versions.yml
           list-files: 'json' # Enables listing of files matching the filter
 
   # Build base image for Jupyter only
