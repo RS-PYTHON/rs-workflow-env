@@ -50,7 +50,8 @@ RUN conda update -n base -c conda-forge conda && \
         prefect[aws]=="${PREFECT_TAG}" \
         ipywidgets \
         s3fs \
-        boto3 && \
+        boto3 \
+        papermill && \
     conda clean --all --yes && \
     layer-cleanup.sh
 
