@@ -54,12 +54,14 @@ for dep in $deps; do
     conda init bash zsh && source ~/.zshrc # note: sourcing ~/.bashrc doesn't work because we're in non-interactive mode
     conda activate "$dep_name"
 
-    # Install dependencies
+    # Install dependencies.
+    # We need prefect only to read JUPYTERHUB_API_TOKEN from the prefect blocks.
     pip install --only-binary :all: -U pip
     pip install --only-binary :all: \
         ipykernel \
         "dask[complete]==${dask_version}" \
         dask-gateway=="${DASK_GATEWAY_TAG}" \
+        prefect=="${PREFECT_TAG}" \
         ipywidgets
 
     # Install the Jupyter kernel
