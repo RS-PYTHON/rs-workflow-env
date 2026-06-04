@@ -55,6 +55,9 @@ RUN --mount=type=secret,id=GITLAB_EOPF_TOKEN,env=GITLAB_EOPF_TOKEN \
     layer-cleanup.sh && \
     rm -rf /opt/requirements-*.txt
 
+# Install complete dask subsets
+RUN pip install dask[complete] && layer-cleanup.sh
+
 # Other installations
 RUN \
     restore-apt.sh && \
