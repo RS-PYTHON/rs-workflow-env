@@ -243,6 +243,12 @@ worker:
                         "name": "prefect-job",
                         "image": "ghcr.io/rs-python/prefect/rs-client-libraries/k8s:latest",
                         "imagePullPolicy": "IfNotPresent",
+                        "volumeMounts": [
+                          {
+                            "name": "rspython-ops-ads-01",
+                            "mountPath": "/mnt/share/ads-01"
+                          }
+                        ],
                         "resources":{
                           "requests": {
                             "cpu": "150m",
@@ -251,7 +257,15 @@ worker:
                           "limits": {
                             "cpu": "300m",
                             "memory": "512Mi"
-                          }
+                          },
+                        }
+                      }
+                    ],
+                    "volumes": [
+                      {
+                        "name": "rspython-ops-ads-01",
+                        "persistentVolumeClaim": {
+                          "claimName": "rspython-ops-ads-01"
                         }
                       }
                     ],
