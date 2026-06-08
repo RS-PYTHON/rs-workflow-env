@@ -40,7 +40,7 @@ RUN chmod 755 /usr/local/bin/layer-cleanup.sh /usr/local/bin/restore-apt.sh
 # System installations
 RUN \
     restore-apt.sh && apt update && \
-    apt install -y git && \
+    apt install -y git curl && \
     layer-cleanup.sh
 
 # Install processor and eopf
@@ -88,7 +88,7 @@ RUN \
     rm -rf /opt/resources
 
 # Clean everything
-RUN apt autoremove -y git && layer-cleanup.sh
+RUN apt autoremove -y git curl && layer-cleanup.sh
 
 # Remove custom scripts
 RUN rm -f /usr/local/bin/layer-cleanup.sh /usr/local/bin/restore-apt.sh
