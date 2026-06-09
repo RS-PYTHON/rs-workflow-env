@@ -446,7 +446,7 @@ singleuser:
   extraFiles: {}
   extraEnv:
     DASK_GATEWAY_ADDRESS: "http://traefik-dask-gateway.dask-gateway.svc.cluster.local"
-    DASK_GATEWAY_PUBLIC: "https://dash-dask.{{ platform_domain_name }}"
+    DASK_GATEWAY_PUBLIC: "https://dash-dask.{{ jupyterhub.ops.subDomain }}.{{ platform_domain_name }}"
     RSPY_DASK_STAGING_CLUSTER_NAME: "dask-staging"
     PREFECT_API_URL: "http://{{ prefect3server.ops.name }}-server.{{ prefect3server.ops.namespace }}.svc.cluster.local:4200/api"
     PREFECT_WORK_POOL_MONITORING: "{{ prefect3worker.monitoring.name }}"
