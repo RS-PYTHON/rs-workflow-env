@@ -22,5 +22,5 @@ PROJ_LOCAL_DIR="/usr/local/lib/python3.13/site-packages/pyproj/proj_dir/share/pr
 # Download the required grid files
 # shellcheck disable=SC2043
 for grid_filename in us_nga_egm08_25.tif ; do
-  curl -fLs "${PROJ_CDN_URL}/${grid_filename}" -o "${PROJ_LOCAL_DIR}/${grid_filename}"
+  curl -fLs --proto '=https' --proto-redir '=https' "${PROJ_CDN_URL}/${grid_filename}" -o "${PROJ_LOCAL_DIR}/${grid_filename}"
 done
