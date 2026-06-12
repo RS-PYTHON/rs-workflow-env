@@ -71,7 +71,8 @@ RUN pip install --only-binary=:all: dask[complete] && layer-cleanup.sh
 # Other installations and installation of system requirements if a file for it exists
 RUN restore-apt.sh && \
     if [ -f "/opt/system-requirements-${IMAGE2BUILD}.txt" ]; \
-    then apt update && apt install -y $(grep -vE "^\s*#" /opt/system-requirements-"${IMAGE2BUILD}".txt | tr "\n" "\t"); fi && \
+    then apt update && \
+    apt install -y $(grep -vE "^\s*#" /opt/system-requirements-"${IMAGE2BUILD}".txt | tr "\n" "\t"); fi && \
     layer-cleanup.sh
 
 # Install and auto configure opentelemetry
