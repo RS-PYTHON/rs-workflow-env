@@ -56,6 +56,7 @@ RUN --mount=type=secret,id=GITLAB_EOPF_TOKEN,env=GITLAB_EOPF_TOKEN \
     rm -rf /opt/requirements-*.txt
 
 # Install complete dask subsets
+
 RUN pip install --only-binary=:all: dask[complete] && layer-cleanup.sh
 
 # Other installations
@@ -70,6 +71,7 @@ RUN \
     layer-cleanup.sh
 
 # Install and auto configure opentelemetry
+
 RUN pip install --only-binary=:all: opentelemetry-distro opentelemetry-exporter-otlp "opentelemetry-instrumentation-eopf>=0.2.5" && \
     opentelemetry-bootstrap -a install && \
     layer-cleanup.sh
