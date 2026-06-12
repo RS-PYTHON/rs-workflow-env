@@ -54,7 +54,7 @@ RUN \
 
 # Install processor and eopf
 ADD ./resources/requirements-*.txt /opt
-ADD ./resources/system-requirements-*.txt /opt
+COPY ./resources/system-requirements-*.txt /opt
 # NOTE, with older docker versions, use:
 # RUN --mount=type=secret,id=GITLAB_EOPF_TOKEN \
 # GITLAB_EOPF_TOKEN=$(cat /run/secrets/GITLAB_EOPF_TOKEN) pip install ...
@@ -71,8 +71,8 @@ RUN pip install --only-binary=:all: dask[complete] && layer-cleanup.sh
 # Other installations and installation of system requirements if a file for it exists
 RUN restore-apt.sh && \
     apt update && \
-    apt install -y graphviz proj-bin proj-data python3-pydot && \
-    if [ -f "/opt/system-requirements-${IMAGE2BUILD}.txt" ]; then apt install -y $(grep -vE "^\s*#" /opt/system-requirements-${IMAGE2BUILD}.txt | tr "\n" "\t"); fi && \
+    if [ -f "/opt/system-requirements-${IMAGE2BUILD}.txt" ]; \
+    then apt install -y $(grep -vE "^\s*#" /opt/system-requirements-${IMAGE2BUILD}.txt | tr "\n" "\t"); fi && \
     layer-cleanup.sh
 
 # Install and auto configure opentelemetry
