@@ -46,10 +46,10 @@ USER root
 COPY --from=docker-scripts ./layer-cleanup.sh ./restore-apt.sh /usr/local/bin/
 RUN chmod 755 /usr/local/bin/layer-cleanup.sh /usr/local/bin/restore-apt.sh
 
-# System installations
+# System installations (libexpat1 required for rasterio)
 RUN \
     restore-apt.sh && apt update && \
-    apt install -y git curl && \
+    apt install -y curl git libexpat1 && \
     layer-cleanup.sh
 
 # Install processor and eopf
