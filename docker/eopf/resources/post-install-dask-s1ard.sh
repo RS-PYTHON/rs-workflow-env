@@ -1,3 +1,4 @@
+#!/usr/bin/env bash
 # Copyright 2023-2026 Airbus, CS Group
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -12,24 +13,14 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-namespace: dask-gateway
+set -euo pipefail
+set -x
 
-helmCharts:
-- name: dask-gateway
-  namespace: dask-gateway
-  releaseName: '{{ app_name }}'
-  repo: https://helm.dask.org/
-  valuesFile: values.yaml
-  version: 2025.4.0
+PROJ_CDN_URL="https://cdn.proj.org"
+PROJ_LOCAL_DIR="/usr/local/lib/python3.13/site-packages/pyproj/proj_dir/share/proj"
 
-resources:
-- secret.yaml
-- ingress.yaml
-- sharedvolume.yaml
-
-apiVersion: kustomize.config.k8s.io/v1beta1
-kind: Kustomization
-labels:
-- includeSelectors: true
-  pairs:
-    app.kubernetes.io/instance: '{{ app_name }}'
+# Download the required grid files
+# shellcheck disable=SC2043
+for grid_filename in us_nga_egm08_25.tif ; do
+  curl -fLs --proto '=https' --proto-redir '=https' "${PROJ_CDN_URL}/${grid_filename}" -o "${PROJ_LOCAL_DIR}/${grid_filename}"
+done

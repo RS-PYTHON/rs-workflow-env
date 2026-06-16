@@ -446,19 +446,19 @@ singleuser:
   extraFiles: {}
   extraEnv:
     DASK_GATEWAY_ADDRESS: "http://traefik-dask-gateway.dask-gateway.svc.cluster.local"
-    DASK_GATEWAY_PUBLIC: "https://dash-dask.{{ platform_domain_name }}"
+    DASK_GATEWAY_PUBLIC: "https://dash-dask.{{ jupyterhub.ops.subDomain }}.{{ platform_domain_name }}"
     RSPY_DASK_STAGING_CLUSTER_NAME: "dask-staging"
     PREFECT_API_URL: "http://{{ prefect3server.ops.name }}-server.{{ prefect3server.ops.namespace }}.svc.cluster.local:4200/api"
-    PREFECT_WORK_POOL_STAGING: "{{ prefect3worker.staging.name }}"
-    PREFECT_WORK_POOL_EOPF: "{{ prefect3worker.eopf.name }}"
-    PREFECT_WORK_POOL_GENERAL: "{{ prefect3worker.general.name }}"
+    PREFECT_WORK_POOL_MONITORING: "{{ prefect3worker.monitoring.name }}"
+    PREFECT_WORK_POOL_INTEGRATED: "{{ prefect3worker.integrated.name }}"
+    PREFECT_WORK_POOL_SANDBOX: "{{ prefect3worker.sandbox.name }}"
     RSPY_CATALOG_BUCKET: "{{ rspy.catalog_bucket }}"
     RSPY_DPR_SIMU_URL: "http://mockup-processor-dpr.processing.svc.cluster.local:8080"
     RSPY_GRAFANA_URL: "https://monitoring.{{ platform_domain_name }}"
     RSPY_PREFECT_URL: "https://{{ prefect3server.ops.subDomain }}.{{ platform_domain_name }}"
     RSPY_TEMP_BUCKET: "{{ rspy.tmp_bucket }}"
     RSPY_UAC_CHECK_URL: "http://apikeymanager.processing.svc.cluster.local:8000/auth/check_key"
-    RSPY_UAC_HOMEPAGE : "https://apikeymanager.{{ platform_domain_name }}/docs"
+    RSPY_UAC_HOMEPAGE: "https://apikeymanager.{{ platform_domain_name }}/docs"
     RSPY_WEBSITE: "https://{{ platform_domain_name }}"
     S3_ENDPOINT: "{{ s3.endpoint }}"
     S3_REGION: "{{ s3.region }}"
@@ -771,7 +771,7 @@ ingress:
     cert-manager.io/cluster-issuer: "{{ cluster_issuer }}"
     nginx.ingress.kubernetes.io/backend-protocol: HTTP
     nginx.ingress.kubernetes.io/proxy-buffer-size: 32k
-# This line allow files under 64MB to be uploaded in jupyterlab
+    # This line allow files under 64MB to be uploaded in jupyterlab
     nginx.ingress.kubernetes.io/proxy-body-size: 64m
 
 # cull relates to the jupyterhub-idle-culler service, responsible for evicting

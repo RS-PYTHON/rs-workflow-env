@@ -14,20 +14,20 @@
 
 ## Common parameters
 # -- fully override common.names.fullname
-fullnameOverride: "{{ prefect3worker.eopf.name }}"
+fullnameOverride: "{{ prefect3worker.integrated.name }}"
 
 worker:
   clusterUid: "rspy"
   image:
     repository: prefecthq/prefect
-    prefectTag: 3.6.20-python3.13-kubernetes
+    prefectTag: 3.6.29-python3.13-kubernetes
     pullPolicy: IfNotPresent
   apiConfig: selfHostedServer
   config:
-    workPool: "{{ prefect3worker.eopf.name }}"
+    workPool: "{{ prefect3worker.integrated.name }}"
     limit: 200
     baseJobTemplate:
-      name: "{{ prefect3worker.eopf.name }}-base-job-template"
+      name: "{{ prefect3worker.integrated.name }}-base-job-template"
       configuration: |
         {
           "variables": {
@@ -57,7 +57,7 @@ worker:
                     "type": "null"
                   }
                 ],
-                "title": "{{ prefect3worker.eopf.name }}",
+                "title": "{{ prefect3worker.integrated.name }}",
                 "description": "Name given to infrastructure created by a worker."
               },
               "image": {
@@ -71,7 +71,7 @@ worker:
                 ],
                 "title": "Image",
                 "examples": [
-                  "prefecthq/prefect:3.6.20-python3.13-kubernetes"
+                  "prefecthq/prefect:3.6.29-python3.13-kubernetes"
                 ],
                 "description": "The image reference of a container image to use for created jobs. If not set, the latest Prefect image will be used."
               },
@@ -98,7 +98,7 @@ worker:
               "namespace": {
                 "type": "string",
                 "title": "Namespace",
-                "default": "{{ prefect3worker.eopf.namespace }}",
+                "default": "{{ prefect3worker.integrated.namespace }}",
                 "description": "The Kubernetes namespace to create jobs within."
               },
               "stream_output": {
@@ -203,10 +203,10 @@ worker:
           },
           "job_configuration": {
             "env": "{% raw %}{{ env }}{% endraw %}",
-            "name": "{{ prefect3worker.eopf.name }}-job-",
+            "name": "{{ prefect3worker.integrated.name }}-job-",
             "labels": "{% raw %}{{ labels }}{% endraw %}",
             "command": "{% raw %}{{ command }}{% endraw %}",
-            "namespace": "{{ prefect3worker.eopf.namespace }}",
+            "namespace": "{{ prefect3worker.integrated.namespace }}",
             "job_manifest": {
               "kind": "Job",
               "spec": {
@@ -243,6 +243,12 @@ worker:
                         "name": "prefect-job",
                         "image": "ghcr.io/rs-python/prefect/rs-client-libraries/k8s:latest",
                         "imagePullPolicy": "IfNotPresent",
+                        "volumeMounts": [
+                          {
+                            "name": "rspython-ops-ads-01",
+                            "mountPath": "/mnt/share/ads-01"
+                          }
+                        ],
                         "resources":{
                           "requests": {
                             "cpu": "150m",
@@ -255,10 +261,18 @@ worker:
                         }
                       }
                     ],
+                    "volumes": [
+                      {
+                        "name": "rspython-ops-ads-01",
+                        "persistentVolumeClaim": {
+                          "claimName": "rspython-ops-ads-01"
+                        }
+                      }
+                    ],
                     "completions": 1,
                     "parallelism": 1,
                     "restartPolicy": "Never",
-                    "serviceAccountName": "{{ prefect3worker.eopf.name }}"
+                    "serviceAccountName": "{{ prefect3worker.integrated.name }}"
                   }
                 },
                 "backoffLimit": 0,
@@ -266,8 +280,8 @@ worker:
               },
               "metadata": {
                 "labels": "{% raw %}{{ labels }}{% endraw %}",
-                "namespace": "{{ prefect3worker.eopf.namespace }}",
-                "generateName": "{{ prefect3worker.eopf.name }}-run-"
+                "namespace": "{{ prefect3worker.integrated.namespace }}",
+                "generateName": "{{ prefect3worker.integrated.name }}-run-"
               },
               "apiVersion": "batch/v1"
             },
@@ -297,7 +311,7 @@ worker:
   livenessProbe:
     enabled: true
 
-  replicaCount: {{ prefect3worker.eopf.number | default(2) }}
+  replicaCount: {{ prefect3worker.integrated.number | default(2) }}
 
   extraEnvVars:
     - name: RSPY_HOST_OSAM

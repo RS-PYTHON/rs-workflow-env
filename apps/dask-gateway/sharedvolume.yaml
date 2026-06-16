@@ -12,19 +12,14 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-
-namespace: "{{ prefect3worker.staging.namespace }}"
-
-helmCharts:
-- name: prefect-worker
-  repo: https://prefecthq.github.io/prefect-helm
-  releaseName: "{{ app_name }}"
-  version: 2026.2.27173158
-  namespace: "{{ prefect3worker.staging.namespace }}"
-  valuesFile: values.yaml
-apiVersion: kustomize.config.k8s.io/v1beta1
-kind: Kustomization
-labels:
-- includeSelectors: true
-  pairs:
-    app.kubernetes.io/instance: '{{ app_name }}'
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: rspython-ops-ads-01
+spec:
+  accessModes:
+    - ReadWriteMany
+  resources:
+    requests:
+      storage: 3Ti
+  storageClassName: csi-manila-nfs

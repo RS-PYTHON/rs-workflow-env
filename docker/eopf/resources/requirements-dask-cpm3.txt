@@ -12,24 +12,5 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-namespace: dask-gateway
-
-helmCharts:
-- name: dask-gateway
-  namespace: dask-gateway
-  releaseName: '{{ app_name }}'
-  repo: https://helm.dask.org/
-  valuesFile: values.yaml
-  version: 2025.4.0
-
-resources:
-- secret.yaml
-- ingress.yaml
-- sharedvolume.yaml
-
-apiVersion: kustomize.config.k8s.io/v1beta1
-kind: Kustomization
-labels:
-- includeSelectors: true
-  pairs:
-    app.kubernetes.io/instance: '{{ app_name }}'
+--extra-index-url https://__token__:${GITLAB_EOPF_TOKEN}@gitlab.eopf.copernicus.eu/api/v4/projects/14/packages/pypi/simple # eopf cpm
+eopf==3.0.0rc3

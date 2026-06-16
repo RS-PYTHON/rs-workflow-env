@@ -21,15 +21,21 @@ APPS=rs-workflow-env/apps
 sed -i 's!: 0.1!: 0.001!g' "${APPS}/jupyterhub/values.yaml"
 sed -i 's!: 500m!: 1m!g' "${APPS}/prefect3-server/values.yaml"
 sed -i 's!: "150m"!: "1m"!g' \
-  "${APPS}/prefect3-worker-eopf/values.yaml" \
-  "${APPS}/prefect3-worker-general/values.yaml" \
-  "${APPS}/prefect3-worker-staging/values.yaml"
+  "${APPS}/prefect3-worker-integrated/values.yaml" \
+  "${APPS}/prefect3-worker-sandbox/values.yaml" \
+  "${APPS}/prefect3-worker-monitoring/values.yaml"
 
 # Lower jupyter specs
+# yq mangles unquoted {{ }} Jinja2 expressions (it parses them as YAML flow
+# mappings and rewrites them as complex-key notation), which breaks kustomize's
+# YAML-to-JSON conversion later. Escape them as plain strings before yq runs,
+# then restore them afterwards.
+sed -i 's/{{/JINJA2OPEN/g; s/}}/JINJA2CLOSE/g' "${APPS}/jupyterhub/values.yaml"
 yq -i '.scheduling.userScheduler.replicas = 1' "${APPS}/jupyterhub/values.yaml"
 yq -i '.singleuser.profileList = [ .singleuser.profileList[0] ]' "${APPS}/jupyterhub/values.yaml"
+sed -i 's/JINJA2OPEN/{{/g; s/JINJA2CLOSE/}}/g' "${APPS}/jupyterhub/values.yaml"
 
 # Lower prefect specs
-yq -i '.worker.replicaCount = 1' "${APPS}/prefect3-worker-general/values.yaml"
-yq -i '.worker.replicaCount = 1' "${APPS}/prefect3-worker-staging/values.yaml"
-yq -i '.worker.replicaCount = 1' "${APPS}/prefect3-worker-eopf/values.yaml"
+yq -i '.worker.replicaCount = 1' "${APPS}/prefect3-worker-sandbox/values.yaml"
+yq -i '.worker.replicaCount = 1' "${APPS}/prefect3-worker-monitoring/values.yaml"
+yq -i '.worker.replicaCount = 1' "${APPS}/prefect3-worker-integrated/values.yaml"

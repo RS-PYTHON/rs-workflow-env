@@ -13,6 +13,20 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/) 
 >- **Fixed** for any bug fixes.
 >- **Security** in case of vulnerabilities.
 
+## [1.0a10] - 2026-04-27
+
+### Added
+
+- [RSPY-1994](https://github.com/RS-PYTHON/rs-workflow-env/pull/92) : create rwx volume
+- [PR#102](https://github.com/RS-PYTHON/rs-workflow-env/pull/102) : Install prefect in dask sub-venvs
+- [RSPY-1044](https://github.com/RS-PYTHON/rs-workflow-env/pull/95) : Make DPR service compatible with multiple dask versions
+
+### Changed
+
+- [PR#97](https://github.com/RS-PYTHON/rs-workflow-env/pull/97) : update workpool, deployment and tags
+- [RSPY-1071](https://github.com/RS-PYTHON/rs-workflow-env/pull/100) : Update to Prefect 3.6.29
+- [PR#98](https://github.com/RS-PYTHON/rs-workflow-env/pull/98) : Update to OpenTelemetry 1.42.1/0.63b1
+
 ## [1.0a9] - 2026-04-27
 
 ### Added

@@ -23,12 +23,12 @@ metadata:
     nginx.ingress.kubernetes.io/auth-url: https://oauth2-proxy.{{ platform_domain_name }}/oauth2/auth
     nginx.ingress.kubernetes.io/backend-protocol: HTTP
     nginx.ingress.kubernetes.io/proxy-buffer-size: 32k
-    nginx.ingress.kubernetes.io/server-alias: dash-dask.{{ platform_domain_name }}
+    nginx.ingress.kubernetes.io/server-alias: dash-dask.{{ jupyterhub.ops.subDomain }}.{{ platform_domain_name }}
     nginx.ingress.kubernetes.io/use-regex: "true"
 spec:
   ingressClassName: nginx
   rules:
-  - host: dash-dask.{{ platform_domain_name }}
+  - host: dash-dask.{{ jupyterhub.ops.subDomain }}.{{ platform_domain_name }} ### rajouter sous domaine dask
     http:
       paths:
       - path: /clusters/dask-gateway.[0-9a-z]{32}/
@@ -40,5 +40,5 @@ spec:
               number: 80
   tls:
   - hosts:
-    - dash-dask.{{ platform_domain_name }}
-    secretName: dash-dask-{{ platform_domain_name | replace(".", "-") }}
+    - dash-dask.{{ jupyterhub.ops.subDomain }}.{{ platform_domain_name }}
+    secretName: dash-dask-{{ jupyterhub.ops.subDomain }}-{{ platform_domain_name | replace(".", "-") }}

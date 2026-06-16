@@ -21,7 +21,10 @@
 # ghcr.io/rs-python/dask/s1ard/localcluster
 #
 
-FROM ghcr.io/rs-python/rs-dpr-service:latest
+ARG PYTHON_VERSION=xxx
+ARG DASK_TAG=xxx
+
+FROM ghcr.io/rs-python/rs-dpr-service_py${PYTHON_VERSION}-${DASK_TAG}:latest
 
 ARG IMAGE2BUILD
 
@@ -37,7 +40,7 @@ RUN chmod 755 /usr/local/bin/layer-cleanup.sh /usr/local/bin/restore-apt.sh
 # System installations
 RUN \
     restore-apt.sh && apt update && \
-    apt install -y git && \
+    apt install -y git curl && \
     layer-cleanup.sh
 
 # Install processor and eopf
@@ -47,10 +50,14 @@ ADD ./resources/requirements-*.txt /opt
 # GITLAB_EOPF_TOKEN=$(cat /run/secrets/GITLAB_EOPF_TOKEN) pip install ...
 RUN --mount=type=secret,id=GITLAB_EOPF_TOKEN,env=GITLAB_EOPF_TOKEN \
     git config --global url."https://__token__:${GITLAB_EOPF_TOKEN}@gitlab.eopf.copernicus.eu/".insteadOf "https://gitlab.eopf.copernicus.eu/" && \
-    pip install -U pip && \
-    pip install -U -r /opt/requirements-${IMAGE2BUILD}.txt && \
+    pip install --only-binary=:all: -U pip && \
+    pip install --prefer-binary -U -r /opt/requirements-${IMAGE2BUILD}.txt && \
     layer-cleanup.sh && \
     rm -rf /opt/requirements-*.txt
+
+# Install complete dask subsets
+
+RUN pip install --only-binary=:all: dask[complete] && layer-cleanup.sh
 
 # Other installations
 RUN \
@@ -58,13 +65,16 @@ RUN \
     apt update && \
     apt install -y \
         python3-pydot graphviz && \
-    pip install \
+    pip install --only-binary=:all: \
         bokeh">=3.1.0" \
         jupyter-server-proxy && \
     layer-cleanup.sh
 
-# Auto configure opentelemetry
-RUN opentelemetry-bootstrap -a install && layer-cleanup.sh
+# Install and auto configure opentelemetry
+
+RUN pip install --only-binary=:all: opentelemetry-distro opentelemetry-exporter-otlp "opentelemetry-instrumentation-eopf>=0.2.5" && \
+    opentelemetry-bootstrap -a install && \
+    layer-cleanup.sh
 
 # Env var to the folder where we store the config files for the payload files.
 ENV PAYLOAD_CONFIG_FILES=/opt/${IMAGE2BUILD}
@@ -80,7 +90,7 @@ RUN \
     rm -rf /opt/resources
 
 # Clean everything
-RUN apt autoremove -y git && layer-cleanup.sh
+RUN apt autoremove -y git curl && layer-cleanup.sh
 
 # Remove custom scripts
 RUN rm -f /usr/local/bin/layer-cleanup.sh /usr/local/bin/restore-apt.sh

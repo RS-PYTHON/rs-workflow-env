@@ -12,24 +12,16 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-namespace: dask-gateway
+# Sets of dependency versions needed by the different dpr and staging dask clusters
+# NOTE: This file is also used by the rs-dpr-service ci/cd.
 
-helmCharts:
-- name: dask-gateway
-  namespace: dask-gateway
-  releaseName: '{{ app_name }}'
-  repo: https://helm.dask.org/
-  valuesFile: values.yaml
-  version: 2025.4.0
+deps:
 
-resources:
-- secret.yaml
-- ingress.yaml
-- sharedvolume.yaml
+  - python_version: "3.11.7"
+    dask_version: "2024.5.2"
 
-apiVersion: kustomize.config.k8s.io/v1beta1
-kind: Kustomization
-labels:
-- includeSelectors: true
-  pairs:
-    app.kubernetes.io/instance: '{{ app_name }}'
+  - python_version: "3.11.7"
+    dask_version: "2026.1.2"
+
+  - python_version: "3.13.12"
+    dask_version: "2026.1.2"
