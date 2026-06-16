@@ -12,14 +12,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-apiVersion: v1
-kind: PersistentVolumeClaim
-metadata:
-  name: rspython-ops-ads-01
-spec:
-  accessModes:
-    - ReadWriteMany
-  resources:
-    requests:
-      storage: 3Ti
-  storageClassName: csi-manila-nfs
+# Additional file to list dependencies to be installed with apt
+proj-bin
+proj-data

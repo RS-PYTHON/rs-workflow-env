@@ -45,7 +45,7 @@ server:
     - name: PREFECT_LOGGING_LOGGERS_PREFECT_EXTRA_HANDLERS
       value: "[api console]"
     - name: PREFECT_LOGGING_LOGGERS_PREFECT_FLOW_RUNS_LEVEL
-      value: INFO
+      value: DEBUG
     - name: PREFECT_LOGGING_LOGGERS_PREFECT_FLOW_RUNS_HANDLERS
       value: "[api console]"
     - name: PREFECT_LOGGING_LOGGERS_PREFECT_TASK_RUNS_HANDLERS
