@@ -105,7 +105,7 @@ jobs:
       - name: Aggressive cleanup
         run: |
           # Cleanup disk space (level between 0 and 15, more cleaning takes more time)
-          .github/common/resources/aggressive-cleanup.sh 7
+          ./rs-infra-core/.github/common/resources/aggressive-cleanup.sh 7
         shell: bash
       - name: Login to GHCR
         run: echo "${{ secrets.GITHUB_TOKEN }}" | docker login ghcr.io --username "${{ github.actor }}" --password-stdin
@@ -147,7 +147,7 @@ jobs:
       - name: Aggressive cleanup
         run: |
           # Cleanup disk space (level between 0 and 15, more cleaning takes more time)
-          .github/common/resources/aggressive-cleanup.sh 7
+          ./rs-infra-core/.github/common/resources/aggressive-cleanup.sh 7
         shell: bash
 
       - name: Copy common requirements
