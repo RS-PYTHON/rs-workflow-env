@@ -96,6 +96,17 @@ jobs:
     steps:
       - name: Checkout repository
         uses: actions/checkout@v6
+        # clone rs-infra-core to use the GH runner cleanup script
+      - name: Checkout infra-core repository
+        uses: actions/checkout@v6
+        with:
+          repository: RS-PYTHON/rs-infra-core
+          path: rs-infra-core
+      - name: Aggressive cleanup
+        run: |
+          # Cleanup disk space (level between 0 and 15, more cleaning takes more time)
+          .github/common/resources/aggressive-cleanup.sh 7
+        shell: bash
       - name: Login to GHCR
         run: echo "${{ secrets.GITHUB_TOKEN }}" | docker login ghcr.io --username "${{ github.actor }}" --password-stdin
       - name: Build and push base image
@@ -126,6 +137,18 @@ jobs:
     permissions: write-all
     steps:
       - uses: actions/checkout@v6
+
+        # clone rs-infra-core to use the GH runner cleanup script
+      - name: Checkout infra-core repository
+        uses: actions/checkout@v6
+        with:
+          repository: RS-PYTHON/rs-infra-core
+          path: rs-infra-core
+      - name: Aggressive cleanup
+        run: |
+          # Cleanup disk space (level between 0 and 15, more cleaning takes more time)
+          .github/common/resources/aggressive-cleanup.sh 7
+        shell: bash
 
       - name: Copy common requirements
         id: copy_common_req
