@@ -36,7 +36,7 @@ CUSTOM_REQ=$(realpath "${SCRIPT_DIR}/../scripts")
 PYTHON_VERSION=3.13.12
 JUPYTER_HUB_VERSION=5.4.3
 DASK_GATEWAY_TAG=2025.4.0
-PREFECT_TAG=3.6.29
+PREFECT_TAG=3.7.5
 
 ####################
 # Retrieve options #
