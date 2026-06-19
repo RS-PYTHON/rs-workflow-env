@@ -13,7 +13,30 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/) 
 >- **Fixed** for any bug fixes.
 >- **Security** in case of vulnerabilities.
 
-## [1.0a10] - 2026-04-27
+## [1.0a11] - 2026-06-19
+
+### Added
+
+- [RSPY-1086](https://github.com/RS-PYTHON/rs-workflow-env/pull/114) : Add dynamic APT dependency system for EOPF images
+- [PR#107](https://github.com/RS-PYTHON/rs-workflow-env/pull/107) : Feat/rwx volume part2
+- [RSPY-1086](https://github.com/RS-PYTHON/rs-workflow-env/pull/115) : Install libexpat1 in EOPF images
+
+### Changed
+
+- [RSPY-1025](https://github.com/RS-PYTHON/rs-workflow-env/pull/110) : Use main branch of S1-ARD
+- [PR#116](https://github.com/RS-PYTHON/rs-workflow-env/pull/116) : feat: update CI to remove specific apps
+- [RSPY-1056](https://github.com/RS-PYTHON/rs-workflow-env/pull/96) : Set DEBUG level for showing debug logs in prefect
+- [PR#118](https://github.com/RS-PYTHON/rs-workflow-env/pull/118) : ci: Update build-jupyter.yml
+
+### Fixed
+
+- [PR#108](https://github.com/RS-PYTHON/rs-workflow-env/pull/108) : pip install dask[complete] in localcluster
+- [PR#109](https://github.com/RS-PYTHON/rs-workflow-env/pull/109) : pip install opentelemetry-instrumentation-eopf in localcluster
+- [RSPY-1077](https://github.com/RS-PYTHON/rs-workflow-env/pull/111) : CI: Fix the jupyterhub deployment
+- [PR#113](https://github.com/RS-PYTHON/rs-workflow-env/pull/113) : fix: add missing subdomain for default dashboard for dask
+- [PR#117](https://github.com/RS-PYTHON/rs-workflow-env/pull/117) : fix: remove faulty character in template
+
+## [1.0a10] - 2026-06-03
 
 ### Added
 
