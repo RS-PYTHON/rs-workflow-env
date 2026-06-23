@@ -295,7 +295,11 @@ proxy:
       periodSeconds: 2
       failureThreshold: 1000
       timeoutSeconds: 1
-    resources: {}
+    resources:
+      limits:
+        memory: 48Mi
+      requests:
+        memory: 22Mi
     defaultTarget:
     errorTarget:
     extraEnv: {}
@@ -343,7 +347,11 @@ proxy:
       includeSubdomains: false
       preload: false
       maxAge: 15724800 # About 6 months
-    resources: {}
+    resources:
+      limits:
+        memory: 42Mi
+      requests:
+        memory: 24Mi
     labels: {}
     extraInitContainers: []
     extraEnv: {}
@@ -641,7 +649,11 @@ scheduling:
       enabled: true
       maxUnavailable: 1
       minAvailable:
-    resources: {}
+    resources:
+      limits:
+        memory: 56Mi
+      requests:
+        memory: 14Mi
     serviceAccount:
       create: true
       name:
@@ -700,7 +712,11 @@ prePuller:
   revisionHistoryLimit:
   labels: {}
   annotations: {}
-  resources: {}
+  resources:
+    limits:
+      memory: 8Mi
+    requests:
+      memory: 216Ki
   containerSecurityContext:
     runAsUser: 65534 # nobody user
     runAsGroup: 65534 # nobody group

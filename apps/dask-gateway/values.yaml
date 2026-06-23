@@ -25,6 +25,11 @@ gateway:
           - matchExpressions:
             - key: "node-role.kubernetes.io/rs_env"
               operator: Exists
+  resources:
+    limits:
+      memory: 84Mi
+    requests:
+      memory: 62Mi
   tolerations:
     - key: role
       value: rs_env
@@ -114,6 +119,11 @@ controller:
           - matchExpressions:
             - key: "node-role.kubernetes.io/rs_env"
               operator: Exists
+  resources:
+    limits:
+      memory: 96Mi
+    requests:
+      memory: 64Mi
   tolerations:
     - key: role
       value: rs_env
@@ -131,6 +141,11 @@ traefik:
           - matchExpressions:
             - key: "node-role.kubernetes.io/rs_env"
               operator: Exists
+  resources:
+    limits:
+      memory: 42Mi
+    requests:
+      memory: 24Mi
   tolerations:
     - key: role
       value: rs_env
