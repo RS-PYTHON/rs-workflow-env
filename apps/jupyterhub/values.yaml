@@ -714,7 +714,7 @@ prePuller:
   annotations: {}
   resources:
     limits:
-      memory: 300Ki
+      memory: 8Mi
     requests:
       memory: 216Ki
   containerSecurityContext:
