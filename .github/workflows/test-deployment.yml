@@ -83,6 +83,7 @@ jobs:
           addons: 'metallb,metrics-server'
           cpus: 4
           memory: 8000m
+          container-runtime: containerd
           start-args: '--disk-size=32g'
       - name: "Configure cluster labels, IP and DNS (host + CoreDNS)"
         run: |
