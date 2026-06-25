@@ -20,7 +20,7 @@
 ARG PYTHON_VERSION=3.13.12
 ARG JUPYTER_HUB_VERSION=5.4.3
 
-FROM ghcr.io/rs-python/quay.io/jupyter/base-notebook:hub-${JUPYTER_HUB_VERSION}-py${PYTHON_VERSION}
+FROM ghcr.io/rs-python/quay.io/jupyter/base-notebook:hub-${JUPYTER_HUB_VERSION}-py${PYTHON_VERSION}-v1
 
 ARG PYTHON_VERSION=3.13.12
 ARG DASK_TAG=2024.5.2
