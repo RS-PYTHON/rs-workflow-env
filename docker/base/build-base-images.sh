@@ -17,7 +17,7 @@
 # Build the base Docker images that are used in the cluster and in the ci/cd.
 # Target Docker image names:
 # ghcr.io/rs-python/python:xxx-slim-bookworm
-# ghcr.io/rs-python/quay.io/jupyter/base-notebook:hub-xxx
+# ghcr.io/rs-python/quay.io/jupyter/base-notebook:hub-xxx-pyzzz-vn
 # ghcr.io/rs-python/dask/dask-gateway:xxx-pyzzz-yyy
 # ghcr.io/rs-python/prefecthq/prefect:xxx-pyzzz
 # ghcr.io/rs-python/prefecthq/prefect:xxx-pyzzz-k8s
@@ -111,7 +111,7 @@ if [[ "$TARGET" == "all" || "$TARGET" == "jupyter" ]]; then
 
     jupyter_dockerfile="Dockerfile.jupyter"
     jupyter_base="quay.io/jupyter/base-notebook:hub-${JUPYTER_HUB_VERSION}"
-    jupyter_suffix="-py${PYTHON_VERSION}"
+    jupyter_suffix="-py${PYTHON_VERSION}-v1"
 
     # Add our hosting github organization to the docker image
     jupyter_target="ghcr.io/rs-python/${jupyter_base}${jupyter_suffix}"

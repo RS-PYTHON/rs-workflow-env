@@ -15,7 +15,7 @@
 
 #
 # Target Docker image names:
-# ghcr.io/rs-python/quay.io/jupyter/base-notebook:hub-xxx
+# ghcr.io/rs-python/quay.io/jupyter/base-notebook:hub-xxx-pyzzz-vn
 #
 
 # shellcheck disable=SC2102,SC1091
