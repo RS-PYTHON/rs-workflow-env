@@ -102,10 +102,6 @@ RUN curl -L -o /tmp/firefox.tar.xz "https://download.mozilla.org/?product=firefo
     ln -s /opt/firefox/firefox /usr/bin/firefox && \
     rm /tmp/firefox.tar.xz
 
-# Clone rs-demo repository
-RUN cd /opt && \
-    git clone https://github.com/RS-PYTHON/rs-demo.git
-
 COPY --chown=rspy:rspy ./resources/00-read-env.py /tmp/00-read-env.py
 COPY --chown=rspy:rspy ./resources/jupyter_server_config.py /tmp/jupyter_server_config.py
 
@@ -114,6 +110,13 @@ RUN chmod 755 /usr/local/bin/start-notebook.sh
 
 # Remove custom scripts
 RUN rm -f /usr/local/bin/layer-cleanup.sh /usr/local/bin/restore-apt.sh
+
+# Clone rs-demo repository
+# CACHEBUST invalidates the cache so git clone always fetches the latest commits
+ARG CACHEBUST
+ARG RS_DEMO_BRANCH=develop
+RUN cd /opt && \
+    git clone --single-branch --branch "${RS_DEMO_BRANCH}" https://github.com/RS-PYTHON/rs-demo.git
 
 ENTRYPOINT ["start-notebook.sh"]
 

@@ -107,7 +107,7 @@ jobs:
       s3olci: ${{ steps.filter.outputs.s3olci }}
     steps:
       - uses: actions/checkout@v6
-      - uses: dorny/paths-filter@v3
+      - uses: dorny/paths-filter@v4
         id: filter
         with:
           filters: |
