@@ -29,7 +29,7 @@ fi
 # After conversion to json, its content should be something like:
 # {"deps": [
 # {"python_version": "3.11.7", "dask_version": "2024.5.2"},
-# {"python_version": "3.13.12", "dask_version": "2026.1.2"},
+# {"python_version": "3.13.12", "dask_version": "2026.3.0"},
 # ...
 echo "Read: '$deps_file'"
 cat "$deps_file"

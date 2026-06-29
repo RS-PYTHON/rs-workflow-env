@@ -78,3 +78,9 @@ tolerations:
   - key: role
     value: rs_env
     effect: NoSchedule
+
+resources:
+  limits:
+    memory: 128Mi
+  requests:
+    memory: 74Mi

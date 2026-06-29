@@ -17,7 +17,7 @@
 # Build the base Docker images that are used in the cluster and in the ci/cd.
 # Target Docker image names:
 # ghcr.io/rs-python/python:xxx-slim-bookworm
-# ghcr.io/rs-python/quay.io/jupyter/base-notebook:hub-xxx
+# ghcr.io/rs-python/quay.io/jupyter/base-notebook:hub-xxx-pyzzz-vn
 # ghcr.io/rs-python/dask/dask-gateway:xxx-pyzzz-yyy
 # ghcr.io/rs-python/prefecthq/prefect:xxx-pyzzz
 # ghcr.io/rs-python/prefecthq/prefect:xxx-pyzzz-k8s
@@ -36,7 +36,7 @@ CUSTOM_REQ=$(realpath "${SCRIPT_DIR}/../scripts")
 PYTHON_VERSION=3.13.12
 JUPYTER_HUB_VERSION=5.4.3
 DASK_GATEWAY_TAG=2025.4.0
-PREFECT_TAG=3.6.29
+PREFECT_TAG=3.7.5
 
 ####################
 # Retrieve options #
@@ -111,7 +111,7 @@ if [[ "$TARGET" == "all" || "$TARGET" == "jupyter" ]]; then
 
     jupyter_dockerfile="Dockerfile.jupyter"
     jupyter_base="quay.io/jupyter/base-notebook:hub-${JUPYTER_HUB_VERSION}"
-    jupyter_suffix="-py${PYTHON_VERSION}"
+    jupyter_suffix="-py${PYTHON_VERSION}-v1"
 
     # Add our hosting github organization to the docker image
     jupyter_target="ghcr.io/rs-python/${jupyter_base}${jupyter_suffix}"
@@ -140,7 +140,7 @@ if [[ "$TARGET" == "all" || "$TARGET" == "dask" ]]; then
     # After conversion to json, its content should be something like:
     # {"deps": [
     # {"python_version": "3.11.7", "dask_version": "2024.5.2"},
-    # {"python_version": "3.13.12", "dask_version": "2026.1.2"},
+    # {"python_version": "3.13.12", "dask_version": "2026.3.0"},
     # ...
     deps_file="${CUSTOM_REQ}/dask-cluster-versions.yml"
 

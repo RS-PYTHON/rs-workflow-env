@@ -72,7 +72,7 @@ RUN \
 
 # Install and auto configure opentelemetry
 
-RUN pip install --only-binary=:all: opentelemetry-distro opentelemetry-exporter-otlp "opentelemetry-instrumentation-eopf>=0.2.5" && \
+RUN pip install --only-binary=:all: opentelemetry-distro opentelemetry-exporter-otlp "opentelemetry-instrumentation-eopf>=0.2.7" && \
     opentelemetry-bootstrap -a install && \
     layer-cleanup.sh
 
