@@ -38,7 +38,8 @@ COPY ./layer-cleanup.sh ./restore-apt.sh /usr/local/bin/
 RUN chmod 755 /usr/local/bin/layer-cleanup.sh /usr/local/bin/restore-apt.sh
 RUN apt update && apt upgrade -y && pip install -U pip && layer-cleanup.sh
 
-# Install python version and dependencies
+# Install python version and dependencies.
+# NOTE: we install pytest only because it has a nice feature to compare dicts.
 RUN conda update -n base -c conda-forge conda && \
     conda install --yes conda-forge::python="${PYTHON_VERSION}" && \
     python -V && \
@@ -51,7 +52,8 @@ RUN conda update -n base -c conda-forge conda && \
         ipywidgets \
         s3fs \
         boto3 \
-        papermill && \
+        papermill \
+        pytest && \
     conda clean --all --yes && \
     layer-cleanup.sh
 

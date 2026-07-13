@@ -72,7 +72,7 @@ jobs:
       base: ${{ steps.filter.outputs.base }}
     steps:
       - uses: actions/checkout@v6
-      - uses: dorny/paths-filter@v3
+      - uses: dorny/paths-filter@v4
         id: filter
         with:
           filters: |
@@ -205,6 +205,19 @@ jobs:
           repository: RS-PYTHON/rs-client-libraries
           run-id: ${{ steps.rs-client-run-id.outputs.run-id }}
 
+      - name: Resolve rs-demo branch
+        id: rs-demo-branch
+        env:
+          GH_TOKEN: ${{ github.token }}
+          CURRENT_BRANCH: ${{ needs.set-env.outputs.branch_name }}
+        run: |
+          if gh api "repos/${{ github.repository_owner }}/rs-demo/branches/${CURRENT_BRANCH}" --silent 2>/dev/null; then
+            echo "branch=${CURRENT_BRANCH}" >> "$GITHUB_OUTPUT"
+          else
+            echo "branch=develop" >> "$GITHUB_OUTPUT"
+          fi
+        shell: bash
+
       - id: publish-docker
         uses: RS-PYTHON/actions/.github/actions/publish-docker@develop
         with:
@@ -212,6 +225,9 @@ jobs:
           build_context_path: ./docker/jupyter
           image_suffix: -jupyter
           image_tags: ${{ needs.set-env.outputs.docker_tags }}
+          build_args: |
+            CACHEBUST=${{ github.run_id }}
+            RS_DEMO_BRANCH=${{ steps.rs-demo-branch.outputs.branch }}
           dockerhub_username: ${{ vars.DOCKERHUB_USERNAME }}
           dockerhub_token: ${{ secrets.DOCKERHUB_TOKEN }}
           github_token: ${{ secrets.GITHUB_TOKEN }}
