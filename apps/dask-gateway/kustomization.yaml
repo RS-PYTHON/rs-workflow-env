@@ -20,7 +20,7 @@ helmCharts:
   releaseName: '{{ app_name }}'
   repo: https://helm.dask.org/
   valuesFile: values.yaml
-  version: 2025.4.0
+  version: 2026.3.0
 
 resources:
 - secret.yaml

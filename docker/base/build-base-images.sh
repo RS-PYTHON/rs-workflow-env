@@ -35,8 +35,8 @@ CUSTOM_REQ=$(realpath "${SCRIPT_DIR}/../scripts")
 
 PYTHON_VERSION=3.13.12
 JUPYTER_HUB_VERSION=5.4.3
-DASK_GATEWAY_TAG=2025.4.0
-PREFECT_TAG=3.7.5
+DASK_GATEWAY_TAG=2026.3.0
+PREFECT_TAG=3.6.20
 
 ####################
 # Retrieve options #
@@ -140,7 +140,7 @@ if [[ "$TARGET" == "all" || "$TARGET" == "dask" ]]; then
     # After conversion to json, its content should be something like:
     # {"deps": [
     # {"python_version": "3.11.7", "dask_version": "2024.5.2"},
-    # {"python_version": "3.13.12", "dask_version": "2026.3.0"},
+    # {"python_version": "3.13.12", "dask_version": "2026.7.0"},
     # ...
     deps_file="${CUSTOM_REQ}/dask-cluster-versions.yml"
 
