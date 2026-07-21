@@ -18,6 +18,7 @@
 # The mapping between each Python/Dask combination labelled with "dpr" and the processors that use it
 # is done in the values.yaml file of each "rs-dpr-service" app configured in rs-server-deployment.
 # See here: https://github.com/RS-PYTHON/rs-server-deployment/tree/develop/apps
+# For local mode see: https://github.com/RS-PYTHON/rs-demo/blob/develop/local-mode/nginx.conf#L103
 
 deps:
 
