@@ -19,9 +19,16 @@ deps:
 
   - python_version: "3.11.7"
     dask_version: "2024.5.2"
+    used_by: [dpr] # WARNING: use a list because an env could be used by both dpr and staging
 
   - python_version: "3.11.7"
     dask_version: "2026.1.2"
+    used_by: [dpr]
 
   - python_version: "3.13.12"
     dask_version: "2026.3.0"
+    used_by: [dpr]
+
+  - python_version: "3.13.12"
+    dask_version: "2026.7.0"
+    used_by: [staging]
