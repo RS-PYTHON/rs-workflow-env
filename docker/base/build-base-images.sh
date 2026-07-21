@@ -140,7 +140,7 @@ if [[ "$TARGET" == "all" || "$TARGET" == "dask" ]]; then
     # After conversion to json, its content should be something like:
     # {"deps": [
     # {"python_version": "3.11.7", "dask_version": "2024.5.2"},
-    # {"python_version": "3.13.12", "dask_version": "2026.7.0"},
+    # {"python_version": "3.13.12", "dask_version": "2026.3.0"},
     # ...
     deps_file="${CUSTOM_REQ}/dask-cluster-versions.yml"
 

@@ -73,7 +73,7 @@ all_procs = {
     # WARNING: Up to first official relase, release-candidate revision is hard-coded in requirements-dask-cpm3.txt
     "cpm3": Image(
         python_version="3.13.12",
-        dask_version="2026.7.0",
+        dask_version="2026.3.0",
         k8s_name="ghcr.io/rs-python/dask/cpm3/k8s",
         local_name="ghcr.io/rs-python/dask/cpm3/local",
         local_cluster_name="ghcr.io/rs-python/dask/cpm3/localcluster",
@@ -89,7 +89,7 @@ all_procs = {
     ),
     "s1ard": Image(
         python_version="3.13.12",
-        dask_version="2026.7.0",
+        dask_version="2026.3.0",
         k8s_name="ghcr.io/rs-python/dask/s1ard/k8s",
         local_name="ghcr.io/rs-python/dask/s1ard/local",
         local_cluster_name="ghcr.io/rs-python/dask/s1ard/localcluster",

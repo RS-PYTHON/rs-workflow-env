@@ -72,9 +72,9 @@ Each base image contains a Jupyter environment with the libraries "dask", "distr
 
 Currently, here are the four variants of Dask base images created and their usage. The tag follows the naming convention `<TARGET SYSTEM>-py<PYTHON VERSION>-<DASK VERSION>`.
 
-- `ghcr.io/rs-python/dask/dask-gateway:k8s-py3.13.12-2026.7.0`: for staging and S1 ARD on cluster mode. The staging runs with Python 3.13.12 and usually the latest version of Dask as it has a direct dependency to it that can be updated regularly.
+- `ghcr.io/rs-python/dask/dask-gateway:k8s-py3.13.12-2026.3.0`: for staging and S1 ARD on cluster mode. The staging runs with Python 3.13.12 and usually the latest version of Dask as it has a direct dependency to it that can be updated regularly.
 - `ghcr.io/rs-python/dask/dask-gateway:k8s-py3.11.7-2024.5.2`: for L0 processors on cluster mode. The L0 processors are currently in Python 3.11.7 and their dependency to Dask is more complicated to update as it is linked to a third-party dependency, so it uses an older version.
-- `ghcr.io/rs-python/dask/dask-gateway:local-py3.13.12-2026.7.0`: for staging and S1 ARD processor on local mode.
+- `ghcr.io/rs-python/dask/dask-gateway:local-py3.13.12-2026.3.0`: for staging and S1 ARD processor on local mode.
 - `ghcr.io/rs-python/dask/dask-gateway:local-py3.11.7-2024.5.2`: for L0 processors on local mode.
 
 ## Processor images
