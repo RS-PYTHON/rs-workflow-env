@@ -15,11 +15,15 @@
 # Sets of dependency versions needed by the different dpr and staging dask clusters
 # NOTE: This file is also used by the rs-dpr-service ci/cd.
 
+# The mapping between each Python/Dask combination labelled with "dpr" and the processors that use it
+# is done in the values.yaml file of each "rs-dpr-service" app configured in rs-server-deployment.
+# See here: https://github.com/RS-PYTHON/rs-server-deployment/tree/develop/apps
+
 deps:
 
   - python_version: "3.11.7"
     dask_version: "2024.5.2"
-    used_by: [dpr] # WARNING: use a list because an env could be used by both dpr and staging
+    used_by: [dpr]
 
   - python_version: "3.11.7"
     dask_version: "2026.1.2"
