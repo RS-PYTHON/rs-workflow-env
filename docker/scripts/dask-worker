@@ -1,0 +1,4 @@
+#!/bin/sh
+
+# wrapper for dask-worker
+exec /usr/local/bin/dask worker "$@"

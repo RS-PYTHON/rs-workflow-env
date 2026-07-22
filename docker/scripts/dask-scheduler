@@ -1,0 +1,4 @@
+#!/bin/sh
+
+# wrapper for dask-scheduler
+exec /usr/local/bin/dask scheduler "$@"
