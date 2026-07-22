@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/usr/local/bin/python3.13
 # Copyright 2023-2026 Airbus, CS Group
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -14,4 +14,8 @@
 # limitations under the License.
 
 # wrapper for dask-worker
-exec /usr/local/bin/dask worker "$@"
+import sys
+from distributed.cli.dask_worker import main
+if __name__ == '__main__':
+    sys.argv[0] = sys.argv[0].removesuffix('.exe')
+    sys.exit(main())
