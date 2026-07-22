@@ -35,7 +35,7 @@ CUSTOM_REQ=$(realpath "${SCRIPT_DIR}/../scripts")
 
 PYTHON_VERSION=3.13.12
 JUPYTER_HUB_VERSION=5.4.3
-DASK_GATEWAY_TAG=2025.4.0
+DASK_GATEWAY_TAG=2026.3.0
 PREFECT_TAG=3.7.5
 
 ####################
@@ -188,7 +188,7 @@ if [[ "$TARGET" == "all" || "$TARGET" == "dask" ]]; then
         done
 
         # Copy Dockerfile requirements
-        cp -t "${tmp}/dask-gateway" "${CUSTOM_REQ}/layer-cleanup.sh" "${CUSTOM_REQ}/restore-apt.sh"
+        cp -t "${tmp}/dask-gateway" "${CUSTOM_REQ}/layer-cleanup.sh" "${CUSTOM_REQ}/restore-apt.sh" "${CUSTOM_REQ}/dask-scheduler" "${CUSTOM_REQ}/dask-worker"
 
         # Target environments supported: local and k8s
         localenv="local"

@@ -27,6 +27,11 @@ ARG DASK_GATEWAY_TAG=xxx
 COPY ./layer-cleanup.sh /usr/local/bin/
 RUN chmod 755 /usr/local/bin/layer-cleanup.sh
 
+COPY dask-scheduler /usr/local/bin/
+RUN chmod 755 /usr/local/bin/dask-scheduler
+COPY dask-worker /usr/local/bin/
+RUN chmod 755 /usr/local/bin/dask-worker
+
 COPY ./dask-gateway /opt/dask-gateway
 
 # Do the same as in:
