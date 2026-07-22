@@ -188,7 +188,7 @@ if [[ "$TARGET" == "all" || "$TARGET" == "dask" ]]; then
         done
 
         # Copy Dockerfile requirements
-        cp -t "${tmp}/dask-gateway" "${CUSTOM_REQ}/layer-cleanup.sh" "${CUSTOM_REQ}/restore-apt.sh"
+        cp -t "${tmp}/dask-gateway" "${CUSTOM_REQ}/layer-cleanup.sh" "${CUSTOM_REQ}/restore-apt.sh" "${CUSTOM_REQ}/dask-scheduler" "${CUSTOM_REQ}/dask-worker"
 
         # Target environments supported: local and k8s
         localenv="local"
