@@ -24,57 +24,57 @@ ARG JUPYTER_HUB_VERSION=5.4.3
 
 FROM "quay.io/jupyter/base-notebook:hub-${JUPYTER_HUB_VERSION}"
 
-# ENV PATH="/home/jovyan/.local/bin:${PATH}"
+ENV PATH="/home/jovyan/.local/bin:${PATH}"
 
-# ARG PYTHON_VERSION=3.13.12
-# ARG DASK_TAG=2024.5.2
-# ARG DASK_GATEWAY_TAG=2025.4.0
-# ARG PREFECT_TAG=3.7.5
+ARG PYTHON_VERSION=3.13.12
+ARG DASK_TAG=2024.5.2
+ARG DASK_GATEWAY_TAG=2026.3.0
+ARG PREFECT_TAG=3.7.5
 
-# USER root
+USER root
 
-# COPY ./layer-cleanup.sh ./restore-apt.sh /usr/local/bin/
-# RUN chmod 755 /usr/local/bin/layer-cleanup.sh /usr/local/bin/restore-apt.sh
-# RUN apt update && apt upgrade -y && pip install -U pip && layer-cleanup.sh
+COPY ./layer-cleanup.sh ./restore-apt.sh /usr/local/bin/
+RUN chmod 755 /usr/local/bin/layer-cleanup.sh /usr/local/bin/restore-apt.sh
+RUN apt update && apt upgrade -y && pip install -U pip && layer-cleanup.sh
 
-# # Install python version and dependencies.
-# # NOTE: we install pytest only because it has a nice feature to compare dicts.
-# RUN conda update -n base -c conda-forge conda && \
-#     conda install --yes conda-forge::python="${PYTHON_VERSION}" && \
-#     python -V && \
-#     pip install -U pip && \
-#     pip install \
-#         dask[complete]=="${DASK_TAG}" \
-#         distributed=="${DASK_TAG}" \
-#         dask-gateway=="${DASK_GATEWAY_TAG}" \
-#         prefect[aws]=="${PREFECT_TAG}" \
-#         ipywidgets \
-#         s3fs \
-#         boto3 \
-#         papermill \
-#         pytest && \
-#     conda clean --all --yes && \
-#     layer-cleanup.sh
+# Install python version and dependencies.
+# NOTE: we install pytest only because it has a nice feature to compare dicts.
+RUN conda update -n base -c conda-forge conda && \
+    conda install --yes conda-forge::python="${PYTHON_VERSION}" && \
+    python -V && \
+    pip install -U pip && \
+    pip install \
+        dask[complete]=="${DASK_TAG}" \
+        distributed=="${DASK_TAG}" \
+        dask-gateway=="${DASK_GATEWAY_TAG}" \
+        prefect[aws]=="${PREFECT_TAG}" \
+        ipywidgets \
+        s3fs \
+        boto3 \
+        papermill \
+        pytest && \
+    conda clean --all --yes && \
+    layer-cleanup.sh
 
-# # Install packages
-# RUN restore-apt.sh && apt update && apt install -y python3-pydot graphviz && layer-cleanup.sh
+# Install packages
+RUN restore-apt.sh && apt update && apt install -y python3-pydot graphviz && layer-cleanup.sh
 
-# # Create Jupyter kernels
-# COPY ./create-jupyter-kernels.sh ./dask-cluster-versions.yml /opt/
-# RUN \
-#     restore-apt.sh && \
-#     /opt/create-jupyter-kernels.sh /opt/dask-cluster-versions.yml && \
-#     conda clean --all --yes && \
-#     layer-cleanup.sh && \
-#     rm -f /opt/create-jupyter-kernels.sh /opt/dask-cluster-versions.yml
+# Create Jupyter kernels
+COPY ./create-jupyter-kernels.sh ./dask-cluster-versions.yml /opt/
+RUN \
+    restore-apt.sh && \
+    /opt/create-jupyter-kernels.sh /opt/dask-cluster-versions.yml && \
+    conda clean --all --yes && \
+    layer-cleanup.sh && \
+    rm -f /opt/create-jupyter-kernels.sh /opt/dask-cluster-versions.yml
 
-# RUN chown -R jovyan /home/jovyan
-# RUN rm -f /usr/local/bin/layer-cleanup.sh /usr/local/bin/restore-apt.sh
+RUN chown -R jovyan /home/jovyan
+RUN rm -f /usr/local/bin/layer-cleanup.sh /usr/local/bin/restore-apt.sh
 
-# USER jovyan
+USER jovyan
 
-# # Set labels based on the Open Containers Initiative (OCI):
-# # https://github.com/opencontainers/image-spec/blob/main/annotations.md#pre-defined-annotation-keys
-# #
-# LABEL org.opencontainers.image.source="https://github.com/RS-PYTHON/rs-workflow-env"
-# LABEL dockerfile.url="https://github.com/RS-PYTHON/rs-workflow-env/blob/develop/docker/base/Dockerfile.jupyter"
+# Set labels based on the Open Containers Initiative (OCI):
+# https://github.com/opencontainers/image-spec/blob/main/annotations.md#pre-defined-annotation-keys
+#
+LABEL org.opencontainers.image.source="https://github.com/RS-PYTHON/rs-workflow-env"
+LABEL dockerfile.url="https://github.com/RS-PYTHON/rs-workflow-env/blob/develop/docker/base/Dockerfile.jupyter"

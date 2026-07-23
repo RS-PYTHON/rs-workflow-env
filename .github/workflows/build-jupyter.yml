@@ -64,21 +64,26 @@ env:
 jobs:
 
   set-binary-env:
-    name: Set environment for publishing Docker images
+    name: Set Docker environment
     if: github.actor != 'dependabot[bot]' # ignore pull requests by github bot
     runs-on: ubuntu-latest
     outputs:
       branch_name: ${{ steps.set-binary-env.outputs.branch_name }}
-      docker_tags: ${{ case(
-        steps.set-binary-env.outputs.docker_final_tags != '',
-        steps.set-binary-env.outputs.docker_final_tags,
-        steps.set-binary-env.outputs.docker_tags) }} # don't use temp tags, take directly the final tags
+      # Use directly the final tags
+      docker_tags: ${{ steps.set-binary-env.outputs.docker_tags }},${{ steps.set-binary-env.outputs.docker_final_tags }}
+      first_tag: ${{ steps.first-tag.outputs.value }}
     steps:
       - id: set-binary-env
         name: Call action 'set-binary-env'
         uses: RS-PYTHON/actions/.github/actions/set-binary-env@develop
         with:
           manual_tag: ${{ github.event.inputs.docker_tag }}
+      - name: First docker tag
+        id: first-tag
+        run: |
+          # Keep the first image tag from a list as tag1,tag2,tag3
+          value=$(echo ${{ steps.set-binary-env.outputs.docker_tags }} | cut -d , -f1)
+          echo "value=$value" >> $GITHUB_OUTPUT
 
   # Enable conditional execution of workflow steps and jobs, based on the files modified
   # by pull request, on a feature branch, or by the recently pushed commits.
@@ -113,8 +118,6 @@ jobs:
     permissions:
       contents: read
       packages: write
-    outputs:
-      base-tag: ${{ steps.base-tag.outputs.value }}
     steps:
       - name: Checkout repository
         uses: actions/checkout@v6
@@ -123,6 +126,7 @@ jobs:
           # Cleanup disk space (level between 0 and 15, more cleaning takes more time)
           wget --max-redirect=0 \
             https://raw.githubusercontent.com/RS-PYTHON/rs-infra-core/refs/heads/develop/.github/common/resources/aggressive-cleanup.sh
+          chmod u+x aggressive-cleanup.sh
           ./aggressive-cleanup.sh 7
         shell: bash
 
@@ -139,13 +143,6 @@ jobs:
           github_token: ${{ secrets.GITHUB_TOKEN }}
           trivy_skip_dirs: ${{ env.TRIVY_SKIP_DIRS }}
           trivy_skip_files: ${{ env.TRIVY_SKIP_FILES }}
-
-      - name: Base image tag
-        id: base-tag
-        run: |
-          # Keep the first image tag from a list as tag1,tag2,tag3
-          value=$(echo ${{ needs.set-binary-env.outputs.docker_tags }} | cut -d , -f1)
-          echo "value=$value" >> $GITHUB_OUTPUT
 
   publish-docker:
     if: ${{ always() && !failure() && !cancelled() && (github.actor != 'dependabot[bot]') }} # Run the job even if previous job was skipped
@@ -245,7 +242,7 @@ jobs:
           image_suffix: -jupyter
           image_tags: ${{ needs.set-binary-env.outputs.docker_tags }}
           build_args: |
-            BASE_TAG=${{ needs.build-base-jupyter-image.outputs.base-tag }}
+            BASE_TAG=${{ needs.set-binary-env.outputs.first_tag }}
             CACHEBUST=${{ github.run_id }}
             RS_DEMO_BRANCH=${{ steps.rs-demo-branch.outputs.branch }}
           dockerhub_username: ${{ vars.DOCKERHUB_USERNAME }}
