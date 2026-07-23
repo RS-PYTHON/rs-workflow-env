@@ -196,7 +196,8 @@ jobs:
     needs: [changes, set-env, build-base-dask-images]
     # Job run when there are changes OR a manual trigger, EVEN if any previous job is skipped
     if: ${{ always() && !failure() && !cancelled() && ((needs.set-env.outputs.any_changes == 'true') || (github.event_name == 'workflow_dispatch')) }}
-    permissions: write-all
+    permissions:
+      packages: write
     env:
       DOCKER_TAGS: ${{ needs.set-env.outputs.docker_tags }}
 

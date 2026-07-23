@@ -58,8 +58,27 @@ on:
 
 env:
   DOCKER_REGISTRY: ghcr.io
+  TRIVY_SKIP_DIRS: /opt/conda/pkgs/cache
+  TRIVY_SKIP_FILES: /opt/conda/lib/python3.*/site-packages/bokeh/server/static/js/compiler.js,/opt/conda/lib/python3.*/site-packages/prefect/server/ui/assets/index-CCNfsmcm.js.map
 
 jobs:
+
+  set-binary-env:
+    name: Set environment for publishing Docker images
+    if: github.actor != 'dependabot[bot]' # ignore pull requests by github bot
+    runs-on: ubuntu-latest
+    outputs:
+      branch_name: ${{ steps.set-binary-env.outputs.branch_name }}
+      docker_tags: ${{ case(
+        steps.set-binary-env.outputs.docker_final_tags != '',
+        steps.set-binary-env.outputs.docker_final_tags,
+        steps.set-binary-env.outputs.docker_tags) }} # don't use temp tags, take directly the final tags
+    steps:
+      - id: set-binary-env
+        name: Call action 'set-binary-env'
+        uses: RS-PYTHON/actions/.github/actions/set-binary-env@develop
+        with:
+          manual_tag: ${{ github.event.inputs.docker_tag }}
 
   # Enable conditional execution of workflow steps and jobs, based on the files modified
   # by pull request, on a feature branch, or by the recently pushed commits.
@@ -77,64 +96,64 @@ jobs:
         with:
           filters: |
             base:
-              - docker/base/build-base-images.sh
               - docker/base/Dockerfile.jupyter
-              - docker/base/Dockerfile.python
               - docker/scripts/create-jupyter-kernels.sh
               - docker/scripts/dask-cluster-versions.yml
           list-files: 'json' # Enables listing of files matching the filter
 
-  # Build base image for Jupyter only
+  # Build base Jupyter image
   build-base-jupyter-image:
     runs-on: ubuntu-latest
     name: Build base image for Jupyter
-    needs: [changes]
-    if: ${{ (needs.changes.outputs.base == 'true') || ((github.event_name == 'workflow_dispatch') && (github.event.inputs.build_base_image == 'true')) }}
+    needs: [set-binary-env, changes]
+    if: ${{
+      (needs.changes.outputs.base == 'true') ||
+      ((github.event_name == 'workflow_dispatch') && (github.event.inputs.build_base_image == 'true'))
+      }}
     permissions:
       contents: read
       packages: write
+    outputs:
+      base-tag: ${{ steps.base-tag.outputs.value }}
     steps:
       - name: Checkout repository
         uses: actions/checkout@v6
-        # clone rs-infra-core to use the GH runner cleanup script
-      - name: Checkout infra-core repository
-        uses: actions/checkout@v6
-        with:
-          repository: RS-PYTHON/rs-infra-core
-          path: rs-infra-core
       - name: Aggressive cleanup
         run: |
           # Cleanup disk space (level between 0 and 15, more cleaning takes more time)
-          ./rs-infra-core/.github/common/resources/aggressive-cleanup.sh 7
+          wget --max-redirect=0 \
+            https://raw.githubusercontent.com/RS-PYTHON/rs-infra-core/refs/heads/develop/.github/common/resources/aggressive-cleanup.sh
+          ./aggressive-cleanup.sh 7
         shell: bash
-      - name: Login to GHCR
-        run: echo "${{ secrets.GITHUB_TOKEN }}" | docker login ghcr.io --username "${{ github.actor }}" --password-stdin
-      - name: Build and push base image
-        run: docker/base/build-base-images.sh -t jupyter --push
 
-  set-env:
-    name: Set environment
-    if: github.actor != 'dependabot[bot]' # ignore pull requests by github bot
-    runs-on: ubuntu-latest
-    outputs:
-      branch_name: ${{ steps.set-binary-env.outputs.branch_name }}
-      docker_tags: ${{ case(
-        steps.set-binary-env.outputs.docker_final_tags != '',
-        steps.set-binary-env.outputs.docker_final_tags,
-        steps.set-binary-env.outputs.docker_tags) }} # don't use temp tags, take directly the final tags
-    steps:
-      - id: set-binary-env
-        name: Call action 'set-binary-env'
-        uses: RS-PYTHON/actions/.github/actions/set-binary-env@develop
+      - id: publish-docker
+        uses: RS-PYTHON/actions/.github/actions/publish-docker@develop
         with:
-          manual_tag: ${{ github.event.inputs.docker_tag }}
+          dockerfile: ./docker/base/Dockerfile.jupyter
+          build_context_path: ./docker/scripts
+          image_basename: ${{ github.repository_owner }}/
+          image_suffix: quay.io/jupyter/base-notebook
+          image_tags: ${{ needs.set-binary-env.outputs.docker_tags }}
+          dockerhub_username: ${{ vars.DOCKERHUB_USERNAME }}
+          dockerhub_token: ${{ secrets.DOCKERHUB_TOKEN }}
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          trivy_skip_dirs: ${{ env.TRIVY_SKIP_DIRS }}
+          trivy_skip_files: ${{ env.TRIVY_SKIP_FILES }}
+
+      - name: Base image tag
+        id: base-tag
+        run: |
+          # Keep the first image tag from a list as tag1,tag2,tag3
+          value=$(echo ${{ needs.set-binary-env.outputs.docker_tags }} | cut -d , -f1)
+          echo "value=$value" >> $GITHUB_OUTPUT
 
   publish-docker:
     if: ${{ always() && !failure() && !cancelled() && (github.actor != 'dependabot[bot]') }} # Run the job even if previous job was skipped
     runs-on: ubuntu-latest
     name: Build image for Jupyter
-    needs: [set-env, build-base-jupyter-image]
-    permissions: write-all
+    needs: [set-binary-env, build-base-jupyter-image]
+    permissions:
+      packages: write
     steps:
       - uses: actions/checkout@v6
 
@@ -164,7 +183,7 @@ jobs:
           REPO_NAME: rs-client-libraries
           RS_SERVER_PAT: ${{ secrets.RS_SERVER_PAT }}
           WORKFLOW_FILE: "publish-binaries.yml"
-          CURRENT_BRANCH: ${{ needs.set-env.outputs.branch_name }}
+          CURRENT_BRANCH: ${{ needs.set-binary-env.outputs.branch_name }}
         run: |
           set -x
 
@@ -209,7 +228,7 @@ jobs:
         id: rs-demo-branch
         env:
           GH_TOKEN: ${{ github.token }}
-          CURRENT_BRANCH: ${{ needs.set-env.outputs.branch_name }}
+          CURRENT_BRANCH: ${{ needs.set-binary-env.outputs.branch_name }}
         run: |
           if gh api "repos/${{ github.repository_owner }}/rs-demo/branches/${CURRENT_BRANCH}" --silent 2>/dev/null; then
             echo "branch=${CURRENT_BRANCH}" >> "$GITHUB_OUTPUT"
@@ -224,12 +243,13 @@ jobs:
           dockerfile: ./docker/jupyter/Dockerfile
           build_context_path: ./docker/jupyter
           image_suffix: -jupyter
-          image_tags: ${{ needs.set-env.outputs.docker_tags }}
+          image_tags: ${{ needs.set-binary-env.outputs.docker_tags }}
           build_args: |
+            BASE_TAG=${{ needs.build-base-jupyter-image.outputs.base-tag }}
             CACHEBUST=${{ github.run_id }}
             RS_DEMO_BRANCH=${{ steps.rs-demo-branch.outputs.branch }}
           dockerhub_username: ${{ vars.DOCKERHUB_USERNAME }}
           dockerhub_token: ${{ secrets.DOCKERHUB_TOKEN }}
           github_token: ${{ secrets.GITHUB_TOKEN }}
-          trivy_skip_dirs: /opt/conda/pkgs/cache
-          trivy_skip_files: /opt/conda/lib/python3.*/site-packages/bokeh/server/static/js/compiler.js,/opt/conda/lib/python3.*/site-packages/prefect/server/ui/assets/index-CCNfsmcm.js.map
+          trivy_skip_dirs: ${{ env.TRIVY_SKIP_DIRS }}
+          trivy_skip_files: ${{ env.TRIVY_SKIP_FILES }}

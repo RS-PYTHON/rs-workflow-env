@@ -42,7 +42,6 @@ on:
         options:
           - all
           - python
-          - jupyter
           - dask
           - prefect
 

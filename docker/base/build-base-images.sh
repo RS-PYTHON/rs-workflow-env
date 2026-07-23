@@ -17,7 +17,6 @@
 # Build the base Docker images that are used in the cluster and in the ci/cd.
 # Target Docker image names:
 # ghcr.io/rs-python/python:xxx-slim-bookworm
-# ghcr.io/rs-python/quay.io/jupyter/base-notebook:hub-xxx-pyzzz-vn
 # ghcr.io/rs-python/dask/dask-gateway:xxx-pyzzz-yyy
 # ghcr.io/rs-python/prefecthq/prefect:xxx-pyzzz
 # ghcr.io/rs-python/prefecthq/prefect:xxx-pyzzz-k8s
@@ -34,7 +33,6 @@ SCRIPT_DIR=$( cd -- "$( dirname -- "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )
 CUSTOM_REQ=$(realpath "${SCRIPT_DIR}/../scripts")
 
 PYTHON_VERSION=3.13.12
-JUPYTER_HUB_VERSION=5.4.3
 DASK_GATEWAY_TAG=2025.4.0
 PREFECT_TAG=3.7.5
 
@@ -47,7 +45,7 @@ TARGET="all"
 
 help() {
     echo "Usage: $0 [-p|--push] [-t|--target <target>]"
-    echo "Target can be one of: all, python, jupyter, dask, prefect"
+    echo "Target can be one of: all, python, dask, prefect"
 }
 
 while [[ $# -gt 0 ]] && [[ "$1" == "-"* ]] ;
@@ -100,33 +98,6 @@ if [[ "$TARGET" == "all" || "$TARGET" == "python" ]]; then
     # Push the docker image to the registry, if the --push option is specified.
     if [[ "$PUSH" == "true" ]]; then
         docker push "$python_target"
-    fi
-fi
-
-###########
-# Jupyter #
-###########
-
-if [[ "$TARGET" == "all" || "$TARGET" == "jupyter" ]]; then
-
-    jupyter_dockerfile="Dockerfile.jupyter"
-    jupyter_base="quay.io/jupyter/base-notebook:hub-${JUPYTER_HUB_VERSION}"
-    jupyter_suffix="-py${PYTHON_VERSION}-v1"
-
-    # Add our hosting github organization to the docker image
-    jupyter_target="ghcr.io/rs-python/${jupyter_base}${jupyter_suffix}"
-
-    # Build the docker image
-    docker build \
-        --build-arg "BASE=${jupyter_base}" \
-        --progress plain \
-        -f "${SCRIPT_DIR}/${jupyter_dockerfile}" \
-        -t "$jupyter_target" \
-        "$CUSTOM_REQ"
-
-    # Push the docker image to the registry, if the --push option is specified.
-    if [[ "$PUSH" == "true" ]]; then
-        docker push "$jupyter_target"
     fi
 fi
 
