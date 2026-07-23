@@ -27,7 +27,7 @@
 ARG BASE_IMAGE_TARGET=xxx
 
 # Python and Dask versions depend on each processor.
-# The base images are all built with dask-gateway 2025.4.0
+# The base images are all built with dask-gateway 2026.3.0
 # Base images for local mode also include dask-gateway-server with the same version as dask-gateway
 # ANY VERSION CHANGE MUST BE UPDATED IN THE BASE IMAGES SCRIPT GENERATOR (docker/base/build-base-images.sh and docker/eopf/build_dask_eopf.py).
 ARG PYTHON_VERSION=xxx

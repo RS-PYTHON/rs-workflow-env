@@ -13,6 +13,23 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/) 
 >- **Fixed** for any bug fixes.
 >- **Security** in case of vulnerabilities.
 
+## [1.0a12] - 2026-07-21
+
+### Added
+
+- [RSPY-1025](https://github.com/RS-PYTHON/rs-workflow-env/pull/123) : Update S1ARD and staging to Dask 2026.3.0
+- [RSPY-1109](https://github.com/RS-PYTHON/rs-workflow-env/pull/126) : Use correct rs-demo branch with cache bust
+- [RSPY-1076](https://github.com/RS-PYTHON/rs-workflow-env/pull/128) : Store Storage Configuration in a Prefect Variable
+- [RSPY-1000](https://github.com/RS-PYTHON/rs-workflow-env/pull/119) : Update OLCI L1 from 1.4.0 to 1.5.0
+
+### Changed
+
+- [PR#121](https://github.com/RS-PYTHON/rs-workflow-env/pull/121) : Update prefect version to 3.7.5
+- [PR#122](https://github.com/RS-PYTHON/rs-workflow-env/pull/122) : add memory request and limit
+- [PR#124](https://github.com/RS-PYTHON/rs-workflow-env/pull/124) : env var for fastapi protocol forward
+- [PR#125](https://github.com/RS-PYTHON/rs-workflow-env/pull/125) : Update to OpenTelemetry 143.0/0.64b0
+- [PR#127](https://github.com/RS-PYTHON/rs-workflow-env/pull/127) : Update to EOPF CPM 2.8.1
+
 ## [1.0a11] - 2026-06-19
 
 ### Added
