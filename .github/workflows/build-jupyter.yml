@@ -122,36 +122,23 @@ jobs:
     steps:
       - name: Checkout repository
         uses: actions/checkout@v6
-      # - id: publish-docker
-      #   uses: RS-PYTHON/actions/.github/actions/publish-docker@feat-rspy1108/jupyter-cicd
-      #   with:
-      #     dockerfile: ./docker/base/Dockerfile.jupyter
-      #     build_context_path: ./docker/scripts
-      #     image_basename: ${{ github.repository_owner }}/
-      #     image_suffix: quay.io/jupyter/base-notebook
-      #     image_tags: ${{ needs.set-binary-env.outputs.docker_tags }}
-      #     dockerhub_username: ${{ vars.DOCKERHUB_USERNAME }}
-      #     dockerhub_token: ${{ secrets.DOCKERHUB_TOKEN }}
-      #     github_token: ${{ secrets.GITHUB_TOKEN }}
-      #     trivy_skip_dirs: ${{ env.TRIVY_SKIP_DIRS }}
-      #     trivy_skip_files: ${{ env.TRIVY_SKIP_FILES }}
+      - id: publish-docker
+        uses: RS-PYTHON/actions/.github/actions/publish-docker@feat-rspy1108/jupyter-cicd
+        with:
+          dockerfile: ./docker/base/Dockerfile.jupyter
+          build_context_path: ./docker/scripts
+          image_basename: ${{ github.repository_owner }}/
+          image_suffix: quay.io/jupyter/base-notebook
+          image_tags: ${{ needs.set-binary-env.outputs.docker_tags }}
+          dockerhub_username: ${{ vars.DOCKERHUB_USERNAME }}
+          dockerhub_token: ${{ secrets.DOCKERHUB_TOKEN }}
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          trivy_skip_dirs: ${{ env.TRIVY_SKIP_DIRS }}
+          trivy_skip_files: ${{ env.TRIVY_SKIP_FILES }}
 
-  # After rebuilding the base image, we need to run the rs-client-libraries ci/cd
-  # because it builds the jupyter image for local mode from the base image
-  call-rs-client-libraries:
-    name: rs-client-libraries
-    if: github.actor != 'dependabot[bot]' # ignore pull requests by github bot
-    needs: build-base-jupyter-image
-    uses: RS-PYTHON/rs-client-libraries/.github/workflows/reusable-publish-binaries.yml@feat-rspy1108/jupyter-cicd
-    with:
-      caller-repository: ${{ github.repository }}
-      caller-ref: ${{ github.ref }}
-    secrets:
-      DOCKERHUB_TOKEN: ${{ secrets.DOCKERHUB_TOKEN }}
-    permissions:
-      security-events: write # needed for github/codeql-action/upload-sarif
-      packages: write # needed for 'docker push'
-      id-token: write  # needed for pypi
+  # NOTE: after rebuilding the base image, it would be nice if we would run the rs-client-libraries ci/cd
+  # so the jupyter image for local mode is rebuilt. But it's too dangerous if the rs-client-libraries ci/cd
+  # is already running: the two runs would overwrite each other's docker images and the result would be unstable.
 
   build-rs-client-wheel:
     name: Build rs-client-libraries wheel
