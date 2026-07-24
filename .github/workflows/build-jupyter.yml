@@ -28,7 +28,6 @@ name: Build the Jupyter Docker image
 # Run workflow only for ...
 on:
   pull_request: # pull requests
-    branches: none
     types: [opened, synchronize, reopened]
     paths:
       - 'docker/base/**'
@@ -141,9 +140,12 @@ jobs:
   # because it builds the jupyter image for local mode from the base image
   call-rs-client-libraries:
     name: rs-client-libraries
-    uses: RS-PYTHON/rs-client-libraries/.github/workflows/reusable-publish-binaries.yml@feat-rspy1108/jupyter-cicd
     if: github.actor != 'dependabot[bot]' # ignore pull requests by github bot
     needs: build-base-jupyter-image
+    uses: RS-PYTHON/rs-client-libraries/.github/workflows/reusable-publish-binaries.yml@feat-rspy1108/jupyter-cicd
+    with:
+      caller-repository: ${{ github.repository }}
+      caller-ref: ${{ github.ref }}
     secrets:
       DOCKERHUB_TOKEN: ${{ secrets.DOCKERHUB_TOKEN }}
     permissions:
