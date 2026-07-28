@@ -62,7 +62,6 @@ env:
   TRIVY_SKIP_FILES: /opt/conda/lib/python3.*/site-packages/bokeh/server/static/js/compiler.js,/opt/conda/lib/python3.*/site-packages/prefect/server/ui/assets/index-CCNfsmcm.js.map
 
 jobs:
-
   set-binary-env:
     name: Set Docker environment
     if: github.actor != 'dependabot[bot]' # ignore pull requests by github bot
@@ -73,7 +72,6 @@ jobs:
       docker_final_tags: ${{ steps.set-binary-env.outputs.docker_final_tags }}
       base_jupyter_tag: ${{ steps.base-jupyter-tag.outputs.value }}
       rs_client_branch: ${{ steps.rs-client-libraries.outputs.branch }}
-      force_temp_tag: true
     steps:
       - id: set-binary-env
         name: Call action 'set-binary-env'
@@ -128,30 +126,34 @@ jobs:
     permissions:
       contents: read
       security-events: write # needed for github/codeql-action/upload-sarif
-      packages: write
+      packages: write # needed for 'docker push'
+    outputs:
+      docker_images: ${{ steps.publish-docker.outputs.docker_images }}
     steps:
       - name: Checkout repository
         uses: actions/checkout@v6
-      # - id: publish-docker
-      #   uses: RS-PYTHON/actions/.github/actions/publish-docker@feat-rspy1108/jupyter-cicd
-      #   with:
-      #     dockerfile: ./docker/base/Dockerfile.jupyter
-      #     build_context_path: ./docker/scripts
-      #     image_basename: ${{ github.repository_owner }}/
-      #     image_suffix: quay.io/jupyter/base-notebook
-      #     image_tags: ${{ needs.set-binary-env.outputs.docker_tags }}
-      #     dockerhub_username: ${{ vars.DOCKERHUB_USERNAME }}
-      #     dockerhub_token: ${{ secrets.DOCKERHUB_TOKEN }}
-      #     github_token: ${{ secrets.GITHUB_TOKEN }}
-      #     trivy_skip_dirs: ${{ env.TRIVY_SKIP_DIRS }}
-      #     trivy_skip_files: ${{ env.TRIVY_SKIP_FILES }}
+      - id: publish-docker
+        uses: RS-PYTHON/actions/.github/actions/publish-docker@feat-rspy1108/jupyter-cicd
+        with:
+          dockerfile: ./docker/base/Dockerfile.jupyter
+          build_context_path: ./docker/scripts
+          image_basename: ${{ github.repository_owner }}/
+          image_suffix: quay.io/jupyter/base-notebook
+          image_tags: ${{ needs.set-binary-env.outputs.docker_tags }}
+          dockerhub_username: ${{ vars.DOCKERHUB_USERNAME }}
+          dockerhub_token: ${{ secrets.DOCKERHUB_TOKEN }}
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          trivy_skip_dirs: ${{ env.TRIVY_SKIP_DIRS }}
+          trivy_skip_files: ${{ env.TRIVY_SKIP_FILES }}
 
   trigger-rs-client-libraries:
     runs-on: ubuntu-latest
     name: Trigger rs-client-libraries # to build the jupyter image for local mode from the base image
     needs: [set-binary-env, build-base-jupyter-image]
     # Only if the current branch also exists in rs-client-libraries
-    if: ${{ needs.set-binary-env.outputs.branch_name != needs.set-binary-env.outputs.rs_client_branch }}
+    if: ${{ needs.set-binary-env.outputs.branch_name == needs.set-binary-env.outputs.rs_client_branch }}
+    permissions:
+      packages: write # needed for 'docker push'
     steps:
 
       # When we merge to develop, rs-client will first use a temp docker tag, then run the tests,
@@ -177,6 +179,16 @@ jobs:
           wait-for-completion: true
           wait-timeout-seconds: 3600
 
+      # If we used a temp docker tag, and only if the rs-client tests succeeded, then
+      # we tag the base jupyter image with the real tags and push them.
+      - name: Tag and push Docker images
+        if: ${{ needs.set-binary-env.outputs.docker_final_tags != '' }}
+        uses: RS-PYTHON/actions/.github/actions/tag-push-docker@feat-rspy1108/jupyter-cicd
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          old_docker_images: ${{ needs.build-base-jupyter-image.outputs.docker_images }}
+          new_tags: ${{ needs.set-binary-env.outputs.docker_final_tags }}
+
   build-rs-client-wheel:
     name: Build rs-client-libraries wheel
     runs-on: ubuntu-latest
@@ -199,7 +211,7 @@ jobs:
     needs: [set-binary-env, build-base-jupyter-image, build-rs-client-wheel]
     permissions:
       security-events: write # needed for github/codeql-action/upload-sarif
-      packages: write
+      packages: write # needed for 'docker push'
     steps:
       - uses: actions/checkout@v6
       - name: Copy common requirements
@@ -238,3 +250,12 @@ jobs:
           github_token: ${{ secrets.GITHUB_TOKEN }}
           trivy_skip_dirs: ${{ env.TRIVY_SKIP_DIRS }}
           trivy_skip_files: ${{ env.TRIVY_SKIP_FILES }}
+
+      # If we used a temp docker tag, we tag the jupyter image with the real tags and push them.
+      - name: Tag and push Docker images
+        if: ${{ needs.set-binary-env.outputs.docker_final_tags != '' }}
+        uses: RS-PYTHON/actions/.github/actions/tag-push-docker@feat-rspy1108/jupyter-cicd
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          old_docker_images: ${{ steps.publish-docker.outputs.docker_images }}
+          new_tags: ${{ needs.set-binary-env.outputs.docker_final_tags }}
