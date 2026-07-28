@@ -69,22 +69,32 @@ jobs:
     runs-on: ubuntu-latest
     outputs:
       branch_name: ${{ steps.set-binary-env.outputs.branch_name }}
-      # Use directly the final tags
-      docker_tags: ${{ steps.set-binary-env.outputs.docker_tags }},${{ steps.set-binary-env.outputs.docker_final_tags }}
-      first_tag: ${{ steps.first-tag.outputs.value }}
+      docker_tags: ${{ steps.set-binary-env.outputs.docker_tags }}
+      docker_final_tags: ${{ steps.set-binary-env.outputs.docker_final_tags }}
+      base_jupyter_tag: ${{ steps.base-jupyter-tag.outputs.value }}
+      rs_client_branch: ${{ steps.rs-client-libraries.outputs.branch }}
+      force_temp_tag: true
     steps:
       - id: set-binary-env
         name: Call action 'set-binary-env'
         uses: RS-PYTHON/actions/.github/actions/set-binary-env@develop
         with:
           manual_tag: ${{ github.event.inputs.docker_tag }}
-      - name: First docker tag
-        id: first-tag
+      - name: Tag of the base Jupyter Docker image
+        id: base-jupyter-tag
         run: |
           set -x
-          # Keep the first image tag from a list as tag1,tag2,tag3
-          value=$(echo ${{ steps.set-binary-env.outputs.docker_tags }} | cut -d , -f1)
+          # Keep last tag (after the last ',')
+          docker_tags=${{ steps.set-binary-env.outputs.docker_tags }}
+          value=${docker_tags##*,}
           echo "value=$value" >> $GITHUB_OUTPUT
+      - name: Branch name in rs-client-libraries
+        id: rs-client-libraries
+        uses: RS-PYTHON/actions/.github/actions/get-repo-branch@feat-rspy1108/jupyter-cicd
+        with:
+          repo: RS-PYTHON/rs-client-libraries
+          branches: ${{ steps.set-binary-env.outputs.branch_name }},develop
+
 
   # Enable conditional execution of workflow steps and jobs, based on the files modified
   # by pull request, on a feature branch, or by the recently pushed commits.
@@ -122,23 +132,50 @@ jobs:
     steps:
       - name: Checkout repository
         uses: actions/checkout@v6
-      - id: publish-docker
-        uses: RS-PYTHON/actions/.github/actions/publish-docker@feat-rspy1108/jupyter-cicd
-        with:
-          dockerfile: ./docker/base/Dockerfile.jupyter
-          build_context_path: ./docker/scripts
-          image_basename: ${{ github.repository_owner }}/
-          image_suffix: quay.io/jupyter/base-notebook
-          image_tags: ${{ needs.set-binary-env.outputs.docker_tags }}
-          dockerhub_username: ${{ vars.DOCKERHUB_USERNAME }}
-          dockerhub_token: ${{ secrets.DOCKERHUB_TOKEN }}
-          github_token: ${{ secrets.GITHUB_TOKEN }}
-          trivy_skip_dirs: ${{ env.TRIVY_SKIP_DIRS }}
-          trivy_skip_files: ${{ env.TRIVY_SKIP_FILES }}
+      # - id: publish-docker
+      #   uses: RS-PYTHON/actions/.github/actions/publish-docker@feat-rspy1108/jupyter-cicd
+      #   with:
+      #     dockerfile: ./docker/base/Dockerfile.jupyter
+      #     build_context_path: ./docker/scripts
+      #     image_basename: ${{ github.repository_owner }}/
+      #     image_suffix: quay.io/jupyter/base-notebook
+      #     image_tags: ${{ needs.set-binary-env.outputs.docker_tags }}
+      #     dockerhub_username: ${{ vars.DOCKERHUB_USERNAME }}
+      #     dockerhub_token: ${{ secrets.DOCKERHUB_TOKEN }}
+      #     github_token: ${{ secrets.GITHUB_TOKEN }}
+      #     trivy_skip_dirs: ${{ env.TRIVY_SKIP_DIRS }}
+      #     trivy_skip_files: ${{ env.TRIVY_SKIP_FILES }}
 
-  # NOTE: after rebuilding the base image, it would be nice if we would run the rs-client-libraries ci/cd
-  # so the jupyter image for local mode is rebuilt. But it's too dangerous if the rs-client-libraries ci/cd
-  # is already running: the two runs would overwrite each other's docker images and the result would be unstable.
+  trigger-rs-client-libraries:
+    runs-on: ubuntu-latest
+    name: Trigger rs-client-libraries # to build the jupyter image for local mode from the base image
+    needs: [set-binary-env, build-base-jupyter-image]
+    # Only if the current branch also exists in rs-client-libraries
+    if: ${{ needs.set-binary-env.outputs.branch_name != needs.set-binary-env.outputs.rs_client_branch }}
+    steps:
+
+      # When we merge to develop, rs-client will first use a temp docker tag, then run the tests,
+      # then retag the images with the final tag.
+      # If two workflow runs do it in parallel, we can have conflicts.
+      # In this case, we cancel the existings runs before triggering a new run with the new base image.
+      - name: Cancel existing runs
+        if: ${{ needs.set-binary-env.outputs.docker_final_tags != '' }}
+        uses: RS-PYTHON/actions/.github/actions/cancel-workflow-runs@feat-rspy1108/jupyter-cicd
+        with:
+          trigger_workflows_token: ${{ secrets.TRIGGER_WORKFLOWS }}
+          owner_repo: RS-PYTHON/rs-client-libraries
+          workflow_path: .github/workflows/publish-binaries.yml
+          branch: ${{ needs.set-binary-env.outputs.branch_name }}
+      - name: Trigger a new run
+        uses: benc-uk/workflow-dispatch@7a027648b88c2413826b6ddd6c76114894dc5ec4
+        with:
+          workflow: publish-binaries.yml
+          repo: RS-PYTHON/rs-client-libraries
+          ref: ${{ needs.set-binary-env.outputs.branch_name }}
+          inputs: '{"called_by": "rebuild-base-jupyter", "base_jupyter_tag": "${{ needs.set-binary-env.outputs.base_jupyter_tag }}"}'
+          token: '${{ secrets.TRIGGER_WORKFLOWS }}'
+          wait-for-completion: true
+          wait-timeout-seconds: 3600
 
   build-rs-client-wheel:
     name: Build rs-client-libraries wheel
@@ -146,17 +183,11 @@ jobs:
     if: github.actor != 'dependabot[bot]' # ignore pull requests by github bot
     needs: [set-binary-env]
     steps:
-      - name: Resolve rs-client-libraries branch
-        id: rs-client-libraries
-        uses: RS-PYTHON/actions/.github/actions/get-repo-branch@feat-rspy1108/jupyter-cicd
-        with:
-          repo: RS-PYTHON/rs-client-libraries
-          branches: ${{ needs.set-binary-env.outputs.branch_name }},develop
       - uses: actions/checkout@v6
         with:
           repository: RS-PYTHON/rs-client-libraries
 
-          ref: ${{ steps.rs-client-libraries.outputs.branch }}
+          ref: ${{ needs.set-binary-env.outputs.rs_client_branch }}
           fetch-depth: 0 # so that Dunamai produce the correct version
       - id: build-wheel
         uses: RS-PYTHON/actions/.github/actions/build-wheel@develop
@@ -199,7 +230,7 @@ jobs:
           image_suffix: -jupyter
           image_tags: ${{ needs.set-binary-env.outputs.docker_tags }}
           build_args: |
-            BASE_TAG=${{ needs.set-binary-env.outputs.first_tag }}
+            BASE_TAG=${{ needs.set-binary-env.outputs.base_jupyter_tag }}
             CACHEBUST=${{ github.run_id }}
             RS_DEMO_BRANCH=${{ steps.rs-demo-branch.outputs.branch }}
           dockerhub_username: ${{ vars.DOCKERHUB_USERNAME }}
