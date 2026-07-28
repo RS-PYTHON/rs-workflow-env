@@ -211,6 +211,9 @@ hub:
     dask-gateway:
       display: false
       apiToken: {{ jupyterhub.ops.services.daskgateway.apitoken }}
+    dask-staging:
+      display: false
+      apiToken: {{ jupyterhub.ops.services.daskstaging.apitoken }}
     metrics:
       display: false
       apiToken: {{ jupyterhub.ops.services.metrics.apitoken }}
