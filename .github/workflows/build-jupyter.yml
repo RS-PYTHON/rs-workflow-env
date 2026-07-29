@@ -44,17 +44,13 @@ on:
       - '.github/workflows/build-jupyter.yml'
   workflow_dispatch: # manual trigger
     inputs:
-      docker_tag:
-        description: Tag the docker images as e.g. 'latest'
+      add_docker_tags:
+        description: Add these tags to the docker images as e.g. 'custom-tag1,custom-tag-2'
         required: false
       build_base_image:
         description: Build the base image before building the Jupyter image?
-        required: false
-        default: 'true'
-        type: choice
-        options:
-          - 'true'
-          - 'false'
+        type: boolean
+        default: true
 
 env:
   DOCKER_REGISTRY: ghcr.io
@@ -75,9 +71,9 @@ jobs:
     steps:
       - id: set-binary-env
         name: Call action 'set-binary-env'
-        uses: RS-PYTHON/actions/.github/actions/set-binary-env@develop
+        uses: RS-PYTHON/actions/.github/actions/set-binary-env@feat-rspy1108/jupyter-cicd
         with:
-          manual_tag: ${{ github.event.inputs.docker_tag }}
+          add_docker_tags: ${{ inputs.add_docker_tags }}
       - name: Tag of the base Jupyter Docker image
         id: base-jupyter-tag
         run: |
@@ -121,30 +117,30 @@ jobs:
     needs: [set-binary-env, changes]
     if: ${{
       ((github.event_name != 'workflow_dispatch') && (needs.changes.outputs.base == 'true')) ||
-      ((github.event_name == 'workflow_dispatch') && (github.event.inputs.build_base_image == 'true'))
+      ((github.event_name == 'workflow_dispatch') && (inputs.build_base_image == true))
       }}
     permissions:
       contents: read
       security-events: write # needed for github/codeql-action/upload-sarif
       packages: write # needed for 'docker push'
     outputs:
-      docker_images: test #${{ steps.publish-docker.outputs.docker_images }}
+      docker_images: ${{ steps.publish-docker.outputs.docker_images }}
     steps:
       - name: Checkout repository
         uses: actions/checkout@v6
-      # - id: publish-docker
-      #   uses: RS-PYTHON/actions/.github/actions/publish-docker@feat-rspy1108/jupyter-cicd
-      #   with:
-      #     dockerfile: ./docker/base/Dockerfile.jupyter
-      #     build_context_path: ./docker/scripts
-      #     image_basename: ${{ github.repository_owner }}/
-      #     image_suffix: quay.io/jupyter/base-notebook
-      #     image_tags: ${{ needs.set-binary-env.outputs.docker_tags }}
-      #     dockerhub_username: ${{ vars.DOCKERHUB_USERNAME }}
-      #     dockerhub_token: ${{ secrets.DOCKERHUB_TOKEN }}
-      #     github_token: ${{ secrets.GITHUB_TOKEN }}
-      #     trivy_skip_dirs: ${{ env.TRIVY_SKIP_DIRS }}
-      #     trivy_skip_files: ${{ env.TRIVY_SKIP_FILES }}
+      - id: publish-docker
+        uses: RS-PYTHON/actions/.github/actions/publish-docker@feat-rspy1108/jupyter-cicd
+        with:
+          dockerfile: ./docker/base/Dockerfile.jupyter
+          build_context_path: ./docker/scripts
+          image_basename: ${{ github.repository_owner }}/
+          image_suffix: quay.io/jupyter/base-notebook
+          image_tags: ${{ needs.set-binary-env.outputs.docker_tags }}
+          dockerhub_username: ${{ vars.DOCKERHUB_USERNAME }}
+          dockerhub_token: ${{ secrets.DOCKERHUB_TOKEN }}
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          trivy_skip_dirs: ${{ env.TRIVY_SKIP_DIRS }}
+          trivy_skip_files: ${{ env.TRIVY_SKIP_FILES }}
 
   trigger-rs-client-libraries:
     runs-on: ubuntu-latest
@@ -154,10 +150,10 @@ jobs:
       packages: write # needed for 'docker push'
     steps:
       - name: Check rs-client-libraries branch
-        if: ${{ true || needs.set-binary-env.outputs.branch_name != needs.set-binary-env.outputs.rs_client_branch }}
+        if: ${{ needs.set-binary-env.outputs.branch_name != needs.set-binary-env.outputs.rs_client_branch }}
         run: |
-          echo "The branch '${{ needs.set-binary-env.outputs.branch_name }}' must exist in rs-client-libraries \
-          to test your changes on the Jupyter base image"
+          echo "The branch '${{ needs.set-binary-env.outputs.branch_name }}' must exist in \
+          https://github.com/RS-PYTHON/rs-client-libraries to test your changes on the Jupyter base image."
           exit 2
 
       # When we merge to develop, rs-client will first use a temp docker tag, then run the tests,
