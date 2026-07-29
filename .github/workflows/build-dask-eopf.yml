@@ -67,7 +67,7 @@ on:
           - s3olci
           - mockup
       build_base_images:
-        description: Build the base image before building the Dask images?
+        description: Build the base images before building the Dask images?
         type: boolean
         default: true
       target_system:
@@ -153,27 +153,32 @@ jobs:
     runs-on: ubuntu-latest
     outputs:
       branch_name: ${{ steps.set-binary-env.outputs.branch_name }}
-      # Use directly the final tags
-      docker_tags: ${{ steps.set-binary-env.outputs.docker_tags }},${{ steps.set-binary-env.outputs.docker_final_tags }}
+      docker_tags: ${{ steps.set-binary-env.outputs.docker_tags }}
+      docker_final_tags: ${{ steps.set-binary-env.outputs.docker_final_tags }}
+      rs_testmeans_branch: ${{ steps.rs-testmeans.outputs.branch }}
     steps:
       - id: set-binary-env
         name: Call action 'set-binary-env'
         uses: RS-PYTHON/actions/.github/actions/set-binary-env@feat-rspy1108/jupyter-cicd
         with:
           add_docker_tags: ${{ inputs.add_docker_tags }}
+      - name: Branch name in rs-testmeans
+        id: rs-testmeans
+        uses: RS-PYTHON/actions/.github/actions/get-repo-branch@feat-rspy1108/jupyter-cicd
+        with:
+          repo: RS-PYTHON/rs-testmeans
+          branches: ${{ steps.set-binary-env.outputs.branch_name }},develop
 
-  # Build base images for Dask only
   build-base-dask-images:
     runs-on: ubuntu-latest
     name: Build base images for Dask
     needs: [changes]
     if: ${{
-      (needs.changes.outputs.base == 'true') ||
+      ((github.event_name != 'workflow_dispatch') && (needs.changes.outputs.base == 'true')) ||
       ((github.event_name == 'workflow_dispatch') && (inputs.build_base_images == true))
       }}
     permissions:
-      contents: read
-      packages: write
+      packages: write # needed for 'docker push'
     steps:
       - name: Checkout repository
         uses: actions/checkout@v6
@@ -181,6 +186,42 @@ jobs:
         run: echo "${{ secrets.GITHUB_TOKEN }}" | docker login ghcr.io --username "${{ github.actor }}" --password-stdin
       - name: Build and push base images
         run: docker/base/build-base-images.sh -t dask --push
+
+  trigger-rs-testmeans:
+    runs-on: ubuntu-latest
+    name: Trigger rs-testmeans # to build the dask mockup image for local mode from the base image
+    needs: [set-binary-env, build-base-dask-images]
+    permissions:
+      packages: write # needed for 'docker push'
+    steps:
+      # When we merge to develop, rs-testmeans will first use a temp docker tag, then run the tests,
+      # then retag the images with the final tag.
+      # If two workflow runs do it in parallel, we can have conflicts.
+      # In this case, we cancel the existings runs before triggering a new run with the new base image.
+      - name: Cancel existing runs
+        if: ${{ needs.set-binary-env.outputs.docker_final_tags != '' }}
+        uses: RS-PYTHON/actions/.github/actions/cancel-workflow-runs@feat-rspy1108/jupyter-cicd
+        with:
+          trigger_workflows_token: ${{ secrets.TRIGGER_WORKFLOWS }}
+          owner_repo: RS-PYTHON/rs-testmeans
+          workflow_path: .github/workflows/publish-binaries.yml
+          branch: ${{ needs.set-binary-env.outputs.rs_testmeans_branch }}
+      - name: Trigger a new run
+        uses: benc-uk/workflow-dispatch@7a027648b88c2413826b6ddd6c76114894dc5ec4
+        with:
+          workflow: publish-binaries.yml
+          repo: RS-PYTHON/rs-testmeans
+          ref: ${{ needs.set-binary-env.outputs.rs_testmeans_branch }}
+          # Use the same docker tags as in the current workflow run, even if we
+          # are in a branch and rs-testmeans is on develop.
+          inputs: '{
+            "called_by": "rebuild-base-dask",
+            "force_docker_tags": "${{ needs.set-binary-env.outputs.docker_tags }}",
+            "force_docker_final_tags": "${{ needs.set-binary-env.outputs.docker_final_tags }}"
+            }'
+          token: '${{ secrets.TRIGGER_WORKFLOWS }}'
+          wait-for-completion: true
+          wait-timeout-seconds: 3600
 
   build-dask-eopf:
     runs-on: ubuntu-latest
@@ -192,9 +233,11 @@ jobs:
       ((needs.changes.outputs.any_changes == 'true') || (github.event_name == 'workflow_dispatch'))
       }}
     permissions:
-      packages: write
+      security-events: write # needed for github/codeql-action/upload-sarif
+      packages: write # needed for 'docker push'
     env:
-      DOCKER_TAGS: ${{ needs.set-binary-env.outputs.docker_tags }}
+      # Use directly the final tags
+      DOCKER_TAGS: ${{ needs.set-binary-env.outputs.docker_tags }},${{ needs.set-binary-env.outputs.docker_final_tags }}
 
     # See: https://docs.github.com/en/actions/how-tos/write-workflows/choose-what-workflows-do/run-job-variations
     strategy:
@@ -205,62 +248,74 @@ jobs:
         include:
           - proc: cpm2
             proccondition: ${{
-              (needs.changes.outputs.cpm2 == 'true') ||
-              (needs.changes.outputs.common == 'true') ||
-              (needs.changes.outputs.base == 'true') ||
-              ((github.event_name == 'workflow_dispatch') &&
-                ((inputs.processor == 'cpm2') || (inputs.processor == 'all')))
-              }}
+              ((github.event_name != 'workflow_dispatch') && (
+                (needs.changes.outputs.cpm2 == 'true') ||
+                (needs.changes.outputs.common == 'true') ||
+                (needs.changes.outputs.base == 'true')
+              )) ||
+              ((github.event_name == 'workflow_dispatch') && (
+                (inputs.processor == 'cpm2') ||
+                (inputs.processor == 'all')
+              ))}}
           - proc: cpm3
             proccondition: ${{
-              (needs.changes.outputs.cpm3 == 'true') ||
-              (needs.changes.outputs.common == 'true') ||
-              (needs.changes.outputs.base == 'true') ||
-              ((github.event_name == 'workflow_dispatch') &&
-                ((inputs.processor == 'cpm3') || (inputs.processor == 'all')))
-              }}
+              ((github.event_name != 'workflow_dispatch') && (
+                (needs.changes.outputs.cpm3 == 'true') ||
+                (needs.changes.outputs.common == 'true') ||
+                (needs.changes.outputs.base == 'true')
+              )) ||
+              ((github.event_name == 'workflow_dispatch') && (
+                (inputs.processor == 'cpm3') ||
+                (inputs.processor == 'all')
+              ))}}
           - proc: l0
             proccondition: ${{
-              (needs.changes.outputs.l0 == 'true') ||
-              (needs.changes.outputs.common == 'true') ||
-              (needs.changes.outputs.base == 'true') ||
-              ((github.event_name == 'workflow_dispatch') &&
-                ((inputs.processor == 'l0') || (inputs.processor == 'all')))
-              }}
+              ((github.event_name != 'workflow_dispatch') && (
+                (needs.changes.outputs.l0 == 'true') ||
+                (needs.changes.outputs.common == 'true') ||
+                (needs.changes.outputs.base == 'true')
+              )) ||
+              ((github.event_name == 'workflow_dispatch') && (
+                (inputs.processor == 'l0') ||
+                (inputs.processor == 'all')
+              ))}}
           - proc: s1ard
             proccondition: ${{
-              (needs.changes.outputs.s1ard == 'true') ||
-              (needs.changes.outputs.common == 'true') ||
-              (needs.changes.outputs.base == 'true') ||
-              ((github.event_name == 'workflow_dispatch') &&
-                ((inputs.processor == 's1ard') || (inputs.processor == 'all')))
-              }}
+              ((github.event_name != 'workflow_dispatch') && (
+                (needs.changes.outputs.s1ard == 'true') ||
+                (needs.changes.outputs.common == 'true') ||
+                (needs.changes.outputs.base == 'true')
+              )) ||
+              ((github.event_name == 'workflow_dispatch') && (
+                (inputs.processor == 's1ard') ||
+                (inputs.processor == 'all')
+              ))}}
           - proc: s3olci
             proccondition: ${{
-              (needs.changes.outputs.s3olci == 'true') ||
-              (needs.changes.outputs.common == 'true') ||
-              (needs.changes.outputs.base == 'true') ||
-              ((github.event_name == 'workflow_dispatch') &&
-                ((inputs.processor == 's3olci') || (inputs.processor == 'all')))
-              }}
+              ((github.event_name != 'workflow_dispatch') && (
+                (needs.changes.outputs.s3olci == 'true') ||
+                (needs.changes.outputs.common == 'true') ||
+                (needs.changes.outputs.base == 'true')
+              )) ||
+              ((github.event_name == 'workflow_dispatch') && (
+                (inputs.processor == 's3olci') ||
+                (inputs.processor == 'all')
+              ))}}
           - target: cluster
             targetcondition: ${{
               (github.event_name != 'workflow_dispatch') ||
               (inputs.target_system == 'cluster') ||
-              (inputs.target_system == 'all')
-              }}
+              (inputs.target_system == 'all')}}
           - target: local
             targetcondition: ${{
               (github.event_name != 'workflow_dispatch') ||
               (inputs.target_system == 'local') ||
-              (inputs.target_system == 'all')
-              }}
+              (inputs.target_system == 'all')}}
           - target: localcluster
             targetcondition: ${{
               (github.event_name != 'workflow_dispatch') ||
               (inputs.target_system == 'localcluster') ||
-              (inputs.target_system == 'all')
-              }}
+              (inputs.target_system == 'all')}}
 
     steps:
       - name: Display build info
@@ -355,7 +410,6 @@ jobs:
       - name: Display link to Trivy results
         if: ${{ matrix.proccondition && matrix.targetcondition }}
         run: |
-
             set -x
 
             # If this is not a pull request, the query is "is:open+branch:branch_name"
@@ -380,33 +434,3 @@ jobs:
             docker push ${{ steps.build.outputs.repository }}:${tag}
           done
         shell: bash
-
-  # trigger-dask-mockup-images-build:
-  #   runs-on: ubuntu-latest
-  #   name: Trigger rs-testmeans CI to build the Dask mockup image
-  #   needs: [changes, set-binary-env, build-base-dask-images]
-  #   # Trigger CI for mockup images only if base images are changed OR if asked by manual trigger
-  #   if: ${{
-  #     always() && !failure() && !cancelled() &&
-  #     ((needs.changes.outputs.base == 'true') ||
-  #       ((github.event_name == 'workflow_dispatch') &&
-  #         ((inputs.processor == 'mockup') || (inputs.processor == 'all'))))
-  #     }}
-  #   steps:
-  #     - env:
-  #         DOCKER_TAGS: ${{ needs.set-env.outputs.docker_tags }}
-  #         TRIGGER_WORKFLOWS_TOKEN: ${{ secrets.TRIGGER_WORKFLOWS }}
-  #       run: |
-  #         set -x
-
-  #         # Keep last tag (after the last ',')
-  #         docker_tag=${DOCKER_TAGS##*,}
-
-  #         curl -L \
-  #           -X POST \
-  #           -H "Accept: application/vnd.github+json" \
-  #           -H "Authorization: Bearer ${TRIGGER_WORKFLOWS_TOKEN}" \
-  #           -H "X-GitHub-Api-Version: 2026-03-10" \
-  #           https://api.github.com/repos/RS-PYTHON/rs-testmeans/actions/workflows/publish-binaries.yml/dispatches \
-  #           -d '{"ref":"${{ needs.set-env.outputs.branch_name }}","inputs":{"docker_tag":"'"$docker_tag"'","build_only_mockup_images":"true"}}'
-  #       shell: bash
