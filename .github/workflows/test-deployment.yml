@@ -109,9 +109,9 @@ jobs:
           # --- Generate inventory
           conda run -n rspy --no-capture-output env PYTHONUNBUFFERED=1 ANSIBLE_FORCE_COLOR=1 ansible-playbook registry.yaml -i inventory/mycluster/hosts.yaml -e ci_mode=true
           conda run -n rspy --no-capture-output env PYTHONUNBUFFERED=1 ANSIBLE_FORCE_COLOR=1 ansible-playbook generate_inventory.yaml -i inventory/mycluster/hosts.yaml
-      - name: Delete specific apps
+      - name: Run wrapper script
         run: |
-          .github/common/resources/remove-apps.sh
+          .github/common/resources/wrapper.sh
       - name: Deploy the core apps (for real)
         run: |
           # --- Use local cluster issuer instead of Let's Encrypt
