@@ -91,7 +91,7 @@ jobs:
     steps:
       - id: set-binary-env
         name: Call action 'set-binary-env'
-        uses: RS-PYTHON/actions/.github/actions/set-binary-env@feat-rspy1108/jupyter-cicd
+        uses: RS-PYTHON/actions/.github/actions/set-binary-env@develop
         with:
           add_docker_tags: ${{ inputs.add_docker_tags }}
       - name: Tag of the base Jupyter Docker image
@@ -104,7 +104,7 @@ jobs:
           echo "value=$value" >> $GITHUB_OUTPUT
       - name: Branch name in rs-client-libraries
         id: rs-client-libraries
-        uses: RS-PYTHON/actions/.github/actions/get-repo-branch@feat-rspy1108/jupyter-cicd
+        uses: RS-PYTHON/actions/.github/actions/get-repo-branch@develop
         with:
           repo: RS-PYTHON/rs-client-libraries
           branches: ${{ steps.set-binary-env.outputs.branch_name }},develop
@@ -126,7 +126,7 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v6
       - id: publish-docker
-        uses: RS-PYTHON/actions/.github/actions/publish-docker@feat-rspy1108/jupyter-cicd
+        uses: RS-PYTHON/actions/.github/actions/publish-docker@develop
         with:
           dockerfile: ./docker/base/Dockerfile.jupyter
           build_context_path: ./docker/scripts
@@ -152,7 +152,7 @@ jobs:
       # In this case, we cancel the existings runs before triggering a new run with the new base image.
       - name: Cancel existing runs
         if: ${{ needs.set-binary-env.outputs.docker_final_tags != '' }}
-        uses: RS-PYTHON/actions/.github/actions/cancel-workflow-runs@feat-rspy1108/jupyter-cicd
+        uses: RS-PYTHON/actions/.github/actions/cancel-workflow-runs@develop
         with:
           trigger_workflows_token: ${{ secrets.TRIGGER_WORKFLOWS }}
           owner_repo: RS-PYTHON/rs-client-libraries
@@ -180,7 +180,7 @@ jobs:
       # we tag the base jupyter image with the real tags and push them.
       - name: Tag and push Docker images
         if: ${{ needs.set-binary-env.outputs.docker_final_tags != '' }}
-        uses: RS-PYTHON/actions/.github/actions/tag-push-docker@feat-rspy1108/jupyter-cicd
+        uses: RS-PYTHON/actions/.github/actions/tag-push-docker@develop
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}
           old_docker_images: ${{ needs.build-base-jupyter-image.outputs.docker_images }}
@@ -226,13 +226,13 @@ jobs:
 
       - name: Resolve rs-demo branch
         id: rs-demo-branch
-        uses: RS-PYTHON/actions/.github/actions/get-repo-branch@feat-rspy1108/jupyter-cicd
+        uses: RS-PYTHON/actions/.github/actions/get-repo-branch@develop
         with:
           repo: RS-PYTHON/rs-demo
           branches: ${{ needs.set-binary-env.outputs.branch_name }},develop
 
       - id: publish-docker
-        uses: RS-PYTHON/actions/.github/actions/publish-docker@feat-rspy1108/jupyter-cicd
+        uses: RS-PYTHON/actions/.github/actions/publish-docker@develop
         with:
           dockerfile: ./docker/jupyter/Dockerfile
           build_context_path: ./docker/jupyter
@@ -251,7 +251,7 @@ jobs:
       # If we used a temp docker tag, we tag the jupyter image with the real tags and push them.
       - name: Tag and push Docker images
         if: ${{ needs.set-binary-env.outputs.docker_final_tags != '' }}
-        uses: RS-PYTHON/actions/.github/actions/tag-push-docker@feat-rspy1108/jupyter-cicd
+        uses: RS-PYTHON/actions/.github/actions/tag-push-docker@develop
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}
           old_docker_images: ${{ steps.publish-docker.outputs.docker_images }}
