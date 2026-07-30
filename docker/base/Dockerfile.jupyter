@@ -15,15 +15,14 @@
 
 #
 # Target Docker image names:
-# ghcr.io/rs-python/quay.io/jupyter/base-notebook:hub-xxx-pyzzz-vn
+# ghcr.io/rs-python/quay.io/jupyter/base-notebook
 #
 
 # shellcheck disable=SC2102,SC1091
 
-# quay.io/jupyter/base-notebook:hub-<tag>-py<python_version>
-ARG BASE=xxx
-FROM "${BASE}"
-ARG BASE=xxx
+ARG JUPYTER_HUB_VERSION=5.4.3
+
+FROM "quay.io/jupyter/base-notebook:hub-${JUPYTER_HUB_VERSION}"
 
 ENV PATH="/home/jovyan/.local/bin:${PATH}"
 
