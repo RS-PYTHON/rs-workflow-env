@@ -158,12 +158,12 @@ jobs:
     steps:
       - id: set-binary-env
         name: Call action 'set-binary-env'
-        uses: RS-PYTHON/actions/.github/actions/set-binary-env@feat-rspy1108/jupyter-cicd
+        uses: RS-PYTHON/actions/.github/actions/set-binary-env@develop
         with:
           add_docker_tags: ${{ inputs.add_docker_tags }}
       - name: Branch name in rs-testmeans
         id: rs-testmeans
-        uses: RS-PYTHON/actions/.github/actions/get-repo-branch@feat-rspy1108/jupyter-cicd
+        uses: RS-PYTHON/actions/.github/actions/get-repo-branch@develop
         with:
           repo: RS-PYTHON/rs-testmeans
           branches: ${{ steps.set-binary-env.outputs.branch_name }},develop
@@ -199,7 +199,7 @@ jobs:
       # In this case, we cancel the existings runs before triggering a new run with the new base image.
       - name: Cancel existing runs
         if: ${{ needs.set-binary-env.outputs.docker_final_tags != '' }}
-        uses: RS-PYTHON/actions/.github/actions/cancel-workflow-runs@feat-rspy1108/jupyter-cicd
+        uses: RS-PYTHON/actions/.github/actions/cancel-workflow-runs@develop
         with:
           trigger_workflows_token: ${{ secrets.TRIGGER_WORKFLOWS }}
           owner_repo: RS-PYTHON/rs-testmeans
