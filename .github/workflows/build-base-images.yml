@@ -20,7 +20,6 @@ name: Build the base Docker images
 # Run workflow only for ...
 on:
   pull_request: # pull requests
-    branches: none
     types: [opened, synchronize, reopened]
     paths:
       - 'docker/base/**'

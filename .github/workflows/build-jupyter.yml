@@ -29,7 +29,6 @@ name: Build the Jupyter Docker image
 on:
   pull_request: # pull requests
     types: [opened, synchronize, reopened]
-    branches: none
     paths:
       - 'docker/base/**'
       - 'docker/jupyter/**'

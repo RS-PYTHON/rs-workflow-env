@@ -33,7 +33,6 @@ name: Build the Dask EOPF/DPR Docker images
 # Run workflow only for ...
 on:
   pull_request: # pull requests
-    branches: none
     types: [opened, synchronize, reopened]
     paths:
       - 'docker/base/**'
