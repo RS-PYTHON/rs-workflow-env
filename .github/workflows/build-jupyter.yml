@@ -147,7 +147,8 @@ jobs:
           build_context_path: ./docker/scripts
           image_basename: ${{ github.repository_owner }}/
           image_suffix: quay.io/jupyter/base-notebook
-          image_tags: ${{ needs.set-binary-env.outputs.docker_tags }}
+          # Set both temp and final tags
+          image_tags: ${{ needs.set-binary-env.outputs.docker_tags }},${{ needs.set-binary-env.outputs.docker_final_tags }}
           dockerhub_username: ${{ vars.DOCKERHUB_USERNAME }}
           dockerhub_token: ${{ secrets.DOCKERHUB_TOKEN }}
           github_token: ${{ secrets.GITHUB_TOKEN }}
@@ -162,8 +163,9 @@ jobs:
       packages: write # needed for 'docker push'
     steps:
       # When we merge to develop, rs-client will first use a temp docker tag, then run the tests,
-      # then retag the images with the final tag.
-      # If two workflow runs do it in parallel, we can have conflicts.
+      # then retag the images with the final tag and push them.
+      # If two workflow runs do it in parallel, we can have conflicts: a temp tag with errors
+      # could be retagged as final and pushed.
       # In this case, we cancel the existings runs before triggering a new run with the new base image.
       - name: Cancel existing runs
         if: ${{ needs.set-binary-env.outputs.docker_final_tags != '' }}
@@ -196,16 +198,6 @@ jobs:
           wait-for-completion: true
           wait-timeout-seconds: 3600
           sync-status: true
-
-      # If we used a temp docker tag, and only if the rs-client tests succeeded, then
-      # we tag the base jupyter image with the real tags and push them.
-      - name: Tag and push Docker images
-        if: ${{ needs.set-binary-env.outputs.docker_final_tags != '' }}
-        uses: RS-PYTHON/actions/.github/actions/tag-push-docker@develop
-        with:
-          github_token: ${{ secrets.GITHUB_TOKEN }}
-          old_docker_images: ${{ needs.build-base-jupyter-image.outputs.docker_images }}
-          new_tags: ${{ needs.set-binary-env.outputs.docker_final_tags }}
 
   build-rs-client-wheel:
     name: Build rs-client-libraries wheel
@@ -266,7 +258,8 @@ jobs:
           dockerfile: ./docker/jupyter/Dockerfile
           build_context_path: ./docker/jupyter
           image_suffix: -jupyter
-          image_tags: ${{ needs.set-binary-env.outputs.docker_tags }}
+          # Set both temp and final tags
+          image_tags: ${{ needs.set-binary-env.outputs.docker_tags }},${{ needs.set-binary-env.outputs.docker_final_tags }}
           build_args: |
             BASE_TAG=${{ steps.base-jupyter-tag.outputs.tag }}
             CACHEBUST=${{ github.run_id }}
@@ -276,12 +269,3 @@ jobs:
           github_token: ${{ secrets.GITHUB_TOKEN }}
           trivy_skip_dirs: ${{ env.TRIVY_SKIP_DIRS }}
           trivy_skip_files: ${{ env.TRIVY_SKIP_FILES }}
-
-      # If we used a temp docker tag, we tag the jupyter image with the real tags and push them.
-      - name: Tag and push Docker images
-        if: ${{ needs.set-binary-env.outputs.docker_final_tags != '' }}
-        uses: RS-PYTHON/actions/.github/actions/tag-push-docker@develop
-        with:
-          github_token: ${{ secrets.GITHUB_TOKEN }}
-          old_docker_images: ${{ steps.publish-docker.outputs.docker_images }}
-          new_tags: ${{ needs.set-binary-env.outputs.docker_final_tags }}
