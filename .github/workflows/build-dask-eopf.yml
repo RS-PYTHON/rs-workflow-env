@@ -49,9 +49,10 @@ on:
       - '.github/workflows/build-dask-eopf.yml'
   workflow_dispatch: # manual trigger
     inputs:
-      add_docker_tags:
-        description: Add these tags to the docker images as e.g. 'custom-tag1,custom-tag-2'
-        required: false
+      build_base_images:
+        description: Build the base images before building the Dask images?
+        type: boolean
+        default: true
       processor:
         description: Which processor to build an image for
         required: false
@@ -65,10 +66,6 @@ on:
           - s1ard
           - s3olci
           - mockup
-      build_base_images:
-        description: Build the base images before building the Dask images?
-        type: boolean
-        default: true
       target_system:
         description: Whether to build images for cluster deployment, local deployment, LocalCluster mode or all of them
         required: false
@@ -79,6 +76,9 @@ on:
           - cluster
           - local
           - localcluster
+      add_docker_tags:
+        description: Add these tags to the docker images as e.g. 'custom-tag1,custom-tag-2'
+        required: false
 
 env:
   DOCKER_REGISTRY: ghcr.io
@@ -188,7 +188,7 @@ jobs:
 
   trigger-rs-testmeans:
     runs-on: ubuntu-latest
-    name: Trigger rs-testmeans # to build the dask mockup image for local mode from the base image
+    name: Trigger rs-testmeans # to build the Dask mockup image for local mode from the Dask base image
     needs: [set-binary-env, build-base-dask-images]
     permissions:
       packages: write # needed for 'docker push'
@@ -206,7 +206,10 @@ jobs:
           workflow_path: .github/workflows/publish-binaries.yml
           branch: ${{ needs.set-binary-env.outputs.rs_testmeans_branch }}
       - name: Trigger a new run
-        uses: benc-uk/workflow-dispatch@7a027648b88c2413826b6ddd6c76114894dc5ec4
+        # Link to the URL of this current github actions run
+        env:
+          THIS_URL: "${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}"
+        uses: benc-uk/workflow-dispatch@ba9b031f598534deb29873396ef7b0acf17aa94a
         with:
           workflow: publish-binaries.yml
           repo: RS-PYTHON/rs-testmeans
@@ -216,11 +219,15 @@ jobs:
           inputs: '{
             "called_by": "rebuild-base-dask",
             "force_docker_tags": "${{ needs.set-binary-env.outputs.docker_tags }}",
-            "force_docker_final_tags": "${{ needs.set-binary-env.outputs.docker_final_tags }}"
+            "force_docker_final_tags": "${{ needs.set-binary-env.outputs.docker_final_tags }}",
+            "caller_name": "rs-workflow-env",
+            "caller_url": "${{ env.THIS_URL }}",
+            "caller_reason": "Build the Dask mockup image for local mode from the Dask base image."
             }'
           token: '${{ secrets.TRIGGER_WORKFLOWS }}'
           wait-for-completion: true
           wait-timeout-seconds: 3600
+          sync-status: true
 
   build-dask-eopf:
     runs-on: ubuntu-latest

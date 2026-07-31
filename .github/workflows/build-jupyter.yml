@@ -44,13 +44,22 @@ on:
       - '.github/workflows/build-jupyter.yml'
   workflow_dispatch: # manual trigger
     inputs:
-      add_docker_tags:
-        description: Add these tags to the docker images as e.g. 'custom-tag1,custom-tag-2'
-        required: false
       build_base_image:
         description: Build the base image before building the Jupyter image?
         type: boolean
         default: true
+      caller_name:
+        description: Caller name, to be displayed in the info job name
+        required: false
+      caller_url:
+        description: Caller url, to be displayed in the info job details
+        required: false
+      caller_reason:
+        description: Why this run was called, to be displayed in the info job details
+        required: false
+      add_docker_tags:
+        description: Add these tags to the docker images as e.g. 'custom-tag1,custom-tag-2'
+        required: false
 
 env:
   DOCKER_REGISTRY: ghcr.io
@@ -58,6 +67,21 @@ env:
   TRIVY_SKIP_FILES: /opt/conda/lib/python3.*/site-packages/bokeh/server/static/js/compiler.js,/opt/conda/lib/python3.*/site-packages/prefect/server/ui/assets/index-CCNfsmcm.js.map
 
 jobs:
+  info:
+    runs-on: ubuntu-latest
+    name: "Triggered by: ${{ inputs.caller_name }}"
+    env:
+      CALLER_URL: ${{ inputs.caller_url }}
+      CALLER_REASON: ${{ inputs.caller_reason }}
+    steps:
+    - if: ${{ inputs.caller_name != '' }}
+      run: >
+        echo
+        ":information_source: <br>
+        This run has been triggered by: ${CALLER_URL}<br>
+        Reason: ${CALLER_REASON}"
+        >> $GITHUB_STEP_SUMMARY
+
   # Enable conditional execution of workflow steps and jobs, based on the files modified
   # by pull request, on a feature branch, or by the recently pushed commits.
   changes:
@@ -132,7 +156,7 @@ jobs:
 
   trigger-rs-client-libraries:
     runs-on: ubuntu-latest
-    name: Trigger rs-client-libraries # to build the jupyter image for local mode from the base image
+    name: Trigger rs-client-libraries # to build the Jupyter image for local mode from the Jupyter base image
     needs: [set-binary-env, build-base-jupyter-image]
     permissions:
       packages: write # needed for 'docker push'
@@ -150,7 +174,10 @@ jobs:
           workflow_path: .github/workflows/publish-binaries.yml
           branch: ${{ needs.set-binary-env.outputs.rs_client_branch }}
       - name: Trigger a new run
-        uses: benc-uk/workflow-dispatch@7a027648b88c2413826b6ddd6c76114894dc5ec4
+        # Link to the URL of this current github actions run
+        env:
+          THIS_URL: "${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}"
+        uses: benc-uk/workflow-dispatch@ba9b031f598534deb29873396ef7b0acf17aa94a
         with:
           workflow: publish-binaries.yml
           repo: RS-PYTHON/rs-client-libraries
@@ -160,11 +187,15 @@ jobs:
           inputs: '{
             "called_by": "rebuild-base-jupyter",
             "force_docker_tags": "${{ needs.set-binary-env.outputs.docker_tags }}",
-            "force_docker_final_tags": "${{ needs.set-binary-env.outputs.docker_final_tags }}"
+            "force_docker_final_tags": "${{ needs.set-binary-env.outputs.docker_final_tags }}",
+            "caller_name": "rs-workflow-env",
+            "caller_url": "${{ env.THIS_URL }}",
+            "caller_reason": "Build the Jupyter image for local mode from the Jupyter base image."
             }'
           token: '${{ secrets.TRIGGER_WORKFLOWS }}'
           wait-for-completion: true
           wait-timeout-seconds: 3600
+          sync-status: true
 
       # If we used a temp docker tag, and only if the rs-client tests succeeded, then
       # we tag the base jupyter image with the real tags and push them.
@@ -216,7 +247,7 @@ jobs:
 
       - name: Resolve base jupyter image tag
         id: base-jupyter-tag
-        uses: RS-PYTHON/actions/.github/actions/get-image-tag@test-julien-20260731
+        uses: RS-PYTHON/actions/.github/actions/get-image-tag@develop
         with:
           image: ghcr.io/rs-python/quay.io/jupyter/base-notebook
           # Test image tags with the same name as current branch, else latest
