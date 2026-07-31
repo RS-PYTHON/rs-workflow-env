@@ -195,7 +195,8 @@ jobs:
     steps:
       # When we merge to develop, rs-testmeans will first use a temp docker tag, then run the tests,
       # then retag the images with the final tag.
-      # If two workflow runs do it in parallel, we can have conflicts.
+      # If two workflow runs do it in parallel, we can have conflicts: a temp tag with errors
+      # could be retagged as final and pushed.
       # In this case, we cancel the existings runs before triggering a new run with the new base image.
       - name: Cancel existing runs
         if: ${{ needs.set-binary-env.outputs.docker_final_tags != '' }}
