@@ -117,6 +117,7 @@ jobs:
         uses: RS-PYTHON/actions/.github/actions/set-binary-env@develop
         with:
           add_docker_tags: ${{ inputs.add_docker_tags }}
+          force_temp_tag: true
       - name: Branch name in rs-client-libraries
         id: rs-client-libraries
         uses: RS-PYTHON/actions/.github/actions/get-repo-branch@develop
