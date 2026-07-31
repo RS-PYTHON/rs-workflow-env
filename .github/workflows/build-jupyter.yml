@@ -86,7 +86,6 @@ jobs:
       branch_name: ${{ steps.set-binary-env.outputs.branch_name }}
       docker_tags: ${{ steps.set-binary-env.outputs.docker_tags }}
       docker_final_tags: ${{ steps.set-binary-env.outputs.docker_final_tags }}
-      base_jupyter_tag: ${{ steps.base-jupyter-tag.outputs.value }}
       rs_client_branch: ${{ steps.rs-client-libraries.outputs.branch }}
     steps:
       - id: set-binary-env
@@ -94,14 +93,6 @@ jobs:
         uses: RS-PYTHON/actions/.github/actions/set-binary-env@develop
         with:
           add_docker_tags: ${{ inputs.add_docker_tags }}
-      - name: Tag of the base Jupyter Docker image
-        id: base-jupyter-tag
-        run: |
-          set -x
-          # Keep last tag (after the last ',')
-          docker_tags=${{ steps.set-binary-env.outputs.docker_tags }}
-          value=${docker_tags##*,}
-          echo "value=$value" >> $GITHUB_OUTPUT
       - name: Branch name in rs-client-libraries
         id: rs-client-libraries
         uses: RS-PYTHON/actions/.github/actions/get-repo-branch@develop
@@ -168,7 +159,6 @@ jobs:
           # are in a branch and rs-client-libraries is on develop.
           inputs: '{
             "called_by": "rebuild-base-jupyter",
-            "base_jupyter_tag": "${{ needs.set-binary-env.outputs.base_jupyter_tag }}",
             "force_docker_tags": "${{ needs.set-binary-env.outputs.docker_tags }}",
             "force_docker_final_tags": "${{ needs.set-binary-env.outputs.docker_final_tags }}"
             }'
@@ -224,6 +214,14 @@ jobs:
           pattern: rs_client_libraries-*.whl
           path: ./docker/jupyter
 
+      - name: Resolve base jupyter image tag
+        id: base-jupyter-tag
+        uses: RS-PYTHON/actions/.github/actions/get-image-tag@test-julien-20260731
+        with:
+          image: ghcr.io/rs-python/quay.io/jupyter/base-notebook
+          # Test image tags with the same name as current branch, else latest
+          tags: ${{ needs.set-binary-env.outputs.docker_tags }},latest
+
       - name: Resolve rs-demo branch
         id: rs-demo-branch
         uses: RS-PYTHON/actions/.github/actions/get-repo-branch@develop
@@ -239,7 +237,7 @@ jobs:
           image_suffix: -jupyter
           image_tags: ${{ needs.set-binary-env.outputs.docker_tags }}
           build_args: |
-            BASE_TAG=${{ needs.set-binary-env.outputs.base_jupyter_tag }}
+            BASE_TAG=${{ steps.base-jupyter-tag.outputs.tag }}
             CACHEBUST=${{ github.run_id }}
             RS_DEMO_BRANCH=${{ steps.rs-demo-branch.outputs.branch }}
           dockerhub_username: ${{ vars.DOCKERHUB_USERNAME }}
