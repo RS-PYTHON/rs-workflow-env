@@ -28,6 +28,10 @@ on:
         required: true
         default: 'develop'
 
+env:
+  # Current branch name (or source branch for a pull request) or git tag (if we are pushing a git tag)
+  BRANCH_NAME: ${{ case(github.event_name == 'pull_request', github.event.pull_request.head.ref, github.ref_name) }}
+
 jobs:
   test-deploy:
     if: github.actor != 'dependabot[bot]' # ignore pull requests by github bot
@@ -45,21 +49,16 @@ jobs:
     steps:
       - name: Check if branch exists in rs-infra-core
         id: check_branch
-        env:
-          LOCAL_BRANCH: ${{ github.head_ref }}
-          INFRA_CORE_REF: ${{ inputs.infra_core_ref || '' }}
-        run: |
-          BRANCH="${INFRA_CORE_REF:-$LOCAL_BRANCH}"
-          if git ls-remote --heads https://github.com/RS-PYTHON/rs-infra-core.git $BRANCH | grep -q $BRANCH; then
-            echo "branch_to_use=$BRANCH" >> $GITHUB_OUTPUT
-          else
-            echo "branch_to_use=" >> $GITHUB_OUTPUT  # Leave empty to use default
-          fi
+        uses: RS-PYTHON/actions/.github/actions/get-repo-branch@develop
+        with:
+          repo: RS-PYTHON/rs-infra-core
+          # Try user given branch, then current branch, then develop
+          branches: ${{ inputs.infra_core_ref || '' }},${{ env.BRANCH_NAME }},develop
       - name: Checkout infra-core repository
         uses: actions/checkout@v6
         with:
           repository: RS-PYTHON/rs-infra-core
-          ref: ${{ steps.check_branch.outputs.branch_to_use }}
+          ref: ${{ steps.check_branch.outputs.branch }}
       - name: Checkout infra-monitoring repository
         uses: actions/checkout@v6
         if: ${{ matrix.deploy_monitoring }}
@@ -109,9 +108,9 @@ jobs:
           # --- Generate inventory
           conda run -n rspy --no-capture-output env PYTHONUNBUFFERED=1 ANSIBLE_FORCE_COLOR=1 ansible-playbook registry.yaml -i inventory/mycluster/hosts.yaml -e ci_mode=true
           conda run -n rspy --no-capture-output env PYTHONUNBUFFERED=1 ANSIBLE_FORCE_COLOR=1 ansible-playbook generate_inventory.yaml -i inventory/mycluster/hosts.yaml
-      - name: Delete specific apps
+      - name: Run wrapper script
         run: |
-          .github/common/resources/remove-apps.sh
+          .github/common/resources/wrapper.sh
       - name: Deploy the core apps (for real)
         run: |
           # --- Use local cluster issuer instead of Let's Encrypt

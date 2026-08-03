@@ -44,22 +44,43 @@ on:
       - '.github/workflows/build-jupyter.yml'
   workflow_dispatch: # manual trigger
     inputs:
-      docker_tag:
-        description: Tag the docker images as e.g. 'latest'
-        required: false
       build_base_image:
         description: Build the base image before building the Jupyter image?
+        type: boolean
+        default: true
+      caller_name:
+        description: Caller name, to be displayed in the info job name
         required: false
-        default: 'true'
-        type: choice
-        options:
-          - 'true'
-          - 'false'
+      caller_url:
+        description: Caller url, to be displayed in the info job details
+        required: false
+      caller_reason:
+        description: Why this run was called, to be displayed in the info job details
+        required: false
+      add_docker_tags:
+        description: Add these tags to the docker images as e.g. 'custom-tag1,custom-tag-2'
+        required: false
 
 env:
   DOCKER_REGISTRY: ghcr.io
+  TRIVY_SKIP_DIRS: /opt/conda/pkgs/cache
+  TRIVY_SKIP_FILES: /opt/conda/lib/python3.*/site-packages/bokeh/server/static/js/compiler.js,/opt/conda/lib/python3.*/site-packages/prefect/server/ui/assets/index-CCNfsmcm.js.map
 
 jobs:
+  info:
+    runs-on: ubuntu-latest
+    name: "Triggered by: ${{ inputs.caller_name }}"
+    env:
+      CALLER_URL: ${{ inputs.caller_url }}
+      CALLER_REASON: ${{ inputs.caller_reason }}
+    steps:
+    - if: ${{ inputs.caller_name != '' }}
+      run: >
+        echo
+        ":information_source: <br>
+        This run has been triggered by: ${CALLER_URL}<br>
+        Reason: ${CALLER_REASON}"
+        >> $GITHUB_STEP_SUMMARY
 
   # Enable conditional execution of workflow steps and jobs, based on the files modified
   # by pull request, on a feature branch, or by the recently pushed commits.
@@ -77,79 +98,132 @@ jobs:
         with:
           filters: |
             base:
-              - docker/base/build-base-images.sh
               - docker/base/Dockerfile.jupyter
-              - docker/base/Dockerfile.python
               - docker/scripts/create-jupyter-kernels.sh
               - docker/scripts/dask-cluster-versions.yml
           list-files: 'json' # Enables listing of files matching the filter
-
-  # Build base image for Jupyter only
-  build-base-jupyter-image:
-    runs-on: ubuntu-latest
-    name: Build base image for Jupyter
-    needs: [changes]
-    if: ${{ (needs.changes.outputs.base == 'true') || ((github.event_name == 'workflow_dispatch') && (github.event.inputs.build_base_image == 'true')) }}
-    permissions:
-      contents: read
-      packages: write
-    steps:
-      - name: Checkout repository
-        uses: actions/checkout@v6
-        # clone rs-infra-core to use the GH runner cleanup script
-      - name: Checkout infra-core repository
-        uses: actions/checkout@v6
-        with:
-          repository: RS-PYTHON/rs-infra-core
-          path: rs-infra-core
-      - name: Aggressive cleanup
-        run: |
-          # Cleanup disk space (level between 0 and 15, more cleaning takes more time)
-          ./rs-infra-core/.github/common/resources/aggressive-cleanup.sh 7
-        shell: bash
-      - name: Login to GHCR
-        run: echo "${{ secrets.GITHUB_TOKEN }}" | docker login ghcr.io --username "${{ github.actor }}" --password-stdin
-      - name: Build and push base image
-        run: docker/base/build-base-images.sh -t jupyter --push
-
-  set-env:
-    name: Set environment
+  set-binary-env:
+    name: Set Docker environment
     if: github.actor != 'dependabot[bot]' # ignore pull requests by github bot
     runs-on: ubuntu-latest
     outputs:
       branch_name: ${{ steps.set-binary-env.outputs.branch_name }}
-      docker_tags: ${{ case(
-        steps.set-binary-env.outputs.docker_final_tags != '',
-        steps.set-binary-env.outputs.docker_final_tags,
-        steps.set-binary-env.outputs.docker_tags) }} # don't use temp tags, take directly the final tags
+      docker_tags: ${{ steps.set-binary-env.outputs.docker_tags }}
+      docker_final_tags: ${{ steps.set-binary-env.outputs.docker_final_tags }}
+      rs_client_branch: ${{ steps.rs-client-libraries.outputs.branch }}
     steps:
       - id: set-binary-env
         name: Call action 'set-binary-env'
         uses: RS-PYTHON/actions/.github/actions/set-binary-env@develop
         with:
-          manual_tag: ${{ github.event.inputs.docker_tag }}
+          add_docker_tags: ${{ inputs.add_docker_tags }}
+      - name: Branch name in rs-client-libraries
+        id: rs-client-libraries
+        uses: RS-PYTHON/actions/.github/actions/get-repo-branch@develop
+        with:
+          repo: RS-PYTHON/rs-client-libraries
+          branches: ${{ steps.set-binary-env.outputs.branch_name }},develop
+
+  build-base-jupyter-image:
+    runs-on: ubuntu-latest
+    name: Build base image for Jupyter
+    needs: [set-binary-env, changes]
+    if: ${{
+      ((github.event_name != 'workflow_dispatch') && (needs.changes.outputs.base == 'true')) ||
+      ((github.event_name == 'workflow_dispatch') && (inputs.build_base_image == true))
+      }}
+    permissions:
+      security-events: write # needed for github/codeql-action/upload-sarif
+      packages: write # needed for 'docker push'
+    outputs:
+      docker_images: ${{ steps.publish-docker.outputs.docker_images }}
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v6
+      - id: publish-docker
+        uses: RS-PYTHON/actions/.github/actions/publish-docker@develop
+        with:
+          dockerfile: ./docker/base/Dockerfile.jupyter
+          build_context_path: ./docker/scripts
+          image_basename: ${{ github.repository_owner }}/
+          image_suffix: quay.io/jupyter/base-notebook
+          # Set both temp and final tags
+          image_tags: ${{ needs.set-binary-env.outputs.docker_tags }},${{ needs.set-binary-env.outputs.docker_final_tags }}
+          dockerhub_username: ${{ vars.DOCKERHUB_USERNAME }}
+          dockerhub_token: ${{ secrets.DOCKERHUB_TOKEN }}
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          trivy_skip_dirs: ${{ env.TRIVY_SKIP_DIRS }}
+          trivy_skip_files: ${{ env.TRIVY_SKIP_FILES }}
+
+  trigger-rs-client-libraries:
+    runs-on: ubuntu-latest
+    name: Trigger rs-client-libraries # to build the Jupyter image for local mode from the Jupyter base image
+    needs: [set-binary-env, build-base-jupyter-image]
+    permissions:
+      packages: write # needed for 'docker push'
+    steps:
+      # When we merge to develop, rs-client will first use a temp docker tag, then run the tests,
+      # then retag the images with the final tag and push them.
+      # If two workflow runs do it in parallel, we can have conflicts: a temp tag with errors
+      # could be retagged as final and pushed.
+      # In this case, we cancel the existings runs before triggering a new run with the new base image.
+      - name: Cancel existing runs
+        if: ${{ needs.set-binary-env.outputs.docker_final_tags != '' }}
+        uses: RS-PYTHON/actions/.github/actions/cancel-workflow-runs@develop
+        with:
+          trigger_workflows_token: ${{ secrets.TRIGGER_WORKFLOWS }}
+          owner_repo: RS-PYTHON/rs-client-libraries
+          workflow_path: .github/workflows/publish-binaries.yml
+          branch: ${{ needs.set-binary-env.outputs.rs_client_branch }}
+      - name: Trigger a new run
+        # Link to the URL of this current github actions run
+        env:
+          THIS_URL: "${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}"
+        uses: benc-uk/workflow-dispatch@ba9b031f598534deb29873396ef7b0acf17aa94a
+        with:
+          workflow: publish-binaries.yml
+          repo: RS-PYTHON/rs-client-libraries
+          ref: ${{ needs.set-binary-env.outputs.rs_client_branch }}
+          # Use the same docker tags as in the current workflow run, even if we
+          # are in a branch and rs-client-libraries is on develop.
+          inputs: '{
+            "called_by": "rebuild-base-jupyter",
+            "force_docker_tags": "${{ needs.set-binary-env.outputs.docker_tags }}",
+            "force_docker_final_tags": "${{ needs.set-binary-env.outputs.docker_final_tags }}",
+            "caller_name": "rs-workflow-env",
+            "caller_url": "${{ env.THIS_URL }}",
+            "caller_reason": "Build the Jupyter image for local mode from the Jupyter base image."
+            }'
+          token: '${{ secrets.TRIGGER_WORKFLOWS }}'
+          wait-for-completion: true
+          wait-timeout-seconds: 3600
+          sync-status: true
+
+  build-rs-client-wheel:
+    name: Build rs-client-libraries wheel
+    runs-on: ubuntu-latest
+    if: github.actor != 'dependabot[bot]' # ignore pull requests by github bot
+    needs: [set-binary-env]
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          repository: RS-PYTHON/rs-client-libraries
+
+          ref: ${{ needs.set-binary-env.outputs.rs_client_branch }}
+          fetch-depth: 0 # so that Dunamai produce the correct version
+      - id: build-wheel
+        uses: RS-PYTHON/actions/.github/actions/build-wheel@develop
 
   publish-docker:
     if: ${{ always() && !failure() && !cancelled() && (github.actor != 'dependabot[bot]') }} # Run the job even if previous job was skipped
     runs-on: ubuntu-latest
     name: Build image for Jupyter
-    needs: [set-env, build-base-jupyter-image]
-    permissions: write-all
+    needs: [set-binary-env, build-base-jupyter-image, build-rs-client-wheel]
+    permissions:
+      security-events: write # needed for github/codeql-action/upload-sarif
+      packages: write # needed for 'docker push'
     steps:
       - uses: actions/checkout@v6
-
-        # clone rs-infra-core to use the GH runner cleanup script
-      - name: Checkout infra-core repository
-        uses: actions/checkout@v6
-        with:
-          repository: RS-PYTHON/rs-infra-core
-          path: rs-infra-core
-      - name: Aggressive cleanup
-        run: |
-          # Cleanup disk space (level between 0 and 15, more cleaning takes more time)
-          ./rs-infra-core/.github/common/resources/aggressive-cleanup.sh 7
-        shell: bash
-
       - name: Copy common requirements
         id: copy_common_req
         shell: bash
@@ -157,66 +231,26 @@ jobs:
           mkdir -p ./docker/jupyter/resources/
           cp ./docker/scripts/*.* ./docker/jupyter/resources/
 
-      - id: rs-client-run-id
-        name: Get latest run ID from rs-client-libraries
-        env:
-          REPO_OWNER: ${{ github.repository_owner }}
-          REPO_NAME: rs-client-libraries
-          RS_SERVER_PAT: ${{ secrets.RS_SERVER_PAT }}
-          WORKFLOW_FILE: "publish-binaries.yml"
-          CURRENT_BRANCH: ${{ needs.set-env.outputs.branch_name }}
-        run: |
-          set -x
-
-          # Test to download from the current branch name, or develop
-          if [[ $CURRENT_BRANCH == develop ]]; then
-              BRANCHES="develop"
-          else
-              BRANCHES="$CURRENT_BRANCH develop"
-          fi
-          for BRANCH in $BRANCHES; do
-
-              # Fetch the latest run for the branch
-              URL="https://api.github.com/repos/$REPO_OWNER/$REPO_NAME/actions/workflows/$WORKFLOW_FILE/runs?branch=$BRANCH&status=completed&per_page=1"
-              echo "$URL"
-              RUNS=$(curl -s -H "Authorization: Bearer $RS_SERVER_PAT" "$URL")
-
-              # Extract the run ID
-              RUN_ID=$(echo "$RUNS" | jq -r '.workflow_runs[0].id')
-              if [[ -z "$RUN_ID" || "$RUN_ID" == null ]]; then
-                  echo "No workflow run found for branch $BRANCH in $REPO_OWNER/$REPO_NAME"
-              else
-                  echo "Latest run ID from $BRANCH: $RUN_ID"
-                  echo "run-id=$RUN_ID" >> $GITHUB_OUTPUT
-                  exit 0
-              fi
-          done
-
-          # No branch found
-          exit 1
-
-      - name: Download rs-client-libraries-wheels
-        uses: actions/download-artifact@v4
+      - name: Download .whl dependency
+        uses: actions/download-artifact@v8
         with:
+          pattern: rs_client_libraries-*.whl
           path: ./docker/jupyter
-          pattern: rs_client_libraries-*-py3-none-any.whl
-          merge-multiple: true
-          github-token: ${{ secrets.RS_SERVER_PAT }}
-          repository: RS-PYTHON/rs-client-libraries
-          run-id: ${{ steps.rs-client-run-id.outputs.run-id }}
+
+      - name: Resolve base jupyter image tag
+        id: base-jupyter-tag
+        uses: RS-PYTHON/actions/.github/actions/get-image-tag@develop
+        with:
+          image: ghcr.io/rs-python/quay.io/jupyter/base-notebook
+          # Test image tags with the same name as current branch, else latest
+          tags: ${{ needs.set-binary-env.outputs.docker_tags }},latest
 
       - name: Resolve rs-demo branch
         id: rs-demo-branch
-        env:
-          GH_TOKEN: ${{ github.token }}
-          CURRENT_BRANCH: ${{ needs.set-env.outputs.branch_name }}
-        run: |
-          if gh api "repos/${{ github.repository_owner }}/rs-demo/branches/${CURRENT_BRANCH}" --silent 2>/dev/null; then
-            echo "branch=${CURRENT_BRANCH}" >> "$GITHUB_OUTPUT"
-          else
-            echo "branch=develop" >> "$GITHUB_OUTPUT"
-          fi
-        shell: bash
+        uses: RS-PYTHON/actions/.github/actions/get-repo-branch@develop
+        with:
+          repo: RS-PYTHON/rs-demo
+          branches: ${{ needs.set-binary-env.outputs.branch_name }},develop
 
       - id: publish-docker
         uses: RS-PYTHON/actions/.github/actions/publish-docker@develop
@@ -224,12 +258,14 @@ jobs:
           dockerfile: ./docker/jupyter/Dockerfile
           build_context_path: ./docker/jupyter
           image_suffix: -jupyter
-          image_tags: ${{ needs.set-env.outputs.docker_tags }}
+          # Set both temp and final tags
+          image_tags: ${{ needs.set-binary-env.outputs.docker_tags }},${{ needs.set-binary-env.outputs.docker_final_tags }}
           build_args: |
+            BASE_TAG=${{ steps.base-jupyter-tag.outputs.tag }}
             CACHEBUST=${{ github.run_id }}
             RS_DEMO_BRANCH=${{ steps.rs-demo-branch.outputs.branch }}
           dockerhub_username: ${{ vars.DOCKERHUB_USERNAME }}
           dockerhub_token: ${{ secrets.DOCKERHUB_TOKEN }}
           github_token: ${{ secrets.GITHUB_TOKEN }}
-          trivy_skip_dirs: /opt/conda/pkgs/cache
-          trivy_skip_files: /opt/conda/lib/python3.*/site-packages/bokeh/server/static/js/compiler.js,/opt/conda/lib/python3.*/site-packages/prefect/server/ui/assets/index-CCNfsmcm.js.map
+          trivy_skip_dirs: ${{ env.TRIVY_SKIP_DIRS }}
+          trivy_skip_files: ${{ env.TRIVY_SKIP_FILES }}

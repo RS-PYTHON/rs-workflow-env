@@ -42,7 +42,6 @@ on:
         options:
           - all
           - python
-          - jupyter
           - dask
           - prefect
 
@@ -90,4 +89,4 @@ jobs:
       - name: Login to GHCR
         run: echo "${{ secrets.GITHUB_TOKEN }}" | docker login ghcr.io --username "${{ github.actor }}" --password-stdin
       - name: Build and push base image
-        run: docker/base/build-base-images.sh -t ${{ github.event.inputs.target_image }} --push
+        run: docker/base/build-base-images.sh -t ${{ inputs.target_image }} --push
