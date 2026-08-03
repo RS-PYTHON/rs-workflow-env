@@ -12,89 +12,159 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+# NOTE: taken from https://gitlab.eopf.copernicus.eu/L0/validation/-/blob/238a291d0114c3dac7680ada752613d4871c5cbd/s3/configs/l0_dask_configuration.yaml
+
 S1:
+  # -------------------------------------------------------------
   # CADU Output Zarr Chunk Size
-  cadu_chunk_size :
-    sar: 1000
-    hktm: 1000
-    ais: 1000
-    gps: 1000
-    hktm_tf: 1000
+  # -------------------------------------------------------------
+  # Chunk sizes for CADU-level products stored in Zarr format.
+  # These chunks are applied to data arrays after CADU processing
+  # and before ISP extraction. Chunk size determines how many
+  # CADU frames are grouped together for efficient parallel processing.
+  cadu_chunk_size:
+    sar: 1000                       # SAR (Synthetic Aperture Radar) data chunk size
+    hktm: 1000                      # HKTM (Housekeeping Telemetry) data chunk size
+    ais: 1000                       # AIS (Automatic Identification System) data chunk size
+    gps: 1000                       # GPS (Global Positioning System) data chunk size
+    hktm_tf: 1000                   # HKTM Transfer Frame data chunk size
 
+  # -------------------------------------------------------------
   # S1 L0 Specific Output Zarr Chunk Size
+  # -------------------------------------------------------------
+  # Chunk sizes for ISP-level products stored in Zarr format.
+  # These chunks are applied to data arrays after ISP extraction
+  # and routing. Chunk sizes can be specified per instrument mode
+  # (IW, EW, SM, etc.) or per data type (SAR, GPS, AIS, HKTM).
+  # Mode-specific chunk sizes allow optimization for different
+  # data volumes and processing requirements.
   isp_chunk_size:
-    sar: 1000
-    # SAR modes
-    iw: 1000
-    ew: 1000
-    sm: 1000
-    rf: 1000
-    wv: 1000
+    sar: 1000                      # General SAR data chunk size (used as default if mode-specific chunk size not specified)
+    # SAR Acquisition Modes
+    # Chunk sizes for different SAR acquisition modes. Mode-specific chunk sizes
+    # allow optimization based on data volume and processing requirements.
+    iw: 1000                       # IW (Interferometric Wide) mode chunk size
+    ew: 1000                       # EW (Extra Wide) mode chunk size
+    sm: 1000                       # SM (StripMap) mode chunk size (general)
+    rf: 1000                       # RF (Radiometric Fine) mode chunk size
+    wv: 1000                       # WV (Wave) mode chunk size
 
-    s1: 1000
-    s2: 1000
-    s3: 1000
-    s4: 1000
-    s5: 1000
-    s6: 1000
+    # StripMap Sub-Modes (SM)
+    s1: 1000                       # StripMap mode 1 chunk size
+    s2: 1000                       # StripMap mode 2 chunk size
+    s3: 1000                       # StripMap mode 3 chunk size
+    s4: 1000                       # StripMap mode 4 chunk size
+    s5: 1000                       # StripMap mode 5 chunk size
+    s6: 1000                       # StripMap mode 6 chunk size
 
-    n1: 1000
-    n2: 1000
-    n3: 1000
-    n4: 1000
-    n5: 1000
-    n6: 1000
+    # Noise Sub-Modes (AN)
+    n1: 1000                       # Noise mode 1 chunk size
+    n2: 1000                       # Noise mode 2 chunk size
+    n3: 1000                       # Noise mode 3 chunk size
+    n4: 1000                       # Noise mode 4 chunk size
+    n5: 1000                       # Noise mode 5 chunk size
+    n6: 1000                       # Noise mode 6 chunk size
 
-    ais: 1000
-    gps: 1000
-    hktm_tf: 1000
+    # Other Data Types
+    ais: 1000                      # AIS (Automatic Identification System) data chunk size
+    gps: 1000                      # GPS (Global Positioning System) data chunk size
+    hktm_tf: 1000                  # HKTM Transfer Frame data chunk size
+
+S2:
+  # -------------------------------------------------------------
+  # CADU Output Zarr Chunk Size
+  # -------------------------------------------------------------
+  # Chunk sizes for CADU-level products stored in Zarr format.
+  # These chunks are applied to data arrays after CADU processing
+  # and before ISP extraction. Sentinel-2 typically uses larger
+  # chunk sizes (30000) compared to Sentinel-1 due to higher data
+  # volumes from MSI (Multi-Spectral Instrument) acquisitions.
+  cadu_chunk_size:
+    sad: 30000                     # SAD (Satellite Ancillary Data) chunk size
+    hktm: 30000                    # HKTM (Housekeeping Telemetry) chunk size
+    msi: 30000                     # MSI (Multi-Spectral Instrument) chunk size
+    hktm_tf: 30000                 # HKTM Transfer Frame chunk size
+
+  # -------------------------------------------------------------
+  # S2 L0 Specific Output Zarr Chunk Size
+  # -------------------------------------------------------------
+  # Chunk sizes for ISP-level products stored in Zarr format.
+  # These chunks are applied to data arrays after ISP extraction
+  # and routing. Chunk sizes are specified per instrument/data type
+  # to optimize memory usage and processing efficiency.
+  isp_chunk_size:
+    msi: 30000                     # MSI (Multi-Spectral Instrument) data chunk size
+    hktm_tf: 30000                 # HKTM Transfer Frame data chunk size
+    sad: 30000                     # SAD (Satellite Ancillary Data) chunk size
 
 S3:
+  # -------------------------------------------------------------
   # CADU Output Zarr Chunk Size
+  # -------------------------------------------------------------
+  # Chunk sizes for CADU-level products stored in Zarr format.
+  # These chunks are applied to data arrays after CADU processing
+  # and before ISP extraction. Sentinel-3 uses larger chunk sizes
+  # (30000) to handle high data volumes from multiple instruments
+  # (OLCI, SLSTR, SRAL, MWR, GNSS, DORIS, NAVATT, HKTM).
   cadu_chunk_size:
-    navatt: 30000
-    olci: 30000
-    slstr: 30000
-    sral: 30000
-    mwr: 30000
-    gnss: 30000
-    doris: 30000
-    hktm: 30000
-    hktm_tf: 30000
+    navatt: 30000                  # NAVATT (Navigation and Attitude) chunk size
+    olci: 30000                     # OLCI (Ocean and Land Colour Instrument) chunk size
+    slstr: 30000                    # SLSTR (Sea and Land Surface Temperature Radiometer) chunk size
+    sral: 30000                     # SRAL (SAR Radar Altimeter) chunk size
+    mwr: 30000                      # MWR (Micro Wave Radiometer) chunk size
+    gnss: 30000                     # GNSS (Global Navigation Satellite System) chunk size
+    doris: 30000                    # DORIS (Doppler Orbitography and Radiopositioning) chunk size
+    hktm: 30000                     # HKTM (Housekeeping Telemetry) chunk size
+    hktm_tf: 30000                  # HKTM Transfer Frame chunk size
 
+  # -------------------------------------------------------------
   # S3 L0 Specific Output Zarr Chunk Size
+  # -------------------------------------------------------------
+  # Chunk sizes for ISP-level products stored in Zarr format.
+  # These chunks are applied to data arrays after ISP extraction
+  # and routing. Chunk sizes are specified per product type,
+  # distinguishing between intermediate products (IG) and
+  # final Level-0 products (L0). This allows optimization
+  # based on data volume and processing stage.
   isp_chunk_size:
-
+    # -------------------------------------------------------------
     # Intermediate Product Chunk Size
-    S03NAT_IG: 30000
-    S03OLCRIG: 30000
-    S03OLCR0G: 30000
-    S03OLCR1G: 30000
-    S03OLC_IG: 30000
-    S03SLS_IG: 30000
-    S03ALT_IG: 30000
-    S03MWR_IG: 30000
-    S03GNS_IG: 30000
-    S03DONAIG: 30000
-    S03DODOIG: 30000
-    S03HKM_IG: 30000
-    S03HKM2IG: 30000
+    # -------------------------------------------------------------
+    # Chunk sizes for intermediate granule (IG) products generated
+    # during processing before final Level-0 products. These products
+    # are extracted from CADU-level products and contain filtered
+    # and processed data for specific instruments.
+    S03NAT_IG: 30000               # NAVATT Intermediate Granule chunk size
+    S03OLCRIG: 30000               # OLCI Calibration Intermediate Granule chunk size
+    S03OLCR0G: 30000               # OLCI Calibration Intermediate Granule type 0 chunk size
+    S03OLCR1G: 30000               # OLCI Calibration Intermediate Granule type 1 chunk size
+    S03OLC_IG: 30000               # OLCI Observation Intermediate Granule chunk size
+    S03SLS_IG: 30000               # SLSTR Intermediate Granule chunk size
+    S03ALT_IG: 30000               # SRAL Altimeter Intermediate Granule chunk size
+    S03MWR_IG: 30000               # MWR Intermediate Granule chunk size
+    S03GNS_IG: 30000               # GNSS Intermediate Granule chunk size
+    S03DONAIG: 30000               # DORIS Navigation Intermediate Granule chunk size
+    S03DODOIG: 30000               # DORIS Doppler Intermediate Granule chunk size
+    S03HKM_IG: 30000               # HKTM Intermediate Granule chunk size (Platform and Payload)
+    S03HKM2IG: 30000               # HKTM Intermediate Granule chunk size (Platform and Payload Diagnostic)
 
+    # -------------------------------------------------------------
     # Level-0 Product Chunk Size
-    S03NATL0_: 30000
-    S03OLCCR0: 30000
-    S03OLCCR1: 30000
-    S03OLCL0_: 30000
-    S03OLCCR0: 30000
-    S03SLSL0_: 30000
-    S03SRCRL0: 30000
-    S03ALTL0_: 30000
-    S03SRCRL0: 30000
-    S03MWRL0_: 30000
-    S03GNSL0_: 30000
-    S03DORNAV: 30000
-    S03DORDOP: 30000
-    S03HKML0_: 30000
-    S03HKM2L0: 30000
-
-    hktm_tf: 30000
+    # -------------------------------------------------------------
+    # Chunk sizes for final Level-0 products generated after all
+    # processing steps. These are the final output products that
+    # are delivered to users. Chunk sizes are optimized for final
+    # product structure and downstream processing requirements.
+    S03NATL0_: 30000               # NAVATT Level-0 product chunk size
+    S03OLCCR0: 30000               # OLCI Calibration Level-0 product type 0 chunk size
+    S03OLCCR1: 30000               # OLCI Calibration Level-0 product type 1 chunk size
+    S03OLCL0_: 30000               # OLCI Level-0 product chunk size
+    S03SLSL0_: 30000               # SLSTR Level-0 product chunk size
+    S03SRAL0C: 30000               # SRAL Calibration Level-0 product chunk size
+    S03SRAL0_: 30000               # SRAL Altimeter Level-0 product chunk size
+    S03MWRL0_: 30000               # MWR Level-0 product chunk size
+    S03GNSL0_: 30000               # GNSS Level-0 product chunk size
+    S03DORNAV: 30000               # DORIS Navigation Level-0 product chunk size
+    S03DORDOP: 30000               # DORIS Doppler Level-0 product chunk size
+    S03HKML0_: 30000               # HKTM Level-0 product chunk size (Platform and Payload)
+    S03HKM2L0: 30000               # HKTM Level-0 product chunk size (Platform and Payload Diagnostic)

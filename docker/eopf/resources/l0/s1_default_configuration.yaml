@@ -20,43 +20,52 @@ S1:
   # -------------------------------------------------------------
   # 1. Window Time Configuration
   # -------------------------------------------------------------
+  # Optional time window configuration for selective processing of SAR, GPS, and AIS data.
+  # When enabled, only data within the specified time range will be processed.
+  # This is useful for testing or reprocessing specific time segments.
   window_time:
-    sar:
-      enabled: false
-      start_slice: '2024-04-10T07:53:55.774338'
-      stop_slice: '2024-04-10T07:53:55.775513'
-    gps:
-      enabled: false
-      start_slice: '2024-04-10T07:53:55.774338'
-      stop_slice: '2024-04-10T07:53:55.775513'
-    ais:
-      enabled: false
-      start_slice: '2024-04-10T07:53:55.774338'
-      stop_slice: '2024-04-10T07:53:55.775513'
+    sar:                                    # SAR data time window configuration
+      enabled: false                        # Enable/disable time window filtering for SAR data
+      start_slice: '2024-04-10T07:53:55.774338'  # Start time for SAR data processing window (ISO 8601 format)
+      stop_slice: '2024-04-10T07:53:55.775513'   # Stop time for SAR data processing window (ISO 8601 format)
+    gps:                                    # GPS data time window configuration
+      enabled: false                        # Enable/disable time window filtering for GPS data
+      start_slice: '2024-04-10T07:53:55.774338'  # Start time for GPS data processing window (ISO 8601 format)
+      stop_slice: '2024-04-10T07:53:55.775513'   # Stop time for GPS data processing window (ISO 8601 format)
+    ais:                                    # AIS data time window configuration
+      enabled: false                        # Enable/disable time window filtering for AIS data
+      start_slice: '2024-04-10T07:53:55.774338'  # Start time for AIS data processing window (ISO 8601 format)
+      stop_slice: '2024-04-10T07:53:55.775513'   # Stop time for AIS data processing window (ISO 8601 format)
 
   # -------------------------------------------------------------
   # 2. Reed Solomon & CADU Configuration
   # -------------------------------------------------------------
+  # CADU (Channel Access Data Unit) processing configuration including
+  # Reed-Solomon error correction, frame structure, and spacecraft identification.
+  # These parameters define the structure of the raw telemetry data format.
   cadu_processing_configuration:
-    use_dual_basis: true
-    cadu_size: 2044                      # Size of the CADU in bytes
-    syn_marker_size: 4                   # Bytes allocated for the synchronization marker
-    syn_marker_value: 449838109          # Fixed synchronization marker value
-    annotation_size: 0                   # Annotation field size (if applicable)
+    use_dual_basis: true                  # Use dual-basis Reed-Solomon decoding
+    cadu_size: 2044                      # Total CADU size in bytes
+    syn_marker_size: 4                   # Synchronization marker size in bytes
+    syn_marker_value: 449838109          # Fixed synchronization marker value (hex: 0x1ACFFC0D)
+    annotation_size: 0                   # Annotation field size in bytes (0 if not used)
     transfer_frame_header_size: 8        # CADU transfer frame header size in bytes
-    mpdu_header_size: 2                  # MPDU header size in bytes
-    mpdu_packet_zone_size: 1902          # Packet zone data field size in bytes
-    rs_check_symbols_size: 128           # Reed Solomon check symbols size
-    spacecraft_id:                       # Spacecraft ID
-      a: 67
-      b: 68
-      c: 240
-      d: 113
+    mpdu_header_size: 2                  # MPDU (Multi-Packet Data Unit) header size in bytes
+    mpdu_packet_zone_size: 1902          # MPDU packet zone data field size in bytes
+    rs_check_symbols_size: 128           # Reed-Solomon error correction check symbols size in bytes
+    spacecraft_id:                       # Spacecraft identifier per platform (A, B, C, D)
+      a: 67                               # Sentinel-1A spacecraft ID
+      b: 68                               # Sentinel-1B spacecraft ID
+      c: 240                              # Sentinel-1C spacecraft ID
+      d: 113                              # Sentinel-1D spacecraft ID
   # -------------------------------------------------------------
   # 3. Packet Store Identifiers
   # -------------------------------------------------------------
+  # Packet store identifiers for routing telemetry data streams.
+  # Each packet store corresponds to a specific data source or instrument.
+  # These values are used to filter and route packets during processing.
   packet_stores:
-    sar:
+    sar:                                  # SAR (Synthetic Aperture Radar) packet stores (0-42)
     - 0
     - 1
     - 2
@@ -100,59 +109,67 @@ S1:
     - 40
     - 41
     - 42
-    ais:
+    ais:                                  # AIS (Automatic Identification System) packet stores
     - 43
     - 44
-    hktm:
+    hktm:                                 # HKTM (Housekeeping Telemetry) packet stores
     - 45
     - 46
     - 47
     - 48
-    gps:
+    gps:                                  # GPS (Global Positioning System) packet store
     - 49
-    idle:
+    idle:                                 # Idle packet store
     - 63
 
   # -------------------------------------------------------------
   # 4. CRC Check Configuration
   # -------------------------------------------------------------
+  # Cyclic Redundancy Check (CRC) validation configuration.
+  # When enabled, CRC checks verify packet integrity during processing.
+  # Corrupted packets can be automatically removed based on these settings.
   check_crc_configuration:
-    check_crc:
-      sar: false
-      ais: false
-      hktm: false
-      gps: true
+    check_crc:                            # Enable CRC validation for each data type
+      sar: false                          # Disable CRC check for SAR packets
+      ais: false                          # Disable CRC check for AIS packets
+      hktm: false                         # Disable CRC check for HKTM packets
+      gps: true                           # Enable CRC check for GPS packets
 
-    remove_corrupted_packets:
-      sar:
-        s1: True
-        s2: True
-        s3: True
-        s4: True
-        s5: True
-        s6: True
-        iw: True
-        ew: True
-        wv: True
-        rf: True
-        en: True
-        n1: True
-        n2: True
-        n3: True
-        n4: True
-        n5: True
-        n6: True
-      hktm: False
-      gps: True
-      ais: False
+    remove_corrupted_packets:             # Automatically remove corrupted packets after CRC check
+      sar:                                # SAR sub-mode specific corrupted packet removal
+        s1: True                          # Remove corrupted S1 mode packets
+        s2: True                          # Remove corrupted S2 mode packets
+        s3: True                          # Remove corrupted S3 mode packets
+        s4: True                          # Remove corrupted S4 mode packets
+        s5: True                          # Remove corrupted S5 mode packets
+        s6: True                          # Remove corrupted S6 mode packets
+        iw: True                          # Remove corrupted IW (Interferometric Wide) mode packets
+        ew: True                          # Remove corrupted EW (Extra Wide) mode packets
+        wv: True                          # Remove corrupted WV (Wave) mode packets
+        rf: True                          # Remove corrupted RF mode packets
+        en: True                          # Remove corrupted EN mode packets
+        n1: True                          # Remove corrupted N1 noise packets
+        n2: True                          # Remove corrupted N2 noise packets
+        n3: True                          # Remove corrupted N3 noise packets
+        n4: True                          # Remove corrupted N4 noise packets
+        n5: True                          # Remove corrupted N5 noise packets
+        n6: True                          # Remove corrupted N6 noise packets
+      hktm: False                         # Keep corrupted HKTM packets (for analysis)
+      gps: True                           # Remove corrupted GPS packets
+      ais: False                          # Keep corrupted AIS packets (for analysis)
   # -------------------------------------------------------------
   # 5. ISP Headers Information
   # -------------------------------------------------------------
-  isp_primary_header_size: 6
+  # Instrument Source Packet (ISP) header configuration.
+  # The primary header contains packet identification and timing information.
+  isp_primary_header_size: 6             # ISP primary header size in bytes
 
   # -------------------------------------------------------------
   # 6. Output Product Types
   # -------------------------------------------------------------
+  # Product type identifiers for output products generated by the L0 processor.
+  # These identifiers follow the Sentinel-1 product naming convention.
+  # SAR products are organized by acquisition mode (S1-S6, IW, EW, WV, RF, EN, N1-N6).
   output_product_types:
     cadu_sar: S01SARISP
     cadu_hktm: S01HKMISP
@@ -200,23 +217,28 @@ S1:
   # -------------------------------------------------------------
   # 7. APID Mapping Configuration
   # -------------------------------------------------------------
+  # Application Process Identifier (APID) mapping for data routing.
+  # Each APID corresponds to a specific data stream or instrument.
   apid_mapping:
-    sar:
+    sar:                                  # SAR (Synthetic Aperture Radar) APID
     - 1052
-    gps:
+    gps:                                  # GPS (Global Positioning System) APIDs
     - 774
     - 779
     - 781
     - 790
     - 795
     - 797
-    ais:
+    ais:                                  # AIS (Automatic Identification System) APID
     - 100
-    idle:
+    idle:                                 # Idle packet APID
     - 2047
   # -------------------------------------------------------------
   # 8. Additional General Properties
   # -------------------------------------------------------------
+  # STAC (SpatioTemporal Asset Catalog) metadata properties for product generation.
+  # These properties define processing metadata, timeliness, platform information,
+  # and provider details for each product type (SAR, HKTM, AIS, GPS).
   properties:
     sar:
       processing:expression: systematic
@@ -278,29 +300,38 @@ S1:
   # -------------------------------------------------------------
   # 9. Remove the duplicated packets
   # -------------------------------------------------------------
+  # Configuration for removing duplicate packets during processing.
+  # Duplicate packets are identified by matching APID and sequence count.
+  # Enabling this reduces data redundancy and improves processing efficiency.
   remove_duplicated_packets:
-    sar:
-      s1: True
-      s2: True
-      s3: True
-      s4: True
-      s5: True
-      s6: True
-      iw: True
-      ew: True
-      wv: True
-      rf: True
-      en: True
-      n1: True
-      n2: True
-      n3: True
-      n4: True
-      n5: True
-      n6: True
-    gps: True
-    ais: True
+    sar:                                # SAR sub-mode specific duplicate removal
+      s1: True                          # Remove duplicate S1 mode packets
+      s2: True                          # Remove duplicate S2 mode packets
+      s3: True                          # Remove duplicate S3 mode packets
+      s4: True                          # Remove duplicate S4 mode packets
+      s5: True                          # Remove duplicate S5 mode packets
+      s6: True                          # Remove duplicate S6 mode packets
+      iw: True                          # Remove duplicate IW (Interferometric Wide) mode packets
+      ew: True                          # Remove duplicate EW (Extra Wide) mode packets
+      wv: True                          # Remove duplicate WV (Wave) mode packets
+      rf: True                          # Remove duplicate RF mode packets
+      en: True                          # Remove duplicate EN mode packets
+      n1: True                          # Remove duplicate N1 noise packets
+      n2: True                          # Remove duplicate N2 noise packets
+      n3: True                          # Remove duplicate N3 noise packets
+      n4: True                          # Remove duplicate N4 noise packets
+      n5: True                          # Remove duplicate N5 noise packets
+      n6: True                          # Remove duplicate N6 noise packets
+    gps: True                           # Remove duplicate GPS packets
+    ais: True                           # Remove duplicate AIS packets
 
-  # 10. Nominal Time Delta Configuration (in ms)
+  # -------------------------------------------------------------
+  # 10. Nominal Time Delta Configuration
+  # -------------------------------------------------------------
+  # Nominal time delta values for SAR acquisition modes and polarizations.
+  # These values represent the time offset (in milliseconds) between nominal
+  # acquisition time and actual packet timestamp for each mode/polarization combination.
+  # Format: [mode]_[polarization] (e.g., iw_shh = IW mode, Single HH polarization)
   delta_nominal_time:
     sar:
       ew_shh: 0.580
@@ -435,9 +466,16 @@ S1:
       n6_dvh: 0.535
       n6_dvv: 0.535
 
-    ais: 5.85937
-    gps: 5000.0
+    ais: 5.85937                           # AIS nominal time delta in milliseconds
+    gps: 5000.0                             # GPS nominal time delta in milliseconds
 
+  # -------------------------------------------------------------
+  # 11. Gap Threshold Configuration
+  # -------------------------------------------------------------
+  # Time gap threshold values for SAR acquisition modes and polarizations.
+  # These thresholds define the maximum time gap (in milliseconds) allowed
+  # between consecutive packets before a gap is detected and reported.
+  # Format: [mode]_[polarization] (e.g., iw_shh = IW mode, Single HH polarization)
   gap_threshold:
     sar:
       ew_shh: 15000
@@ -572,10 +610,19 @@ S1:
       n6_dvh: 15000
       n6_dvv: 15000
 
-    ais: 15000
-    gps: 15000
+    ais: 15000                             # AIS gap threshold in milliseconds
+    gps: 15000                             # GPS gap threshold in milliseconds
 
-  # 11. ISP Field Validation Settings
+  # -------------------------------------------------------------
+  # 12. ISP Field Validation Settings
+  # -------------------------------------------------------------
+  # ISP (Instrument Source Packet) field validation configuration.
+  # These settings define allowed value ranges or fixed values for ISP header
+  # and data fields. Packets with invalid field values can be discarded based
+  # on the discard_packets flag. Validation types include:
+  # - fixed: Field must match exact value
+  # - range: Field must be within min/max range
+  # - allowed: Field must be one of the specified values
   isp_field_allowed_range:
     sar:
       discard_packets: true
@@ -863,50 +910,58 @@ S1:
         max: 255        # (2^8 - 1)
 
   # -------------------------------------------------------------
-  # 11. AIS Instrument Specific Configuration
+  # 13. AIS Instrument Specific Configuration
   # -------------------------------------------------------------
+  # AIS (Automatic Identification System) instrument-specific configuration.
+  # These parameters control AIS data processing and time gap detection.
   ais_instrument:
-  # in ms
-    time_gap_threshold:  60000
+    time_gap_threshold: 60000              # Time gap threshold in milliseconds
 
   # -------------------------------------------------------------
-  # 12. SAR Instrument Specific Configuration
+  # 14. SAR Instrument Specific Configuration
   # -------------------------------------------------------------
+  # SAR (Synthetic Aperture Radar) instrument-specific configuration.
+  # These parameters control SAR data processing, burst identification,
+  # compression, signal types, noise handling, and polarization mapping.
   sar_instrument:
 
-    # 11.2 Preamble length (t_pre) and Beam cycle time (t_beam)
-    # for BURST ID computation
+    # Preamble length (t_pre) and Beam cycle time (t_beam) for BURST ID computation
+    # These timing parameters are used to compute burst identifiers for SAR acquisitions.
     t_pre:
-      iw:
+      iw:                                  # IW (Interferometric Wide) preamble length in seconds
       - 2.299849
-      ew:
+      ew:                                  # EW (Extra Wide) preamble length in seconds
       - 2.299970
 
     t_beam:
-      iw:
+      iw:                                  # IW (Interferometric Wide) beam cycle time in seconds
       - 2.758273
-      ew:
+      ew:                                  # EW (Extra Wide) beam cycle time in seconds
       - 3.038376
 
+    # Compression Type Definitions
+    # Block Adaptive Quantization (BAQ) and Flexible Dynamic Block Adaptive Quantization (FDBAQ)
+    # compression mode codes for SAR data compression.
     compression_type:
       undefined_compression_type:
       - -1
-      bypass:
+      bypass:                              # Bypass compression (no compression)
       - 0
-      baq_3_bit:
+      baq_3_bit:                           # BAQ 3-bit compression
       - 3
-      baq_4_bit:
+      baq_4_bit:                           # BAQ 4-bit compression
       - 4
-      baq_5_bit:
+      baq_5_bit:                           # BAQ 5-bit compression
       - 5
-      fdbaq_0:
+      fdbaq_0:                             # FDBAQ mode 0
       - 12
-      fdbaq_1:
+      fdbaq_1:                             # FDBAQ mode 1
       - 13
-      fdbaq_2:
+      fdbaq_2:                             # FDBAQ mode 2
       - 14
 
-    # 11.4 Signal Type Definitions
+    # Signal Type Definitions
+    # Signal type codes for SAR data classification (noise, echo, calibration).
     signal_type:
       noise:
       - 1
@@ -920,7 +975,8 @@ S1:
       - 12
       - 15
 
-    # 11.5 Subswath ID Mapping for Echo Signal Types
+    # Subswath ID Mapping for Echo Signal Types
+    # Mapping of subswath identifiers to signal type codes for echo signal processing.
     echo_signal_type:
         s01:
         - 0
@@ -957,7 +1013,9 @@ S1:
         wv2:
         - 31
 
-    # 11.6 Noise Preamble and Postamble Lengths (in bytes)
+    # Noise Preamble and Postamble Lengths
+    # Length (in bytes) of noise preamble and postamble data for each SAR acquisition mode.
+    # These lengths are used for noise packet identification and processing.
     noise_preamble_length:
       iw:
       - 24
@@ -1034,7 +1092,11 @@ S1:
       en:
       - 8
 
-    # 11.7 Slice Configuration for Burst Processing
+    # Slice Configuration for Burst Processing
+    # Configuration for temporal slicing of SAR products into smaller segments.
+    # Slicing is useful for processing large acquisitions or creating time-bounded products.
+    # For burst-based modes (IW, EW), slicing is configured by number of bursts.
+    # For other modes, slicing is configured by time duration and overlap.
     slice:
       iw:
         enabled_slicing: false
@@ -1069,8 +1131,11 @@ S1:
         slice_length: 25000    # Slice duration in milliseconds
         slice_overlap: 7700    # Overlap duration in milliseconds
 
-    # 11.8 Polarisation Mapping Configuration
-    # (ecc_numbers, polarisation, rx_channel_id)
+    # Polarisation Mapping Configuration
+    # Mapping of ECC (Echo Calibration Channel) numbers, polarization codes,
+    # and RX (Receive) channel IDs for each SAR acquisition mode and polarization.
+    # Format: [ECC numbers list or single value, polarization code, RX channel ID]
+    # Polarization codes: 1=HH, 2=HV, 3=DH, 5=VH, 6=VV, 7=DV
     polarisation:
 
       s1_shh:
@@ -1408,7 +1473,9 @@ S1:
       en_dvv:
       - [[17, 31], 7, 0]
 
-    # 11.9. Noise Packet Retrieval
+    # Noise Packet Retrieval
+    # Configuration for enabling/disabling noise packet retrieval for each SAR acquisition mode.
+    # Noise packets are used for calibration and quality assessment.
     get_noise_packets:
       iw: true
       ew: true
@@ -1427,7 +1494,10 @@ S1:
       n6: true
       rf: true
 
-    # 11.10. Ranks Configuration
+    # Ranks Configuration
+    # Rank configuration for SAR acquisition modes. Rank values are used for
+    # burst identification and processing. Each entry defines the rank value
+    # for a specific combination of ECC number, swath number, and signal type.
     ranks:
       - ecc_number: 8
         swath_number: 10

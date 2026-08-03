@@ -12,63 +12,97 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-# -------------------------------------------------------------
-# S3 Processor Configuration
-# -------------------------------------------------------------
+# NOTE: taken from https://gitlab.eopf.copernicus.eu/L0/validation/-/blob/238a291d0114c3dac7680ada752613d4871c5cbd/s3/configs/s3_default_configuration.yaml
+
+# =============================================================
+# L0 Processor Configuration File for Sentinel-3
+# =============================================================
+# This configuration file defines all processing parameters for the
+# Sentinel-3 Level-0 (L0) data processor. It includes CADU processing,
+# packet routing, product types, and instrument-specific configurations
+# for OLCI, SLSTR, SRAL, MWR, GNSS, DORIS, NAVATT, and HKTM instruments.
+
 S3:
-   # ==========================================================
-  # Window Time
-  # ==========================================================
-  # set the window start stop time base on instrument
+  # -------------------------------------------------------------
+  # 1. Window Time Configuration
+  # -------------------------------------------------------------
+  # Optional time window configuration for selective processing of instrument data.
+  # When enabled, only data within the specified time range will be processed.
+  # This is useful for testing or reprocessing specific time segments.
+  # Fine precision specifies the number of bits used for fine time encoding.
   # window_time:
   #   olci:
   #         start_slice: '2024-04-11T12:44:23.808509'
   #         stop_slice: '2024-04-11T12:46:22.041641'
   #         fine_precision: 24
 
+  # -------------------------------------------------------------
+  # 2. Reed Solomon & CADU Configuration
+  # -------------------------------------------------------------
+  # CADU (Channel Access Data Unit) processing configuration including
+  # Reed-Solomon error correction, frame structure, and spacecraft identification.
+  # These parameters define the structure of the raw telemetry data format.
   cadu_processing_configuration:
-    cadu_size: 2044
-    syn_marker_size: 4
-    syn_marker_value: 449838109
-    annotation_size: 8
-    transfer_frame_header_size: 8
-    mpdu_header_size: 2
-    mpdu_packet_zone_size: 1902
-    rs_check_symbols_size: 128
-    use_dual_basis: true
-    spacecraft_id:
-      a: 243
-      b: 244
-      c: 203
-      d: 162
+    cadu_size: 2044                       # Total CADU size in bytes
+    syn_marker_size: 4                    # Synchronization marker size in bytes
+    syn_marker_value: 449838109           # Fixed synchronization marker value (hex: 0x1ACFFC0D)
+    annotation_size: 8                    # Annotation field size in bytes
+    transfer_frame_header_size: 8         # CADU transfer frame header size in bytes
+    mpdu_header_size: 2                   # MPDU (Multi-Packet Data Unit) header size in bytes
+    mpdu_packet_zone_size: 1902           # MPDU packet zone data field size in bytes
+    rs_check_symbols_size: 128            # Reed-Solomon error correction check symbols size in bytes
+    use_dual_basis: true                  # Use dual-basis Reed-Solomon decoding
+    spacecraft_id:                        # Spacecraft identifier per platform (A, B, C, D)
+      a: 243                              # Sentinel-3A spacecraft ID
+      b: 244                              # Sentinel-3B spacecraft ID
+      c: 203                              # Sentinel-3C spacecraft ID
+      d: 162                              # Sentinel-3D spacecraft ID
 
-  isp_primary_header_size: 6
+  # -------------------------------------------------------------
+  # 3. ISP Headers Information
+  # -------------------------------------------------------------
+  # Instrument Source Packet (ISP) header configuration.
+  # The primary header contains packet identification and timing information.
+  isp_primary_header_size: 6             # ISP primary header size in bytes
+
+  # -------------------------------------------------------------
+  # 4. Packet Store Identifiers
+  # -------------------------------------------------------------
+  # Packet store identifiers for routing telemetry data streams.
+  # Each packet store corresponds to a specific data source or instrument.
+  # These values are used to filter and route packets during processing.
   packet_stores:
-    navatt:
+    navatt:                               # NAVATT (Navigation and Attitude) packet store
     - 0
     # - 4
-    olci:
+    olci:                                 # OLCI (Ocean and Land Colour Instrument) packet store
     - 1
-    slstr:
+    slstr:                                # SLSTR (Sea and Land Surface Temperature Radiometer) packet store
     - 3
-    sral:
+    sral:                                 # SRAL (SAR Radar Altimeter) packet store
     - 5
-    mwr:
+    mwr:                                  # MWR (Micro Wave Radiometer) packet store
     - 7
-    gnss:
+    gnss:                                 # GNSS (Global Navigation Satellite System) packet store
     - 8
-    doris:
+    doris:                                # DORIS (Doppler Orbitography and Radiopositioning) packet store
     - 9
-    hktm:
+    hktm:                                 # HKTM (Housekeeping Telemetry) packet stores
     - 10
     - 11
-    idle:
+    idle:                                 # Idle packet stores
     - 6
     - 13
     - 14
     - 21
     - 63
 
+  # -------------------------------------------------------------
+  # 5. Additional General Properties
+  # -------------------------------------------------------------
+  # STAC (SpatioTemporal Asset Catalog) metadata properties for product generation.
+  # These properties define processing metadata, timeliness, platform information,
+  # and provider details for each product type (OLCI, SLSTR, SRAL, MWR, GNSS, DORIS, NAVATT, HKTM).
   properties:
     mwr:
       processing:expression: systematic
@@ -183,36 +217,42 @@ S3:
         roles:
           - producer
 
+  # -------------------------------------------------------------
+  # 6. APID Mapping Configuration
+  # -------------------------------------------------------------
+  # Application Process Identifier (APID) mapping for data routing.
+  # Each APID corresponds to a specific data stream or instrument.
+  # Product identifiers (e.g., S03NAT_IG) map to lists of APIDs for that product type.
   apid_mapping:
-    S03NAT_IG: [361]
-    S03MWR_IG: [1323]
-    S03GNS_IG: [
+    S03NAT_IG: [361]                      # NAVATT (Navigation and Attitude) APID
+    S03MWR_IG: [1323]                     # MWR (Micro Wave Radiometer) APID
+    S03GNS_IG: [                          # GNSS (Global Navigation Satellite System) APIDs
       772, 788, 774, 790, 780,
       796, 781, 797, 779, 795
       ]
-    S03SLS_IG: [
+    S03SLS_IG: [                          # SLSTR (Sea and Land Surface Temperature Radiometer) APIDs
       1184, 1185, 1186, 1187, 1188,
       1189, 1190, 1191, 1192, 1193,
       1194, 1195, 1196
       ]
-    S03OLCRIG: [1057, 1073, 1089, 1105, 1121]
-    S03OLC_IG: [1056, 1072, 1088, 1104, 1120]
-    S03SRCRIG: [
+    S03OLCRIG: [1057, 1073, 1089, 1105, 1121]  # OLCI Calibration ISP APIDs (cameras 1-5)
+    S03OLC_IG: [1056, 1072, 1088, 1104, 1120]  # OLCI Observation ISP APIDs (cameras 1-5)
+    S03SRCRIG: [                          # SRAL Calibration ISP APIDs
       1442, 1458, 1443, 1459, 1444,
       1460, 1445, 1461
       ]
-    S03ALT_IG: [
+    S03ALT_IG: [                          # SRAL Altimeter ISP APIDs (ACQ, ST, LRM ECHO, SAR ECHO)
       1440, 1456, 1441, 1457, 1446,
       1462, 1447, 1463
       ]
-    S03DONAIG: [1686, 1702, 1693, 1709, 1694, 1710]
-    S03DODOIG: [
+    S03DONAIG: [1686, 1702, 1693, 1709, 1694, 1710]  # DORIS Navigation APIDs
+    S03DODOIG: [                          # DORIS Doppler APIDs
       1681, 1697, 1682, 1698, 1685,
       1701, 1687, 1703, 1688, 1704,
       1689, 1705, 1690, 1706, 1691,
       1707, 1692, 1708
       ]
-    S03HKM_IG: [
+    S03HKM_IG: [                          # HKTM (Housekeeping Telemetry) APIDs - Platform and Payload
       65, 66, 69, 70, 81,
       82, 85, 86, 97, 98,
       99, 100, 101, 102, 113,
@@ -245,7 +285,7 @@ S3:
       533, 534, 545, 546, 1665,
       1666, 1681, 1682, 1697, 1698
     ]
-    S03HKM2IG: [
+    S03HKM2IG: [                          # HKTM (Housekeeping Telemetry) APIDs - Platform and Payload Diagnostic
       74, 75, 90, 91, 103,
       104, 106, 107, 119, 120,
       122, 123, 136, 138, 139,
@@ -267,87 +307,115 @@ S3:
       540, 542
     ]
 
+  # -------------------------------------------------------------
+  # 7. Output Product Types
+  # -------------------------------------------------------------
+  # Product type identifiers for output products generated by the L0 processor.
+  # These identifiers follow the Sentinel-3 product naming convention.
+  # Products are organized by instrument type and processing level (CADU, intermediate, final L0).
   output_product_types:
 
-    cadu_olci: S03OLCISP
-    cadu_slstr: S03SLSISP
-    cadu_hktm: S03HKMISP
-    cadu_sral: S03SRAISP
-    cadu_doris: S03DORISP
-    cadu_gnss: S03GNSISP
-    cadu_mwr: S03MWRISP
-    cadu_navatt: S03NATISP
+    cadu_olci: S03OLCISP                     # CADU-level OLCI ISP product
+    cadu_slstr: S03SLSISP                    # CADU-level SLSTR ISP product
+    cadu_hktm: S03HKMISP                     # CADU-level HKTM ISP product
+    cadu_sral: S03SRAISP                     # CADU-level SRAL ISP product
+    cadu_doris: S03DORISP                    # CADU-level DORIS ISP product
+    cadu_gnss: S03GNSISP                     # CADU-level GNSS ISP product
+    cadu_mwr: S03MWRISP                      # CADU-level MWR ISP product
+    cadu_navatt: S03NATISP                   # CADU-level NAVATT ISP product
 
-    # TF product
-    hktm_tf: S03HKMRAW
+    # Transfer Frame product
+    hktm_tf: S03HKMRAW                       # HKTM Transfer Frame raw product
 
     # Intermediate products types
-    S03DORISP:
-      doris_nav: S03DONAIG
-      doris_dop: S03DODOIG
-    S03GNSISP:
-      gnss: S03GNS_IG
-    S03MWRISP:
-      mwr: S03MWR_IG
-    S03SRAISP:
-      sral_sra: S03ALT_IG
-      sral_cal: S03SRCRIG
-    S03SLSISP:
-      slstr: S03SLS_IG
-    S03OLCISP:
-      olci_efr: S03OLC_IG
-      olci_cal: S03OLCRIG
-    S03NATISP:
-      navatt: S03NAT_IG
-    S03HKMISP:
-      hkm_l0: S03HKM_IG
-      hkm_l0_2: S03HKM2IG
+    # Intermediate products generated during processing before final Level-0 products.
+    S03DORISP:                               # DORIS intermediate product types
+      doris_nav: S03DONAIG                   # DORIS Navigation intermediate product
+      doris_dop: S03DODOIG                   # DORIS Doppler intermediate product
+    S03GNSISP:                               # GNSS intermediate product types
+      gnss: S03GNS_IG                        # GNSS intermediate product
+    S03MWRISP:                               # MWR intermediate product types
+      mwr: S03MWR_IG                         # MWR intermediate product
+    S03SRAISP:                               # SRAL intermediate product types
+      sral_sra: S03ALT_IG                    # SRAL Altimeter intermediate product
+      sral_cal: S03SRCRIG                    # SRAL Calibration intermediate product
+    S03SLSISP:                               # SLSTR intermediate product types
+      slstr: S03SLS_IG                       # SLSTR intermediate product
+    S03OLCISP:                               # OLCI intermediate product types
+      olci_efr: S03OLC_IG                    # OLCI Earth Frame Reference intermediate product
+      olci_cal: S03OLCRIG                    # OLCI Calibration intermediate product
+    S03NATISP:                               # NAVATT intermediate product types
+      navatt: S03NAT_IG                      # NAVATT intermediate product
+    S03HKMISP:                               # HKTM intermediate product types
+      hkm_l0: S03HKM_IG                      # HKTM Level-0 intermediate product (Platform and Payload)
+      hkm_l0_2: S03HKM2IG                    # HKTM Level-0 intermediate product (Platform and Payload Diagnostic)
 
-    S03OLCRIG:
-      - S03OLCR0G
-      - S03OLCR1G
+    # OLCI Calibration product types
+    S03OLCRIG:                               # OLCI Calibration intermediate product types
+      - S03OLCR0G                            # OLCI Calibration product type 0
+      - S03OLCR1G                            # OLCI Calibration product type 1
 
-    # Final L0 product types
-    S03DONAIG: S03DORNAV
-    S03DODOIG: S03DORDOP
+    # Final Level-0 products generated after all processing steps.
+    S03DONAIG: S03DORNAV                     # DORIS Navigation Level-0 product
+    S03DODOIG: S03DORDOP                     # DORIS Doppler Level-0 product
+    S03GNS_IG: S03GNSL0_                     # GNSS Level-0 product
+    S03MWR_IG: S03MWRL0_                     # MWR Level-0 product
+    S03SLS_IG: S03SLSL0_                     # SLSTR Level-0 product
+    S03OLC_IG: S03OLCL0_                     # OLCI Level-0 product
+    S03OLCR0G: S03OLCCR0                     # OLCI Calibration Level-0 product type 0
+    S03OLCR1G: S03OLCCR1                     # OLCI Calibration Level-0 product type 1
+    S03NAT_IG: S03NATL0_                     # NAVATT Level-0 product
+    S03ALT_IG: S03SRAL0_                     # SRAL Altimeter Level-0 product
+    S03SRCRIG: S03SRAL0C                     # SRAL Calibration Level-0 product
+    S03HKM_IG: S03HKML0_                     # HKTM Level-0 product (Platform and Payload)
+    S03HKM2IG: S03HKM2L0                     # HKTM Level-0 product (Platform and Payload Diagnostic)
 
-    S03GNS_IG: S03GNSL0_
-    S03MWR_IG: S03MWRL0_
-    S03SLS_IG: S03SLSL0_
-    S03OLC_IG: S03OLCL0_
-    S03OLCR0G: S03OLCCR0
-    S03OLCR1G: S03OLCCR1
-    S03NAT_IG: S03NATL0_
-    S03ALT_IG: S03ALTL0_
-    S03SRCRIG: S03SRCRL0
-    S03HKM_IG: S03HKML0_
-    S03HKM2IG: S03HKM2L0
+  # -------------------------------------------------------------
+  # 8. Operational Mode
+  # -------------------------------------------------------------
+  # Strict mode configuration for enhanced validation and error handling.
+  # When enabled, strict mode enforces additional validation checks and
+  # may reject data that would otherwise be processed with warnings.
+  strict_mode: false                          # Enable strict validation mode (processor fails if degraded packet found)
 
-  # Time in seconds for granules generation window
+  # -------------------------------------------------------------
+  # 9. Granules Generation Time
+  # -------------------------------------------------------------
+  # Time window (in seconds) for granule generation.
+  # Granules are generated based on these time intervals for each product type.
   granules_generation_time:
-    S03OLC_IG: 120
-    S03ALT_IG: 600
-    S03SLS_IG: 300
-  # Apply product specific sorting
+    S03OLC_IG: 120                           # OLCI granule generation time window (seconds)
+    S03ALT_IG: 600                           # SRAL Altimeter granule generation time window (seconds)
+    S03SLS_IG: 300                           # SLSTR granule generation time window (seconds)
+
+  # -------------------------------------------------------------
+  # 10. Product-Specific Sorting
+  # -------------------------------------------------------------
+  # Configuration for applying instrument-specific sorting algorithms.
+  # Sorting ensures proper ordering of packets within products.
   sorting:
-    slstr_specific: true
-    olci_cal_specific: true
+    slstr_specific: true                     # Enable SLSTR-specific sorting
+    olci_cal_specific: true                  # Enable OLCI calibration-specific sorting
 
-  # OLCI Calibration
+  # -------------------------------------------------------------
+  # 11. OLCI Calibration Configuration
+  # -------------------------------------------------------------
+  # OLCI (Ocean and Land Colour Instrument) spectral calibration configuration.
+  # These parameters control calibration sequence processing and spectral configuration.
   spectral_configuration:
-    first_sequence_code: 101
-    spectral_sequence:
-      - false
-      - true
-      - true
-      - false
-      - false
-      - false
-      - true
-      - false
-      - true
+    first_sequence_code: 101                # First sequence code for OLCI calibration sequences
+    spectral_sequence:                      # Spectral sequence flags (enabled/disabled for each sequence)
+      - false                               # Sequence 0 (disabled)
+      - true                                # Sequence 1 (enabled)
+      - true                                # Sequence 2 (enabled)
+      - false                               # Sequence 3 (disabled)
+      - false                               # Sequence 4 (disabled)
+      - false                               # Sequence 5 (disabled)
+      - true                                # Sequence 6 (enabled)
+      - false                               # Sequence 7 (disabled)
+      - true                                # Sequence 8 (enabled)
 
-    sequence_description:
+    sequence_description:                   # OLCI calibration sequence descriptions
       S01:
         id: 101
         sequence: S01
@@ -394,161 +462,170 @@ S3:
         triggers: NONE
         description: "OBSERVATION of atmospheric absorption lines"
 
-  # Merge and consolidation parameters
+  # -------------------------------------------------------------
+  # 12. Merge and Consolidation Parameters
+  # -------------------------------------------------------------
+  # Configuration for merging and consolidating granules during processing.
+  # Granules within the specified merge distance are combined into larger products.
+  # Minimum granule length ensures small gaps or short acquisitions are handled correctly.
   merge_and_consolidation:
-    # OLCI
+    # OLCI (Ocean and Land Colour Instrument) merge and consolidation parameters
     olci:
-      # Activated
-      enabled: true
-      # Minimum length of a tolorated granule in seconds
-      min_granule_length: 16
-      # Maximum distance between granules to be merged in seconds
-      max_merge_distance: 360
-      # Seasonnal Effect Gap in secondes
-      seasonnal_effect_gap: 2700
-    # SLSTR
+      enabled: true                        # Enable merge and consolidation for OLCI
+      min_granule_length: 16               # Minimum length of a tolerated granule in seconds
+      max_merge_distance: 360              # Maximum distance between granules to be merged in seconds
+      seasonnal_effect_gap: 2700           # Seasonal effect gap in seconds
+    # SLSTR (Sea and Land Surface Temperature Radiometer) merge and consolidation parameters
     slstr:
-      # Activated
-      enabled: true
-      # Minimum length of a tolorated granule in seconds
-      min_granule_length: 155
-      # Maximum distance between granules to be merged in seconds
-      max_merge_distance: 900
-    # SRAL
+      enabled: true                        # Enable merge and consolidation for SLSTR
+      min_granule_length: 155              # Minimum length of a tolerated granule in seconds
+      max_merge_distance: 900              # Maximum distance between granules to be merged in seconds
+    # SRAL (SAR Radar Altimeter) merge and consolidation parameters
     sral:
-      # Activated
-      enabled: true
-      # Minimum length of a tolorated granule in seconds
-      min_granule_length: 16
-      # Maximum distance between granules to be merged in seconds
-      max_merge_distance: 1200
+      enabled: true                        # Enable merge and consolidation for SRAL
+      min_granule_length: 16               # Minimum length of a tolerated granule in seconds
+      max_merge_distance: 1200             # Maximum distance between granules to be merged in seconds
 
   # -------------------------------------------------------------
-  # Quality Checks Configuration
+  # 13. Quality Checks Configuration
   # -------------------------------------------------------------
+  # Configuration for quality checks and validation during processing.
+  # These checks include ISP field validation, CRC checks, gap detection,
+  # corrupted packet removal, and duplicate packet removal.
   quality_checks_configuration:
-    # Allowed range for each field
+    # ISP Field Allowed Range
+    # Allowed value ranges or fixed values for ISP header and data fields.
+    # Packets with invalid field values can be discarded based on the discard_packets flag.
+    # Validation types include:
+    # - range: Field must be within min/max range
     isp_field_allowed_range:
-      common:
-        discard_packets: true
+      common:                               # Common ISP field validation (applied to all instruments)
+        discard_packets: true               # Discard packets with invalid field values
         # Primary Header
-        packet_version:
+        packet_version:                     # Packet version number validation
           type: range
           min: 0
-          max: 7           # (2^3 - 1)
-        packet_type:
+          max: 7                            # (2^3 - 1)
+        packet_type:                        # Packet type validation
           type: range
           min: 0
-          max: 1           # (2^1 - 1)
-        header_flag:
+          max: 1                            # (2^1 - 1)
+        header_flag:                        # Header flag validation
           type: range
           min: 0
-          max: 1           # (2^1 - 1)
-        application_process_identifier:
+          max: 1                            # (2^1 - 1)
+        application_process_identifier:    # APID (Application Process Identifier) validation
           type: range
           min: 0
-          max: 2047        # (2^11 - 1)
-        packet_category:
+          max: 2047                         # (2^11 - 1)
+        packet_category:                    # Packet category validation
           type: range
           min: 0
-          max: 15          # (2^4 - 1)
-        sequence_flag:
+          max: 15                           # (2^4 - 1)
+        sequence_flag:                      # Sequence flag validation
           type: range
           min: 0
-          max: 3           # (2^2 - 1)
-        packet_sequence_count:
+          max: 3                            # (2^2 - 1)
+        packet_sequence_count:             # Packet sequence count validation
           type: range
           min: 0
-          max: 16383       # (2^14 - 1)
-        packet_data_length:
+          max: 16383                        # (2^14 - 1)
+        packet_data_length:                 # Packet data length validation
           type: range
-          min: 14          # (Secondary Header(12b) + CRC (2b))
-          max: 65535       # (2^16 - 1)
+          min: 14                           # Minimum: Secondary Header (12 bytes) + CRC (2 bytes)
+          max: 65535                        # (2^16 - 1)
         # Secondary Header
-        packet_service_type:
+        packet_service_type:                # Packet service type validation
           type: range
           min: 0
-          max: 255         # (2^8 - 1)
-        packet_subtype:
+          max: 255                          # (2^8 - 1)
+        packet_subtype:                     # Packet subtype validation
           type: range
           min: 0
-          max: 255         # (2^8 - 1)
-        coarse_time:
+          max: 255                          # (2^8 - 1)
+        coarse_time:                        # Coarse time validation
           type: range
           min: 0
-          max: 4294967295  # (2^32 - 1)
-        fine_time:
+          max: 4294967295                   # (2^32 - 1)
+        fine_time:                          # Fine time validation
           type: range
           min: 0
-          max: 16777215    # (2^24 - 1)
-        time_status:
+          max: 16777215                     # (2^24 - 1)
+        time_status:                        # Time status validation
           type: range
           min: 0
-          max: 255         # (2^8 - 1)
+          max: 255                          # (2^8 - 1)
 
     # Check CRC
-    check_crc:
-      S03NAT_IG: true
-      S03MWR_IG: true
-      S03GNS_IG: true
-      S03DODOIG: true
-      S03DONAIG: true
-      S03HKM_IG: true
-      S03HKM2IG: true
-      S03SLS_IG: true
-      S03OLC_IG: true
-      S03OLCRIG: true
-      S03OLCR0G: true
-      S03OLCR1G: true
-      S03ALT_IG: true
-      S03SRCRIG: true
+    # Cyclic Redundancy Check (CRC) validation configuration.
+    # When enabled, CRC checks verify packet integrity during processing.
+    check_crc:                              # Enable CRC validation for each product type
+      S03NAT_IG: true                       # Enable CRC check for NAVATT products
+      S03MWR_IG: true                       # Enable CRC check for MWR products
+      S03GNS_IG: true                       # Enable CRC check for GNSS products
+      S03DODOIG: true                       # Enable CRC check for DORIS Doppler products
+      S03DONAIG: true                       # Enable CRC check for DORIS Navigation products
+      S03HKM_IG: true                       # Enable CRC check for HKTM products (Platform and Payload)
+      S03HKM2IG: true                       # Enable CRC check for HKTM products (Platform and Payload Diagnostic)
+      S03SLS_IG: true                       # Enable CRC check for SLSTR products
+      S03OLC_IG: true                       # Enable CRC check for OLCI Observation products
+      S03OLCRIG: true                       # Enable CRC check for OLCI Calibration products
+      S03ALT_IG: true                       # Enable CRC check for SRAL Altimeter products
+      S03SRCRIG: true                       # Enable CRC check for SRAL Calibration products
+
     # Check Gaps
-    check_gaps:
-      S03NAT_IG: true
-      S03MWR_IG: true
-      S03GNS_IG: true
-      S03DODOIG: true
-      S03DONAIG: true
-      S03HKM_IG: true
-      S03HKM2IG: true
-      S03SLS_IG: true
-      S03OLC_IG: true
-      S03OLCRIG: true
-      S03OLCR0G: true
-      S03OLCR1G: true
-      S03ALT_IG: true
-      S03SRCRIG: true
+    # Gap detection configuration for identifying missing packets in data streams.
+    # When enabled, gaps between consecutive packets are detected and reported.
+    check_gaps:                             # Enable gap detection for each product type
+      S03NAT_IG: true                       # Enable gap check for NAVATT products
+      S03MWR_IG: true                       # Enable gap check for MWR products
+      S03GNS_IG: true                       # Enable gap check for GNSS products
+      S03DODOIG: true                       # Enable gap check for DORIS Doppler products
+      S03DONAIG: true                       # Enable gap check for DORIS Navigation products
+      S03HKM_IG: true                       # Enable gap check for HKTM products (Platform and Payload)
+      S03HKM2IG: true                       # Enable gap check for HKTM products (Platform and Payload Diagnostic)
+      S03SLS_IG: true                       # Enable gap check for SLSTR products
+      S03OLC_IG: true                       # Enable gap check for OLCI Observation products
+      S03OLCRIG: true                       # Enable gap check for OLCI Calibration products
+      S03ALT_IG: true                       # Enable gap check for SRAL Altimeter products
+      S03SRCRIG: true                       # Enable gap check for SRAL Calibration products
+
     # Remove corrupted packets
-    remove_corrupted_packets:
-      S03NAT_IG: true
-      S03MWR_IG: true
-      S03GNS_IG: true
-      S03DODOIG: true
-      S03DONAIG: true
-      S03HKM_IG: true
-      S03HKM2IG: true
-      S03SLS_IG: true
-      S03OLC_IG: true
-      S03OLCRIG: true
-      S03OLCR0G: true
-      S03OLCR1G: true
-      S03ALT_IG: true
-      S03SRCRIG: true
+    # Configuration for automatically removing corrupted packets after CRC check.
+    # Corrupted packets are identified by failed CRC validation.
+    remove_corrupted_packets:               # Remove corrupted packets for each product type
+      S03NAT_IG: true                       # Remove corrupted NAVATT packets
+      S03MWR_IG: true                       # Remove corrupted MWR packets
+      S03GNS_IG: true                       # Remove corrupted GNSS packets
+      S03DODOIG: true                       # Remove corrupted DORIS Doppler packets
+      S03DONAIG: true                       # Remove corrupted DORIS Navigation packets
+      S03HKM_IG: true                       # Remove corrupted HKTM packets (Platform and Payload)
+      S03HKM2IG: true                       # Remove corrupted HKTM packets (Platform and Payload Diagnostic)
+      S03SLS_IG: true                       # Remove corrupted SLSTR packets
+      S03OLC_IG: true                       # Remove corrupted OLCI Observation packets
+      S03OLCRIG: true                       # Remove corrupted OLCI Calibration packets
+      S03ALT_IG: true                       # Remove corrupted SRAL Altimeter packets
+      S03SRCRIG: true                       # Remove corrupted SRAL Calibration packets
+
     # Remove duplicated packets
-    remove_duplicated_packets:
-      S03NAT_IG: true
-      S03MWR_IG: true
-      S03GNS_IG: true
-      S03DODOIG: true
-      S03DONAIG: true
-      S03HKM_IG: true
-      S03HKM2IG: true
-      S03SLS_IG: true
-      S03OLC_IG: true
-      S03OLCRIG: true
-      S03OLCR0G: true
-      S03OLCR1G: true
-      S03ALT_IG: true
-      S03SRCRIG: true
-    # Maximim threashold of errors allowed
-    max_format_errors: 1
+    # Configuration for removing duplicate packets during processing.
+    # Duplicate packets are identified by matching APID and sequence count.
+    # Enabling this reduces data redundancy and improves processing efficiency.
+    remove_duplicated_packets:              # Remove duplicate packets for each product type
+      S03NAT_IG: true                       # Remove duplicate NAVATT packets
+      S03MWR_IG: true                       # Remove duplicate MWR packets
+      S03GNS_IG: true                       # Remove duplicate GNSS packets
+      S03DODOIG: true                       # Remove duplicate DORIS Doppler packets
+      S03DONAIG: true                       # Remove duplicate DORIS Navigation packets
+      S03HKM_IG: true                       # Remove duplicate HKTM packets (Platform and Payload)
+      S03HKM2IG: true                       # Remove duplicate HKTM packets (Platform and Payload Diagnostic)
+      S03SLS_IG: true                       # Remove duplicate SLSTR packets
+      S03OLC_IG: true                       # Remove duplicate OLCI Observation packets
+      S03OLCRIG: true                       # Remove duplicate OLCI Calibration packets
+      S03ALT_IG: true                       # Remove duplicate SRAL Altimeter packets
+      S03SRCRIG: true                       # Remove duplicate SRAL Calibration packets
+
+    # Maximum threshold of errors allowed
+    # Maximum number of format errors allowed before processing fails.
+    # This threshold helps prevent processing from failing due to minor data quality issues.
+    max_format_errors: 1                    # Maximum number of format errors allowed
