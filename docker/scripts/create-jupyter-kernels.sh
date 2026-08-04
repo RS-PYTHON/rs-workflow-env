@@ -61,6 +61,7 @@ for dep in $deps; do
         "dask[complete]==${dask_version}" \
         dask-gateway=="${DASK_GATEWAY_TAG}" \
         prefect=="${PREFECT_TAG}" \
+        python-socks \
         ipywidgets
 
     # Install the Jupyter kernel
