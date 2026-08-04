@@ -30,9 +30,11 @@ RUN chmod 755 /usr/local/bin/layer-cleanup.sh
 RUN \
     apt update && \
     apt upgrade -y && \
-    pip install -U pip && \
+    pip install -U pip==26.1.2 && \
     layer-cleanup.sh && \
     rm -f /usr/local/bin/layer-cleanup.sh
+# NOTE: pip version forced to 26.1.2 because of a bug using pip 26.2, see https://pforge-exchange2.astrium.eads.net/jira/browse/RSPY-1131
+# Please remove hardcoded version when a fixed version of pip is available
 
 # Set labels based on the Open Containers Initiative (OCI):
 # https://github.com/opencontainers/image-spec/blob/main/annotations.md#pre-defined-annotation-keys
