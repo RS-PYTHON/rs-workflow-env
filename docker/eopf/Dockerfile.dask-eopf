@@ -76,7 +76,7 @@ RUN restore-apt.sh && \
     layer-cleanup.sh
 
 # Install and auto configure opentelemetry
-RUN pip install --only-binary=:all: opentelemetry-distro opentelemetry-exporter-otlp "opentelemetry-instrumentation-eopf>=0.2.7" && \
+RUN pip install --only-binary=:all: opentelemetry-distro opentelemetry-exporter-otlp "opentelemetry-instrumentation-eopf>=0.2.8" && \
     opentelemetry-bootstrap -a install && \
     layer-cleanup.sh
 
