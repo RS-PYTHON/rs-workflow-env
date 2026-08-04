@@ -60,6 +60,7 @@ for dep in $deps; do
         ipykernel \
         "dask[complete]==${dask_version}" \
         dask-gateway=="${DASK_GATEWAY_TAG}" \
+        prefect=="${PREFECT_TAG}" \
         ipywidgets
 
     # Install the Jupyter kernel
