@@ -24,14 +24,17 @@ deps:
 
   - python_version: "3.11.7"
     dask_version: "2024.5.2"
+    cpm_version: "2.6.4"
     used_by: [dpr]
 
   - python_version: "3.11.7"
     dask_version: "2026.1.2"
+    cpm_version: "2.8.1"
     used_by: [dpr]
 
   - python_version: "3.13.12"
     dask_version: "2026.3.0"
+    cpm_version: "3.0.0rc4"
     used_by: [dpr]
 
   - python_version: "3.13.12"
