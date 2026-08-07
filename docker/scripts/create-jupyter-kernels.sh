@@ -47,6 +47,7 @@ for dep in $deps; do
     python_version=$(jq -r '."python_version"' <<< "$dep")
     dask_version=$(jq -r '."dask_version"' <<< "$dep")
     dep_name="py${python_version}-${dask_version}"
+    used_by=$(jq -r '.used_by[]' <<< "${dep}")
 
     # Create the conda environment
     conda create -y -n "$dep_name" python="$python_version"
@@ -63,6 +64,16 @@ for dep in $deps; do
         prefect=="${PREFECT_TAG}" \
         python-socks \
         ipywidgets
+    if [[ ${used_by} == "dpr" ]]; then
+        cpm_version=$(jq -r '."cpm_version"' <<< "${dep}")
+        # asciitree (pulled in by zarr, a eopf dependency) only ships a source distribution on
+        # PyPI, so it must be excluded from the --only-binary :all: constraint.
+        pip install --only-binary :all: --no-binary asciitree \
+            eopf=="${cpm_version}" \
+            sentineltoolbox \
+            matplotlib \
+            cartopy
+    fi
 
     # Install the Jupyter kernel
     python -m ipykernel install --name "$dep_name"
