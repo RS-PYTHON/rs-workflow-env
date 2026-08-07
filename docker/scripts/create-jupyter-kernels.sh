@@ -55,9 +55,11 @@ for dep in $deps; do
     conda init bash zsh && source ~/.zshrc # note: sourcing ~/.bashrc doesn't work because we're in non-interactive mode
     conda activate "$dep_name"
 
-    # Install dependencies
+    # Install dependencies.
+    # --no-compile skips generating .pyc bytecode caches: it's regenerated lazily on first import,
+    # and skipping it shaves a meaningful chunk off these heavy, duplicated-per-kernel installs.
     pip install --only-binary :all: -U pip
-    pip install --only-binary :all: \
+    pip install --only-binary :all: --no-compile \
         ipykernel \
         "dask[complete]==${dask_version}" \
         dask-gateway=="${DASK_GATEWAY_TAG}" \
@@ -68,7 +70,7 @@ for dep in $deps; do
         cpm_version=$(jq -r '."cpm_version"' <<< "${dep}")
         # asciitree (pulled in by zarr, a eopf dependency) only ships a source distribution on
         # PyPI, so it must be excluded from the --only-binary :all: constraint.
-        pip install --only-binary :all: --no-binary asciitree \
+        pip install --only-binary :all: --no-binary asciitree --no-compile \
             eopf=="${cpm_version}" \
             sentineltoolbox \
             matplotlib \
