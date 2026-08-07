@@ -66,7 +66,9 @@ for dep in $deps; do
         ipywidgets
     if [[ ${used_by} == "dpr" ]]; then
         cpm_version=$(jq -r '."cpm_version"' <<< "${dep}")
-        pip install --only-binary :all: \
+        # asciitree (pulled in by zarr, a eopf dependency) only ships a source distribution on
+        # PyPI, so it must be excluded from the --only-binary :all: constraint.
+        pip install --only-binary :all: --no-binary asciitree \
             eopf=="${cpm_version}" \
             sentineltoolbox \
             matplotlib \
