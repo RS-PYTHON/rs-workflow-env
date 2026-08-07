@@ -92,7 +92,7 @@ jobs:
     outputs:
       base: ${{ steps.filter.outputs.base }}
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v7
       - uses: dorny/paths-filter@v4
         id: filter
         with:
@@ -139,7 +139,7 @@ jobs:
       docker_images: ${{ steps.publish-docker.outputs.docker_images }}
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v6
+        uses: actions/checkout@v7
       - id: publish-docker
         uses: RS-PYTHON/actions/.github/actions/publish-docker@develop
         with:
@@ -205,7 +205,7 @@ jobs:
     if: github.actor != 'dependabot[bot]' # ignore pull requests by github bot
     needs: [set-binary-env]
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v7
         with:
           repository: RS-PYTHON/rs-client-libraries
 
@@ -222,8 +222,10 @@ jobs:
     permissions:
       security-events: write # needed for github/codeql-action/upload-sarif
       packages: write # needed for 'docker push'
+    outputs:
+      docker_images: ${{ steps.publish-docker.outputs.docker_images }}
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v7
       - name: Copy common requirements
         id: copy_common_req
         shell: bash
@@ -269,3 +271,34 @@ jobs:
           github_token: ${{ secrets.GITHUB_TOKEN }}
           trivy_skip_dirs: ${{ env.TRIVY_SKIP_DIRS }}
           trivy_skip_files: ${{ env.TRIVY_SKIP_FILES }}
+
+  test-dpr-kernel-imports:
+    name: Test dpr kernel imports
+    runs-on: ubuntu-latest
+    needs: [publish-docker]
+    permissions:
+      packages: read # needed to pull the just-built image
+    steps:
+      - uses: actions/checkout@v7
+      - name: Log in to GitHub Container Registry
+        uses: docker/login-action@b45d80f862d83dbcd57f89517bcf500b2ab88fb2
+        with:
+          registry: ${{ env.DOCKER_REGISTRY }}
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+      - name: Pull the built Jupyter image
+        id: image
+        env:
+          DOCKER_IMAGES: ${{ needs.publish-docker.outputs.docker_images }}
+        run: |
+          set -x
+          image="${DOCKER_IMAGES%%,*}" # first of the comma-separated list
+          docker pull "$image"
+          echo "image=$image" >> "$GITHUB_OUTPUT"
+      - name: Run the import-check notebook in every dpr kernel
+        run: |
+          ./docker/scripts/test-dpr-kernel-imports.sh \
+            "${{ steps.image.outputs.image }}" \
+            ./docker/scripts/dask-cluster-versions.yml \
+            ./docker/scripts/test-dpr-kernel-imports-cpm2.ipynb \
+            ./docker/scripts/test-dpr-kernel-imports-cpm3.ipynb

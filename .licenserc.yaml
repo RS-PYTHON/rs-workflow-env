@@ -25,6 +25,7 @@ header:
     - '**/*.lock'
     - '**/*.md'
     - '**/*.raw'
+    - '**/*.ipynb'
     - '**/Dockerfile*'
     - '**/.gitignore'
     - '.gitmodules'

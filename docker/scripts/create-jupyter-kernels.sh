@@ -38,7 +38,7 @@ cat "$deps_file"
 apt update && apt install -y jq
 
 # Install yq (https://github.com/mikefarah/yq#wget)
-wget --max-redirect=1 https://github.com/mikefarah/yq/releases/download/v4.49.2/yq_linux_amd64 -O /usr/local/bin/yq
+wget --max-redirect=1 https://github.com/mikefarah/yq/releases/download/v4.53.3/yq_linux_amd64 -O /usr/local/bin/yq
 chmod +x /usr/local/bin/yq
 
 # For each set of python/dask versions
