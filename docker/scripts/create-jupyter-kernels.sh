@@ -75,6 +75,7 @@ for dep in $deps; do
             sentineltoolbox \
             matplotlib \
             cartopy \
+            pystac-client \
             boto3
     fi
 
