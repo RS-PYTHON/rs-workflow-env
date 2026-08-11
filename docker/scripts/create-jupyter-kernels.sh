@@ -74,7 +74,8 @@ for dep in $deps; do
             eopf=="${cpm_version}" \
             sentineltoolbox \
             matplotlib \
-            cartopy
+            cartopy \
+            boto3
     fi
 
     # Install the Jupyter kernel
