@@ -75,6 +75,10 @@ for dep in $deps; do
             sentineltoolbox \
             matplotlib \
             cartopy \
+            shapely \
+            xarray-spatial \
+            xarray-spatial[plot] \
+            xarray-spatial[vector] \
             pystac-client \
             boto3
     fi
