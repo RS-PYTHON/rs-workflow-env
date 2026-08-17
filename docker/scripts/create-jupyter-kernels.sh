@@ -80,6 +80,7 @@ for dep in $deps; do
             xarray-spatial[plot] \
             xarray-spatial[vector] \
             pystac-client \
+            Bottleneck \
             boto3
     fi
 
