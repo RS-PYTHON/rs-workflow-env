@@ -70,18 +70,7 @@ for dep in $deps; do
         cpm_version=$(jq -r '."cpm_version"' <<< "${dep}")
         # asciitree (pulled in by zarr, a eopf dependency) only ships a source distribution on
         # PyPI, so it must be excluded from the --only-binary :all: constraint.
-        pip install --only-binary :all: --no-binary asciitree --no-compile \
-            eopf=="${cpm_version}" \
-            sentineltoolbox \
-            matplotlib \
-            cartopy \
-            shapely \
-            xarray-spatial \
-            xarray-spatial[plot] \
-            xarray-spatial[vector] \
-            pystac-client \
-            Bottleneck \
-            boto3
+        pip install --only-binary :all: --no-binary asciitree --no-compile eopf=="${cpm_version}"
     fi
 
     # Install the Jupyter kernel

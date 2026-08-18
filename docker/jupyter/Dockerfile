@@ -78,15 +78,21 @@ RUN conda update -n base -c conda-forge conda && \
     zarr \
     scipy \
     xarray \
+    xarray-spatial \
+    xarray-spatial[plot] \
+    xarray-spatial[vector] \
     netCDF4 \
     h5netcdf \
     geopandas \
     matplotlib \
     nc-time-axis \
+    sentineltoolbox \
     pooch \
     fsspec \
     cartopy \
     seaborn \
+    shapely \
+    Bottleneck \
     stac-api-validator && \
     pip install /opt/*.whl && \
     conda clean --all --yes && \
