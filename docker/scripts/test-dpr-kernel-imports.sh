@@ -35,7 +35,7 @@ fi
 
 # Install yq (https://github.com/mikefarah/yq#wget)
 curl --proto '=https' --proto-redir '=https' --max-redirs 1 --fail --silent --show-error --location \
-    https://github.com/mikefarah/yq/releases/download/v4.53.3/yq_linux_amd64 -o /usr/local/bin/yq
+    https://github.com/mikefarah/yq/releases/download/v4.53.6/yq_linux_amd64 -o /usr/local/bin/yq
 chmod +x /usr/local/bin/yq
 
 # dpr kernels are dependency sets whose "used_by" list contains "dpr" (see dask-cluster-versions.yml)
