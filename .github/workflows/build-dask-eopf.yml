@@ -394,7 +394,7 @@ jobs:
 
           # Get the version of the python package from inside the docker image.
           # We will use is as an additional docker tag, only when pushing the 'latest' tag.
-          if [[ ! " $DOCKER_TAGS " =~ latest ]]; then
+          if [[ " $DOCKER_TAGS " =~ latest ]]; then
             python_tag=$(\
               docker run --rm \
               --entrypoint python \
