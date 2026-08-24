@@ -35,18 +35,18 @@ on:
   pull_request: # pull requests
     types: [opened, synchronize, reopened]
     paths:
+      - '.github/workflows/build-dask-eopf.yml'
       - 'docker/base/**'
       - 'docker/eopf/**'
       - 'docker/scripts/**'
-      - '.github/workflows/build-dask-eopf.yml'
   push:
     branches: [develop, main] # pushes on the 'develop' or 'main' branches
     tags: ['**'] # new git tags (including hierarchical tags like v1.0/beta)
     paths:
+      - '.github/workflows/build-dask-eopf.yml'
       - 'docker/base/**'
       - 'docker/eopf/**'
       - 'docker/scripts/**'
-      - '.github/workflows/build-dask-eopf.yml'
   workflow_dispatch: # manual trigger
     inputs:
       build_base_images:
@@ -115,6 +115,7 @@ jobs:
               - docker/base/Dockerfile.dask.local
               - docker/scripts/dask-cluster-versions.yml
             common:
+              - .github/workflows/build-dask-eopf.yml
               - docker/eopf/build_dask_eopf.py
               - docker/eopf/Dockerfile.dask-eopf
               - docker/eopf/Dockerfile.dask-eopf-localcluster
@@ -264,6 +265,7 @@ jobs:
                 (inputs.processor == 'cpm2') ||
                 (inputs.processor == 'all')
               ))}}
+            python-package: eopf
           - proc: cpm3
             proccondition: ${{
               ((github.event_name != 'workflow_dispatch') && (
@@ -275,6 +277,7 @@ jobs:
                 (inputs.processor == 'cpm3') ||
                 (inputs.processor == 'all')
               ))}}
+            python-package: eopf
           - proc: l0
             proccondition: ${{
               ((github.event_name != 'workflow_dispatch') && (
@@ -286,6 +289,7 @@ jobs:
                 (inputs.processor == 'l0') ||
                 (inputs.processor == 'all')
               ))}}
+            python-package: l0
           - proc: s1ard
             proccondition: ${{
               ((github.event_name != 'workflow_dispatch') && (
@@ -297,6 +301,7 @@ jobs:
                 (inputs.processor == 's1ard') ||
                 (inputs.processor == 'all')
               ))}}
+            python-package: s1-ard
           - proc: s3olci
             proccondition: ${{
               ((github.event_name != 'workflow_dispatch') && (
@@ -308,6 +313,7 @@ jobs:
                 (inputs.processor == 's3olci') ||
                 (inputs.processor == 'all')
               ))}}
+            python-package: s3olci
           - target: cluster
             targetcondition: ${{
               (github.event_name != 'workflow_dispatch') ||
@@ -381,14 +387,28 @@ jobs:
             $options \
             ${{ matrix.proc }}
 
-          # Get the docker image name and tag that was built
+          # Get the last docker image name and tag that was built
           last_built=$(docker images | awk 'NR==2')
           repository=$(echo "$last_built" | awk '{print $1}')
           repository_and_tag=$(echo "$last_built" | awk '{print $1 ":" $2}')
 
+          # Get the version of the python package from inside the docker image.
+          # We will use is as an additional docker tag, only when pushing the 'latest' tag.
+          if [[ ! " $DOCKER_TAGS " =~ latest ]]; then
+            python_tag=$(\
+              docker run --rm \
+              --entrypoint python \
+              $repository_and_tag \
+              -c "from importlib.metadata import version as v; print(v('${{ matrix.python-package }}'))" \
+            )
+            # Prefix the tag by the name of the python package to avoid confusion with other tags
+            python_tag="${{ matrix.python-package }}-${python_tag}"
+          fi
+
           # Save values
           echo "repository=$repository" >> $GITHUB_OUTPUT
           echo "repository_and_tag=$repository_and_tag" >> $GITHUB_OUTPUT
+          echo "python_tag=${python_tag:-}" >> $GITHUB_OUTPUT
         shell: bash
 
       - name: Run Trivy vulnerability scanner
@@ -437,7 +457,7 @@ jobs:
         if: ${{ matrix.proccondition && matrix.targetcondition }}
         run: |
           set -x
-          for tag in ${DOCKER_TAGS//,/ }; do
+          for tag in ${DOCKER_TAGS//,/ } ${{ steps.build.outputs.python_tag }}; do
             docker push ${{ steps.build.outputs.repository }}:${tag}
           done
         shell: bash
