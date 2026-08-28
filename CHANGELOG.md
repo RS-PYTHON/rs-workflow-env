@@ -13,6 +13,39 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/) 
 >- **Fixed** for any bug fixes.
 >- **Security** in case of vulnerabilities.
 
+## [1.0a13] - 2026-08-28
+
+### Added
+
+[RSPY-1131](https://github.com/RS-PYTHON/rs-workflow-env/pull/140) : Error building Dask base image py3.13.12-2026.3.0
+[RSPY-1109](https://github.com/RS-PYTHON/rs-workflow-env/pull/139) : Include python_socks in Jupyter kernels (required by prefect)
+[RSPY-1109](https://github.com/RS-PYTHON/rs-workflow-env/pull/138) : Include Prefect in Jupyter kernels
+[RSPY-1017](https://github.com/RS-PYTHON/rs-workflow-env/pull/112) : Update to S1L0 processor 1.5.0
+[RSPY-1060](https://github.com/RS-PYTHON/rs-workflow-env/pull/129) : Update dask-gateway and staging to dask 2026.7.0
+[RSPY-1146](https://github.com/RS-PYTHON/rs-workflow-env/pull/151) : Include processor version in docker image tags
+
+### Changed
+
+- [PR#150](https://github.com/RS-PYTHON/rs-workflow-env/pull/150) : Update to jq 4.53.6
+- [PR#149](https://github.com/RS-PYTHON/rs-workflow-env/pull/149) : Reduce size on jupyter kernels, include carto libs in main kernel
+- [PR#148](https://github.com/RS-PYTHON/rs-workflow-env/pull/148) : Install bottleneck in dpr kernels
+- [PR#147](https://github.com/RS-PYTHON/rs-workflow-env/pull/147) : Add more plotting libraries in kernels
+- [PR#146](https://github.com/RS-PYTHON/rs-workflow-env/pull/146) : Add pystac-client in DPR kernels
+- [PR#145](https://github.com/RS-PYTHON/rs-workflow-env/pull/145) : Install boto3 in DPR kernels
+- [PR#144](https://github.com/RS-PYTHON/rs-workflow-env/pull/144) : Fail the Jupyter image build if a dpr kernel can't import eopf/cartopy
+- [PR#143](https://github.com/RS-PYTHON/rs-workflow-env/pull/143) : Skip .pyc generation to shrink the Jupyter kernels layer
+- [PR#142](https://github.com/RS-PYTHON/rs-workflow-env/pull/142) : Include cpm and plotting libraries in Jupyter kernels
+- [PR#141](https://github.com/RS-PYTHON/rs-workflow-env/pull/141) : Update to OpenTelemetry 1.44.0/0.65b0
+- [PR#137](https://github.com/RS-PYTHON/rs-workflow-env/pull/137) : Improve ci/cd about base jupyter image tags
+- [PR#136](https://github.com/RS-PYTHON/rs-workflow-env/pull/136) : Fix and improve CI
+- [PR#135](https://github.com/RS-PYTHON/rs-workflow-env/pull/135) : Use actions@develop
+- [PR#134](https://github.com/RS-PYTHON/rs-workflow-env/pull/134) : feat: add wrapper in ci
+
+### Fixed
+
+- [PR#134](https://github.com/RS-PYTHON/rs-workflow-env/pull/134) : increase max worker memory
+- [RSPY-996](https://github.com/RS-PYTHON/rs-server-deployment/pull/133) : jupyterhub token for staging
+
 ## [1.0a12] - 2026-07-21
 
 ### Added
