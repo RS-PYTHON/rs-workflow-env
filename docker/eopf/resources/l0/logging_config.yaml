@@ -27,7 +27,7 @@ loggers:
 
 formatters:
   console:
-    format: "%(asctime)s - %(name)s - %(levelname)s - %(message)s"
+    format: "%(asctime)s.%(msecs)03d %(levelname)s [trace_id=%(otelTraceID)s span_id=%(otelSpanID)s resource.service.name=%(otelServiceName)s trace_sampled=%(otelTraceSampled)s] (%(name)s) %(message)s"
     datefmt: '%Y-%m-%d %H:%M:%S'
 
   file:
