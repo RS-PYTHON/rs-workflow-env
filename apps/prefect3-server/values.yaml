@@ -97,7 +97,7 @@ serviceAccount:
 
 # Ingress configuration
 ingress:
-  enabled: true
+  enabled: false
   className: "nginx"
   #path must be /
   host:

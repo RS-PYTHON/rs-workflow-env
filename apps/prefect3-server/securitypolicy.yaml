@@ -1,0 +1,51 @@
+# Copyright 2023-2026 Airbus, CS Group
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+apiVersion: gateway.envoyproxy.io/v1alpha1
+kind: SecurityPolicy
+metadata:
+  name: prefect-server
+spec:
+  targetRefs:
+    - group: gateway.networking.k8s.io
+      kind: HTTPRoute
+      name: prefect-server
+  oidc:
+    provider:
+      issuer: https://iam.dev-rspy-ovh.esa-copernicus.eu/realms/rspy
+    clientID: prefect-ui
+    clientSecret:
+      name: prefect-ui-client-secret
+    forwardAccessToken: true
+    scopes:
+      - openid
+  jwt:
+    providers:
+      - name: keycloak
+        issuer: https://iam.dev-rspy-ovh.esa-copernicus.eu/realms/rspy
+        remoteJWKS:
+          uri: https://iam.dev-rspy-ovh.esa-copernicus.eu/realms/rspy/protocol/openid-connect/certs
+  authorization:
+    defaultAction: Deny
+    rules:
+      - name: allow-roles
+        action: Allow
+        principal:
+          jwt:
+            provider: keycloak
+            claims:
+              - name: realm_access.roles
+                valueType: StringArray
+                values:
+                  - {{ prefect3server.ops.allowedRoles }}
