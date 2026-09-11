@@ -143,7 +143,7 @@ traefik:
               operator: Exists
   resources:
     limits:
-      memory: 42Mi
+      memory: 64Mi
     requests:
       memory: 24Mi
   tolerations:
