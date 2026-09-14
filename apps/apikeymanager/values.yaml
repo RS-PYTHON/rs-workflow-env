@@ -55,7 +55,7 @@ ingress:
     cert-manager.io/cluster-issuer: "{{ cluster_issuer }}"
   className: nginx
   # -- Enabled/Disable ingress
-  enabled: true
+  enabled: false
   hosts:
   - host: "apikeymanager.{{ platform_domain_name }}"
     paths:
