@@ -12,24 +12,26 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-
-namespace: "{{ jupyterhub.ops.namespace }}"
-
-helmCharts:
-- name: jupyterhub
-  namespace: "{{ jupyterhub.ops.namespace }}"
-  releaseName: '{{ app_name }}'
-  repo: https://hub.jupyter.org/helm-chart/
-  valuesFile: values.yaml
-  version: 4.3.2
-
-resources:
-- servicemonitor.yaml
-- secret.yaml
-- httproute.yaml
-apiVersion: kustomize.config.k8s.io/v1beta1
-kind: Kustomization
-labels:
-- includeSelectors: true
-  pairs:
-    app.kubernetes.io/instance: '{{ app_name }}'
+apiVersion: gateway.networking.k8s.io/v1
+kind: HTTPRoute
+metadata:
+  name: "jupyterhub"
+spec:
+  hostnames:
+  - {{ jupyterhub.ops.subDomain }}.{{ platform_domain_name }}
+  parentRefs:
+  - group: gateway.networking.k8s.io
+    kind: ListenerSet
+    name: processing
+    namespace: processing
+  rules:
+  - backendRefs:
+    - group: ""
+      kind: Service
+      name: proxy-public
+      port: 80
+      weight: 1
+    matches:
+    - path:
+        type: PathPrefix
+        value: /jupyter

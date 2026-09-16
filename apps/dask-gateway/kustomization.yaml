@@ -24,7 +24,7 @@ helmCharts:
 
 resources:
 - secret.yaml
-- ingress.yaml
+- httproute.yaml
 - sharedvolume.yaml
 
 apiVersion: kustomize.config.k8s.io/v1beta1

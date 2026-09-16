@@ -12,7 +12,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-
 namespace: "{{ prefect3server.ops.namespace }}"
 
 helmCharts:
@@ -28,3 +27,8 @@ labels:
 - includeSelectors: true
   pairs:
     app.kubernetes.io/instance: '{{ app_name }}'
+
+resources:
+- httproute.yaml
+- securitypolicy.yaml
+- secret.yaml
