@@ -16,4 +16,4 @@
 
 set -euo pipefail
 
-pip install --no-cache-dir --prefer-binary -r /tmp/requirements.txt
+pip install --no-cache-dir --only-binary :all: -r /tmp/requirements.txt
