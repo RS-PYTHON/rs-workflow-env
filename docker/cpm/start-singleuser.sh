@@ -1,3 +1,5 @@
+#!/bin/bash
+
 # Copyright 2023-2026 Airbus, CS Group
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -12,8 +14,11 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-#!/bin/bash
-# Shim to emit warning and call start-singleuser.py
-echo "WARNING: Use start-singleuser.py instead"
+set -e
 
-exec /usr/local/bin/start-singleuser.py "$@"
+# Run home directory initialization if script exists
+if [ -x /opt/eopf/bin/initializeHomeDirectory.bash ]; then
+    /opt/eopf/bin/initializeHomeDirectory.bash
+fi
+
+exec jupyterhub-singleuser "$@"

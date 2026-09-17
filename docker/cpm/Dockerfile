@@ -16,9 +16,9 @@ ARG ROOT_CONTAINER=python:3.13-bookworm
 
 FROM $ROOT_CONTAINER
 
-ARG NB_USER="jovyan"
-ARG NB_UID="1000"
-ARG NB_GID="100"
+ARG NB_USER="rspy"
+ARG NB_UID="1001"
+ARG NB_GID="1001"
 ARG PYTHON_VERSION=3.13
 ARG CPM_VERSION=3.0.0rc4
 ARG JUPYTERHUB_VERSION=4.1.6
@@ -65,13 +65,15 @@ ENV SHELL=/bin/bash \
 COPY fix-permissions /usr/local/bin/fix-permissions
 RUN chmod a+rx /usr/local/bin/fix-permissions
 
-# Create user jovyan with UID 1000 in group users (GID 100) and sudo access
+# Create user rspy (UID 1001, GID 1001) for RSPY compatibility + jovyan compatibility
 RUN echo "auth requisite pam_deny.so" >> /etc/pam.d/su && \
+    groupadd -g "${NB_GID}" "${NB_USER}" && \
     useradd --no-log-init --create-home --shell /bin/bash -g "${NB_GID}" -u "${NB_UID}" "${NB_USER}" && \
-    echo "${NB_USER} ALL=(ALL) NOPASSWD:ALL" >> /etc/sudoers.d/notebook && \
+    useradd --no-log-init --shell /bin/bash -g "${NB_GID}" -u 1000 jovyan 2>/dev/null || true && \
+    ln -s "/home/${NB_USER}" /home/jovyan && \
     mkdir -p /mnt/test-data && \
-    chown "${NB_USER}:${NB_GID}" /mnt/test-data && \
-    chmod 775 /mnt/test-data
+    chown -R "${NB_USER}:${NB_GID}" /mnt/test-data "/home/${NB_USER}" && \
+    chmod 777 /mnt/test-data
 
 # Install Python packages directly via pip (fast, lightweight, single environment)
 RUN pip install --upgrade pip && \
@@ -96,9 +98,8 @@ RUN mkdir -p /opt/conda/bin && \
     ln -s "$(which python3)" /opt/conda/bin/python
 
 # Copy startup scripts and configurations
-COPY start-notebook.py start-notebook.sh start-singleuser.py start-singleuser.sh /usr/local/bin/
-RUN chmod +x /usr/local/bin/start-notebook.py /usr/local/bin/start-notebook.sh \
-             /usr/local/bin/start-singleuser.py /usr/local/bin/start-singleuser.sh
+COPY start-notebook.sh start-singleuser.sh /usr/local/bin/
+RUN chmod +x /usr/local/bin/start-notebook.sh /usr/local/bin/start-singleuser.sh
 
 COPY jupyter_server_config.py /etc/jupyter/jupyter_server_config.py
 
@@ -112,7 +113,7 @@ RUN cp /home/${NB_USER}/.bashrc /opt/eopf/.bashrc 2>/dev/null || true && \
 EXPOSE 8888
 
 ENTRYPOINT ["tini", "-g", "--"]
-CMD ["start-notebook.py", "--ip=0.0.0.0", "--allow-root"]
+CMD ["start-notebook.sh"]
 
 USER ${NB_UID}
 WORKDIR "${HOME}"
