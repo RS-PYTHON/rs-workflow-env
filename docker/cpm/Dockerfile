@@ -73,10 +73,11 @@ RUN chmod a+rx /usr/local/bin/fix-permissions && \
     chown -R "${NB_USER}:${NB_GID}" /mnt/test-data "/home/${NB_USER}" && \
     chmod 775 /mnt/test-data
 
-# Install Python packages via requirements.txt
-COPY requirements.txt /tmp/requirements.txt
-RUN pip install --no-cache-dir --only-binary :all: -r /tmp/requirements.txt && \
-    rm -f /tmp/requirements.txt && \
+# Install Python packages via helper script
+COPY requirements.txt install-dependencies.sh /tmp/
+RUN chmod +x /tmp/install-dependencies.sh && \
+    /tmp/install-dependencies.sh && \
+    rm -rf /tmp/requirements.txt /tmp/install-dependencies.sh && \
     fix-permissions "${HOME}"
 
 # Create compatibility symlinks for scripts expecting /opt/conda/bin
