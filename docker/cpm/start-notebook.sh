@@ -17,12 +17,12 @@
 set -e
 
 # Run home directory initialization if script exists
-if [ -x /opt/eopf/bin/initializeHomeDirectory.bash ]; then
+if [[ -x /opt/eopf/bin/initializeHomeDirectory.bash ]]; then
     /opt/eopf/bin/initializeHomeDirectory.bash
 fi
 
 # If started by JupyterHub (JUPYTERHUB_API_TOKEN is present), start jupyterhub-singleuser
-if [ -n "$JUPYTERHUB_API_TOKEN" ]; then
+if [[ -n "${JUPYTERHUB_API_TOKEN}" ]]; then
     exec jupyterhub-singleuser "$@"
 else
     # Otherwise launch standalone JupyterLab

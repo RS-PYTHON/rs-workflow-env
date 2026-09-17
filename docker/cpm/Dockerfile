@@ -20,8 +20,6 @@ ARG NB_USER="rspy"
 ARG NB_UID="1001"
 ARG NB_GID="1001"
 ARG PYTHON_VERSION=3.13
-ARG CPM_VERSION=3.0.0rc4
-ARG JUPYTERHUB_VERSION=4.1.6
 
 LABEL org.opencontainers.image.title="CPM Dev Studio image"
 LABEL org.opencontainers.image.description="Jupyter Server environment for CPM development and testing on RSPY"
@@ -61,35 +59,25 @@ ENV SHELL=/bin/bash \
     HOME="/home/${NB_USER}" \
     PATH="/home/${NB_USER}/.local/bin:/opt/conda/bin:${PATH}"
 
-# Copy permission fix script
+# Copy permission fix script and configure user
 COPY fix-permissions /usr/local/bin/fix-permissions
-RUN chmod a+rx /usr/local/bin/fix-permissions
 
 # Create user rspy (UID 1001, GID 1001) for RSPY compatibility + jovyan compatibility
-RUN echo "auth requisite pam_deny.so" >> /etc/pam.d/su && \
+RUN chmod a+rx /usr/local/bin/fix-permissions && \
+    echo "auth requisite pam_deny.so" >> /etc/pam.d/su && \
     groupadd -g "${NB_GID}" "${NB_USER}" && \
     useradd --no-log-init --create-home --shell /bin/bash -g "${NB_GID}" -u "${NB_UID}" "${NB_USER}" && \
     useradd --no-log-init --shell /bin/bash -g "${NB_GID}" -u 1000 jovyan 2>/dev/null || true && \
     ln -s "/home/${NB_USER}" /home/jovyan && \
     mkdir -p /mnt/test-data && \
     chown -R "${NB_USER}:${NB_GID}" /mnt/test-data "/home/${NB_USER}" && \
-    chmod 777 /mnt/test-data
+    chmod 775 /mnt/test-data
 
-# Install Python packages directly via pip (fast, lightweight, single environment)
-RUN pip install --upgrade pip && \
-    pip install --no-cache-dir \
-    jupyterlab \
-    jupyterhub=="${JUPYTERHUB_VERSION}" \
-    dask \
-    dask-gateway \
-    distributed \
-    ipywidgets \
-    pytest \
-    pytest-cov \
-    xarray \
-    s3fs \
-    boto3 \
-    eopf=="${CPM_VERSION}" && \
+# Install Python packages via requirements.txt
+COPY requirements.txt /tmp/requirements.txt
+RUN pip install --no-cache-dir --upgrade pip && \
+    pip install --no-cache-dir -r /tmp/requirements.txt && \
+    rm -f /tmp/requirements.txt && \
     fix-permissions "${HOME}"
 
 # Create compatibility symlinks for scripts expecting /opt/conda/bin

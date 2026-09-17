@@ -34,5 +34,7 @@ header:
     - 'LICENSE'
     - 'NOTICE'
     - docker/eopf/resources/l0/**
+    - 'docker/cpm/resources/jupyterlab/**'
+    - '**/*.jupyterlab-*'
 
   comment: on-failure
