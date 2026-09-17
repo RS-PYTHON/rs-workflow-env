@@ -1,30 +1,17 @@
-#!/bin/bash
-#
-# Copyright 2022 ESA
+# Copyright 2023-2026 Airbus, CS Group
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
 # You may obtain a copy of the License at
 #
-#   http://www.apache.org/licenses/LICENSE-2.0
+#     http://www.apache.org/licenses/LICENSE-2.0
 #
 # Unless required by applicable law or agreed to in writing, software
 # distributed under the License is distributed on an "AS IS" BASIS,
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-
-# This script allows initializing the user's HOME directory.
-# Even though the HOME directory is initialized in the container image,
-# a volume is replacing this HOME directory when Studio is started by
-# JupyterHub on the EOPF cluster.
-# Thus, on the first start up, the HOME directory is empty and must
-# be restored.
-# This script copies back into the HOME directory the files from the
-# initial container image's HOME directory, which have already been saved
-# in /opt/eopf. If the file/directory already exists in the running container,
-# then it will not be overridden.
-
+#!/bin/bash
 JOVYAN_HOME=/home/jovyan
 EOPF_HOME=/opt/eopf
 
