@@ -75,8 +75,7 @@ RUN chmod a+rx /usr/local/bin/fix-permissions && \
 
 # Install Python packages via requirements.txt
 COPY requirements.txt /tmp/requirements.txt
-RUN pip install --no-cache-dir --upgrade pip && \
-    pip install --no-cache-dir -r /tmp/requirements.txt && \
+RUN pip install --no-cache-dir --only-binary :all: -r /tmp/requirements.txt && \
     rm -f /tmp/requirements.txt && \
     fix-permissions "${HOME}"
 

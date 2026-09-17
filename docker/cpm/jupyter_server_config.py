@@ -14,5 +14,6 @@
 
 """Jupyter server config file: https://jupyter-server.readthedocs.io/en/latest/users/configuration.html"""
 
-c.ContentsManager.allow_hidden = True  # type: ignore[name-defined] # pylint: disable=undefined-variable # noqa: F821
-c.FileContentsManager.delete_to_trash = False  # type: ignore[name-defined] # pylint: disable=undefined-variable # noqa: F821
+# pylint: disable=undefined-variable
+c.ContentsManager.allow_hidden = True  # type: ignore[name-defined] # noqa: F821
+c.FileContentsManager.delete_to_trash = False  # type: ignore[name-defined] # noqa: F821
