@@ -1,0 +1,54 @@
+{
+  "data": {
+    "layout-restorer:data": {
+      "main": {
+        "dock": {
+          "type": "tab-area",
+          "currentIndex": 0,
+          "widgets": [
+            "markdownviewer-widget:README.md"
+          ]
+        },
+        "current": "markdownviewer-widget:README.md"
+      },
+      "down": {
+        "size": 0,
+        "widgets": []
+      },
+      "left": {
+        "collapsed": false,
+        "current": "filebrowser",
+        "widgets": [
+          "filebrowser",
+          "running-sessions",
+          "dask-dashboard-launcher",
+          "git-sessions",
+          "@jupyterlab/toc:plugin",
+          "eodag-widget",
+          "extensionmanager.main-view"
+        ]
+      },
+      "right": {
+        "collapsed": true,
+        "widgets": [
+          "jp-property-inspector",
+          "debugger-sidebar"
+        ]
+      },
+      "relativeSizes": [
+        0.2223664287259355,
+        0.7776335712740645,
+        0
+      ]
+    },
+    "markdownviewer-widget:README.md": {
+      "data": {
+        "path": "README.md",
+        "factory": "Markdown Preview"
+      }
+    }
+  },
+  "metadata": {
+    "id": "default"
+  }
+}

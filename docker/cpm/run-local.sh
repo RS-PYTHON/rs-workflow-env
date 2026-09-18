@@ -1,3 +1,5 @@
+#!/bin/bash
+
 # Copyright 2023-2026 Airbus, CS Group
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -12,24 +14,19 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+set -euo pipefail
 
-namespace: "{{ jupyterhub.ops.namespace }}"
+IMAGE_NAME=${1:-cpm-studio:latest}
+HOST_PORT=${2:-8888}
 
-helmCharts:
-- name: jupyterhub
-  namespace: "{{ jupyterhub.ops.namespace }}"
-  releaseName: '{{ app_name }}'
-  repo: https://hub.jupyter.org/helm-chart/
-  valuesFile: values.yaml
-  version: 4.3.2
+# Ensure a local test data directory exists to simulate shared test data mount
+mkdir -p /tmp/cpm-test-data
 
-resources:
-- servicemonitor.yaml
-- secret.yaml
-- sharedvolume-cpm-tests.yaml
-apiVersion: kustomize.config.k8s.io/v1beta1
-kind: Kustomization
-labels:
-- includeSelectors: true
-  pairs:
-    app.kubernetes.io/instance: '{{ app_name }}'
+echo "=== Starting CPM Studio local container on http://localhost:${HOST_PORT} ==="
+echo "=== Test data mounted from /tmp/cpm-test-data to /mnt/test-data ==="
+
+docker run -it --rm \
+    --name cpm-studio-test \
+    -p "${HOST_PORT}:8888" \
+    -v "/tmp/cpm-test-data:/mnt/test-data" \
+    "${IMAGE_NAME}"

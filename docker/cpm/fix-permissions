@@ -11,25 +11,22 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
+#!/bin/bash
+set -e
 
-
-namespace: "{{ jupyterhub.ops.namespace }}"
-
-helmCharts:
-- name: jupyterhub
-  namespace: "{{ jupyterhub.ops.namespace }}"
-  releaseName: '{{ app_name }}'
-  repo: https://hub.jupyter.org/helm-chart/
-  valuesFile: values.yaml
-  version: 4.3.2
-
-resources:
-- servicemonitor.yaml
-- secret.yaml
-- sharedvolume-cpm-tests.yaml
-apiVersion: kustomize.config.k8s.io/v1beta1
-kind: Kustomization
-labels:
-- includeSelectors: true
-  pairs:
-    app.kubernetes.io/instance: '{{ app_name }}'
+for d in "$@"; do
+    find "${d}" \
+        ! \( \
+            -group "${NB_GID}" \
+            -a -perm -g+rwX \
+        \) \
+        -exec chgrp "${NB_GID}" {} \; \
+        -exec chmod g+rwX {} \;
+    # setuid, setgid *on directories only*
+    find "${d}" \
+        \( \
+            -type d \
+            -a ! -perm -6000 \
+        \) \
+        -exec chmod +6000 {} \;
+done
