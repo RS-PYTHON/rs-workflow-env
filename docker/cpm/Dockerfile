@@ -35,8 +35,10 @@ RUN apt-get update --yes && \
     apt-get install --yes --no-install-recommends \
     ca-certificates \
     curl \
+    file \
     git \
     jq \
+    libmagic1 \
     locales \
     procps \
     sudo \
@@ -83,7 +85,9 @@ RUN chmod +x /tmp/install-dependencies.sh && \
 # Create compatibility symlinks for scripts expecting /opt/conda/bin
 RUN mkdir -p /opt/conda/bin && \
     ln -s "$(which jupyter)" /opt/conda/bin/jupyter && \
-    ln -s "$(which python3)" /opt/conda/bin/python
+    ln -s "$(which python3)" /opt/conda/bin/python && \
+    ln -s "$(which s3cmd)" /opt/conda/bin/s3cmd 2>/dev/null || true && \
+    ln -s "$(which uv)" /opt/conda/bin/uv 2>/dev/null || true
 
 # Copy startup scripts and configurations
 COPY start-notebook.sh start-singleuser.sh /usr/local/bin/
