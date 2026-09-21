@@ -1,3 +1,5 @@
+#!/bin/bash
+
 # Copyright 2023-2026 Airbus, CS Group
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -12,25 +14,11 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+set -e
 
-namespace: "{{ jupyterhub.ops.namespace }}"
+# Run home directory initialization if script exists
+if [[ -x /opt/eopf/bin/initializeHomeDirectory.bash ]]; then
+    /opt/eopf/bin/initializeHomeDirectory.bash
+fi
 
-helmCharts:
-- name: jupyterhub
-  namespace: "{{ jupyterhub.ops.namespace }}"
-  releaseName: '{{ app_name }}'
-  repo: https://hub.jupyter.org/helm-chart/
-  valuesFile: values.yaml
-  version: 4.3.2
-
-resources:
-- servicemonitor.yaml
-- secret.yaml
-- httproute.yaml
-- sharedvolume-cpm-tests.yaml
-apiVersion: kustomize.config.k8s.io/v1beta1
-kind: Kustomization
-labels:
-- includeSelectors: true
-  pairs:
-    app.kubernetes.io/instance: '{{ app_name }}'
+exec jupyterhub-singleuser "$@"

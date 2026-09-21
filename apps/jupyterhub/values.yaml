@@ -457,6 +457,8 @@ singleuser:
   extraFiles: {}
   extraEnv:
     DASK_GATEWAY_ADDRESS: "http://traefik-dask-gateway.dask-gateway.svc.cluster.local"
+    DASK_GATEWAY__ADDRESS: "http://traefik-dask-gateway.dask-gateway.svc.cluster.local"
+    DASK_GATEWAY__AUTH__TYPE: "jupyterhub"
     DASK_GATEWAY_PUBLIC: "https://dash-dask.{{ jupyterhub.ops.subDomain }}.{{ platform_domain_name }}"
     RSPY_DASK_STAGING_CLUSTER_NAME: "dask-staging"
     PREFECT_API_URL: "http://{{ prefect3server.ops.name }}-server.{{ prefect3server.ops.namespace }}.svc.cluster.local:4200/api"
@@ -532,7 +534,21 @@ singleuser:
       description: "RS-Python release v1.0a13"
       kubespawner_override:
         image: ghcr.io/rs-python/rs-workflow-env-jupyter:v1.0a13
-
+    - display_name: "CPM Dev Environment"
+      description: "CPM Studio environment with shared test data"
+      kubespawner_override:
+        image: ghcr.io/rs-python/rs-workflow-env-cpm:latest
+        cpu_limit: 4
+        cpu_guarantee: 1
+        mem_limit: 16G
+        mem_guarantee: 4G
+        extra_volumes:
+          - name: shared-cpm-tests
+            persistentVolumeClaim:
+              claimName: shared-cpm-tests
+        extra_volume_mounts:
+          - name: shared-cpm-tests
+            mountPath: /mnt/test-data
 # scheduling relates to the user-scheduler pods and user-placeholder pods.
 scheduling:
   userScheduler:

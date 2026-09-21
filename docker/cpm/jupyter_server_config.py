@@ -12,25 +12,8 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+"""Jupyter server config file: https://jupyter-server.readthedocs.io/en/latest/users/configuration.html"""
 
-namespace: "{{ jupyterhub.ops.namespace }}"
-
-helmCharts:
-- name: jupyterhub
-  namespace: "{{ jupyterhub.ops.namespace }}"
-  releaseName: '{{ app_name }}'
-  repo: https://hub.jupyter.org/helm-chart/
-  valuesFile: values.yaml
-  version: 4.3.2
-
-resources:
-- servicemonitor.yaml
-- secret.yaml
-- httproute.yaml
-- sharedvolume-cpm-tests.yaml
-apiVersion: kustomize.config.k8s.io/v1beta1
-kind: Kustomization
-labels:
-- includeSelectors: true
-  pairs:
-    app.kubernetes.io/instance: '{{ app_name }}'
+# pylint: disable=undefined-variable
+c.ContentsManager.allow_hidden = True  # type: ignore[name-defined] # noqa: F821
+c.FileContentsManager.delete_to_trash = False  # type: ignore[name-defined] # noqa: F821
