@@ -12,21 +12,19 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-namespace: dask-gateway
+namespace: "{{ jupyterhub.ops.namespace }}"
 
 helmCharts:
-- name: dask-gateway
-  namespace: dask-gateway
+- name: gitlab-runner
+  namespace: "{{ jupyterhub.ops.namespace }}"
   releaseName: '{{ app_name }}'
-  repo: https://helm.dask.org/
+  repo: https://charts.gitlab.io
   valuesFile: values.yaml
-  version: 2026.3.0
+  version: 0.76.3
 
 resources:
+- sharedvolume-cpm-ci-data.yaml
 - secret.yaml
-- ingress.yaml
-- sharedvolume.yaml
-- sharedvolume-cpm-tests.yaml
 
 apiVersion: kustomize.config.k8s.io/v1beta1
 kind: Kustomization

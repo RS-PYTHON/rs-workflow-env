@@ -1,0 +1,59 @@
+# Copyright 2023-2026 Airbus, CS Group
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+gitlabUrl: https://gitlab.eopf.copernicus.eu
+
+runners:
+  name: "cpm-runner-rspy"
+  secret: runner-credentials-cpm
+  config: |
+    [[runners]]
+      limit = 10
+      environment = [
+        "GET_SOURCES_ATTEMPTS=3",
+        "GIT_HTTP_LOW_SPEED_LIMIT=1000",
+        "GIT_HTTP_LOW_SPEED_TIME=30",
+        "GIT_CONFIG_COUNT=1",
+        "GIT_CONFIG_KEY_0=http.version",
+        "GIT_CONFIG_VALUE_0=HTTP/1.1"
+      ]
+      [runners.kubernetes]
+        poll_timeout = 600r
+        namespace = "{{ jupyterhub.ops.namespace }}"
+        [runners.kubernetes.node_selector]
+          "node-role.kubernetes.io/rs_env" = ""
+        [runners.kubernetes.node_tolerations]
+          "role=rs_env" = "NoSchedule"
+
+      # Mount the 105GB dpr-common dataset into build pods
+      [[runners.kubernetes.volumes.pvc]]
+        name = "shared-cpm-ci-data"
+        mount_path = "/data/cache-ci"
+
+      # Mount shared-cpm-tests dataset into build pods
+      [[runners.kubernetes.volumes.pvc]]
+        name = "shared-cpm-tests"
+        mount_path = "/mnt/test-data"
+
+nodeSelector:
+  node-role.kubernetes.io/rs_env: ""
+
+tolerations:
+  - key: role
+    value: rs_env
+    effect: NoSchedule
+
+rbac:
+  create: true
+  clusterWideAccess: false
