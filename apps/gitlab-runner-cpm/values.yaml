@@ -29,7 +29,7 @@ runners:
         "GIT_CONFIG_VALUE_0=HTTP/1.1"
       ]
       [runners.kubernetes]
-        poll_timeout = 600r
+        poll_timeout = 600
         namespace = "{{ jupyterhub.ops.namespace }}"
         [runners.kubernetes.node_selector]
           "node-role.kubernetes.io/rs_env" = ""
