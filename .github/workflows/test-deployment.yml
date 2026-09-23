@@ -59,12 +59,20 @@ jobs:
         with:
           repository: RS-PYTHON/rs-infra-core
           ref: ${{ steps.check_branch.outputs.branch }}
+      - name: Check if branch exists in rs-infra-monitoring
+        id: check_branch_monitoring
+        uses: RS-PYTHON/actions/.github/actions/get-repo-branch@develop
+        with:
+          repo: RS-PYTHON/rs-infra-monitoring
+          # Try user given branch, then current branch, then develop
+          branches: ${{ inputs.infra_core_ref || '' }},${{ env.BRANCH_NAME }},develop
       - name: Checkout infra-monitoring repository
         uses: actions/checkout@v6
         if: ${{ matrix.deploy_monitoring }}
         with:
           path: rs-infra-monitoring
           repository: RS-PYTHON/rs-infra-monitoring
+          ref: ${{ steps.check_branch_monitoring.outputs.branch }}
       - name: Checkout repository
         uses: actions/checkout@v6
         with:
