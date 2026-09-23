@@ -791,7 +791,7 @@ prePuller:
       pullSecrets: []
 
 ingress:
-  enabled: true
+  enabled: false
   ingressClassName: "nginx"
   hosts:
     - "{{ jupyterhub.ops.subDomain }}.{{ platform_domain_name }}"
