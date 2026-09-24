@@ -35,6 +35,3 @@ spec:
     - path:
         type: PathPrefix
         value: /api
-      headers:
-      - name: Authorization
-        type: RegularExpression
