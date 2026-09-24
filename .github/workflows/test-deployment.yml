@@ -124,10 +124,10 @@ jobs:
           # --- Use local cluster issuer instead of Let's Encrypt
           if [ "${{ matrix.deploy_monitoring }}" = "true" ]; then
             .github/common/resources/configure-local-ca.sh \
-              dash-dask:dask-gateway iam:iam kube:default monitoring:monitoring processing:processing apikeymanager:processing
+              iam:iam kube:default monitoring:monitoring processing:processing apikeymanager:processing dash-dask:dask-gateway 
           else
             .github/common/resources/configure-local-ca.sh \
-              dash-dask:dask-gateway iam:iam kube:default processing:processing apikeymanager:processing
+              iam:iam kube:default processing:processing apikeymanager:processing dash-dask:dask-gateway 
           fi
           conda run -n rspy --no-capture-output env PYTHONUNBUFFERED=1 ANSIBLE_FORCE_COLOR=1 ansible-playbook apps.yaml -i inventory/mycluster/hosts.yaml
       - name: Deploy the monitoring apps (for real)

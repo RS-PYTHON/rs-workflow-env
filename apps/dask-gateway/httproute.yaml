@@ -22,8 +22,8 @@ spec:
   parentRefs:
   - group: gateway.networking.k8s.io
     kind: ListenerSet
-    name: processing
-    namespace: processing
+    name: dask-dash
+    namespace: dask-gateway
   rules:
   - backendRefs:
     - group: ""
