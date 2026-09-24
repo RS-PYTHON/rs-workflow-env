@@ -95,9 +95,9 @@ jobs:
       - name: "Configure cluster labels, IP and DNS (host + CoreDNS)"
         run: |
           if [ "${{ matrix.deploy_monitoring }}" = "true" ]; then
-            SUBDOMAINS="dash-dask iam kube monitoring processing"
+            SUBDOMAINS="iam kube monitoring processing dash-dask.processing apikeymanager"
           else
-            SUBDOMAINS="dash-dask iam kube processing"
+            SUBDOMAINS="iam kube processing dash-dask.processing apikeymanager"
           fi
           .github/common/resources/configure-cluster.sh \
             "node-role.kubernetes.io/infra= node-role.kubernetes.io/rs_env= node-role.kubernetes.io/prefect_flow= node-role.kubernetes.io/access_csc=" \
@@ -124,10 +124,10 @@ jobs:
           # --- Use local cluster issuer instead of Let's Encrypt
           if [ "${{ matrix.deploy_monitoring }}" = "true" ]; then
             .github/common/resources/configure-local-ca.sh \
-              dash-dask:dask-gateway iam:iam kube:default monitoring:monitoring processing:processing
+              dash-dask:dask-gateway iam:iam kube:default monitoring:monitoring processing:processing apikeymanager:processing
           else
             .github/common/resources/configure-local-ca.sh \
-              dash-dask:dask-gateway iam:iam kube:default processing:processing
+              dash-dask:dask-gateway iam:iam kube:default processing:processing apikeymanager:processing
           fi
           conda run -n rspy --no-capture-output env PYTHONUNBUFFERED=1 ANSIBLE_FORCE_COLOR=1 ansible-playbook apps.yaml -i inventory/mycluster/hosts.yaml
       - name: Deploy the monitoring apps (for real)
