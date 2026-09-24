@@ -12,25 +12,18 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-namespace: "{{ prefect3server.ops.namespace }}"
-
-helmCharts:
-- name: prefect-server
-  repo: https://prefecthq.github.io/prefect-helm
-  releaseName: "{{ app_name }}"
-  version: 2026.6.18212926
-  namespace: "{{ prefect3server.ops.namespace }}"
-  valuesFile: values.yaml
-apiVersion: kustomize.config.k8s.io/v1beta1
-kind: Kustomization
-labels:
-- includeSelectors: true
-  pairs:
-    app.kubernetes.io/instance: '{{ app_name }}'
-
-resources:
-- httproute.yaml
-- httproute-api.yaml
-- securitypolicy.yaml
-- securitypolicy-api.yaml
-- secret.yaml
+apiVersion: gateway.envoyproxy.io/v1alpha1
+kind: SecurityPolicy
+metadata:
+  name: "{{ prefect3server.ops.name }}-server-api"
+spec:
+  targetRefs:
+    - group: gateway.networking.k8s.io
+      kind: HTTPRoute
+      name: "{{ prefect3server.ops.name }}-server-api"
+  jwt:
+    providers:
+      - name: keycloak
+        issuer: https://iam.{{ platform_domain_name }}/realms/{{ keycloak.realm.name }}
+        remoteJWKS:
+          uri: https://iam.{{ platform_domain_name }}/realms/{{ keycloak.realm.name }}/protocol/openid-connect/certs
