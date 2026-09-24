@@ -27,3 +27,15 @@ spec:
         issuer: https://iam.{{ platform_domain_name }}/realms/{{ keycloak.realm.name }}
         remoteJWKS:
           uri: https://iam.{{ platform_domain_name }}/realms/{{ keycloak.realm.name }}/protocol/openid-connect/certs
+  authorization:
+    defaultAction: Deny
+    rules:
+      - name: allow-azp
+        action: Allow
+        principal:
+          jwt:
+            provider: keycloak
+            claims:
+              - name: azp
+                valueType: String
+                values: {{ prefect3server.ops.allowedAzp }}

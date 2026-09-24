@@ -18,7 +18,7 @@ metadata:
   name: "{{ prefect3server.ops.name }}-server-api"
 spec:
   hostnames:
-  - {{ prefect3server.ops.subDomain }}.{{ platform_domain_name }}
+  - "{{ prefect3server.ops.subDomain }}.{{ platform_domain_name }}"
   parentRefs:
   - group: gateway.networking.k8s.io
     kind: ListenerSet
@@ -38,4 +38,3 @@ spec:
       headers:
       - name: Authorization
         type: RegularExpression
-        value: "^Bearer .*"
