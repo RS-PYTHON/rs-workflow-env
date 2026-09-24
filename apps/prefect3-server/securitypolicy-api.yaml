@@ -38,4 +38,4 @@ spec:
             claims:
               - name: azp
                 valueType: String
-                values: {{ prefect3server.ops.allowedAzp }}
+                  - "prefect-api"
