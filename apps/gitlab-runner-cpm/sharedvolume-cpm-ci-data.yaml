@@ -12,25 +12,14 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-namespace: dask-gateway
-
-helmCharts:
-- name: dask-gateway
-  namespace: dask-gateway
-  releaseName: '{{ app_name }}'
-  repo: https://helm.dask.org/
-  valuesFile: values.yaml
-  version: 2026.3.0
-
-resources:
-- secret.yaml
-- httproute.yaml
-- sharedvolume.yaml
-- sharedvolume-cpm-tests.yaml
-
-apiVersion: kustomize.config.k8s.io/v1beta1
-kind: Kustomization
-labels:
-- includeSelectors: true
-  pairs:
-    app.kubernetes.io/instance: '{{ app_name }}'
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: shared-cpm-ci-data
+spec:
+  accessModes:
+    - ReadWriteMany
+  resources:
+    requests:
+      storage: 200Gi
+  storageClassName: csi-manila-nfs
