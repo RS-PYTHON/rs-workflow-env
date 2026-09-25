@@ -15,23 +15,27 @@
 apiVersion: gateway.networking.k8s.io/v1
 kind: HTTPRoute
 metadata:
-  name: dask-gateway-dashboard
+  name: "{{ prefect3server.ops.name }}-server-api"
 spec:
   hostnames:
-  - dash-dask.{{ jupyterhub.ops.subDomain }}.{{ platform_domain_name }}
+  - "{{ prefect3server.ops.subDomain }}.{{ platform_domain_name }}"
   parentRefs:
   - group: gateway.networking.k8s.io
     kind: ListenerSet
-    name: dask-dash
-    namespace: dask-gateway
+    name: processing
+    namespace: processing
   rules:
   - backendRefs:
     - group: ""
       kind: Service
-      name: traefik-dask-gateway
-      port: 80
+      name: "{{ prefect3server.ops.name }}-server"
+      port: 4200
       weight: 1
     matches:
     - path:
+        type: PathPrefix
+        value: /api
+      headers:
+      - name: Authorization
         type: RegularExpression
-        value: "^/clusters/dask-gateway\\.[0-9a-z]{32}/.*"
+        value: "^[Bb]earer .*"

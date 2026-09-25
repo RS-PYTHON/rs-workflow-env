@@ -30,5 +30,7 @@ labels:
 
 resources:
 - httproute.yaml
+- httproute-api.yaml
 - securitypolicy.yaml
+- securitypolicy-api.yaml
 - secret.yaml
