@@ -38,5 +38,4 @@ spec:
             claims:
               - name: azp
                 valueType: String
-                value:
-                  -  prefect-api
+                values: {{ prefect3server.ops.allowedAzp | default(['prefect-api']) | to_yaml }}
