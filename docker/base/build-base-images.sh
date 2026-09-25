@@ -34,7 +34,7 @@ CUSTOM_REQ=$(realpath "${SCRIPT_DIR}/../scripts")
 
 PYTHON_VERSION=3.13.12
 DASK_GATEWAY_TAG=2026.3.0
-PREFECT_TAG=3.7.5
+PREFECT_TAG=3.8.6
 
 ####################
 # Retrieve options #
