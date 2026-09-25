@@ -26,7 +26,7 @@ FROM "ghcr.io/rs-python/quay.io/jupyter/base-notebook:${BASE_TAG}"
 ARG PYTHON_VERSION=3.13.12
 ARG DASK_TAG=2024.5.2
 ARG DASK_GATEWAY_TAG=2026.3.0
-ARG PREFECT_TAG=3.7.5
+ARG PREFECT_TAG=3.8.6
 
 USER root
 
