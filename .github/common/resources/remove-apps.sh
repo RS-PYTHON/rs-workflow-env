@@ -1,3 +1,4 @@
+#!/bin/bash
 # Copyright 2023-2026 Airbus, CS Group
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -12,26 +13,10 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-apiVersion: gateway.networking.k8s.io/v1
-kind: HTTPRoute
-metadata:
-  name: apikeymanager
-spec:
-  hostnames:
-  - apikeymanager.{{ platform_domain_name }}
-  parentRefs:
-  - group: gateway.networking.k8s.io
-    kind: ListenerSet
-    name: apikeymanager
-    namespace: processing
-  rules:
-  - backendRefs:
-    - group: ""
-      kind: Service
-      name: apikeymanager
-      port: 8000
-      weight: 1
-    matches:
-    - path:
-        type: PathPrefix
-        value: /
+set -euo pipefail
+
+APPS="${APPS_DIR:-rs-workflow-env/apps}"
+
+# As we are in a private repository we have very few available resources. Remove unneedeed applications to save some CPU and RAM
+rm -rf \
+  "${APPS}/gitlab-runner-cpm"
