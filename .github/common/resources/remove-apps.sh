@@ -15,7 +15,7 @@
 
 set -euo pipefail
 
-APPS="${APPS_DIR:-apps}"
+APPS="${APPS_DIR:-rs-workflow-env/apps}"
 
 # As we are in a private repository we have very few available resources. Remove unneedeed applications to save some CPU and RAM
 rm -rf \
