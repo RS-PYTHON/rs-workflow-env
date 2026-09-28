@@ -31,13 +31,13 @@ on:
   pull_request: # pull requests
     types: [opened, synchronize, reopened]
     paths:
-      - 'docker/cpm/**'
+      - 'docker/jupyter-cpm/**'
       - '.github/workflows/build-cpm-image.yml'
   push:
     branches: [develop, main] # pushes on the 'develop' or 'main' branches
     tags: ['**'] # new git tags (including hierarchical tags like v1.0/beta)
     paths:
-      - 'docker/cpm/**'
+      - 'docker/jupyter-cpm/**'
       - '.github/workflows/build-cpm-image.yml'
   workflow_dispatch: # manual trigger
     inputs:
@@ -106,8 +106,8 @@ jobs:
       - id: publish-docker
         uses: RS-PYTHON/actions/.github/actions/publish-docker@develop
         with:
-          dockerfile: ./docker/cpm/Dockerfile
-          build_context_path: ./docker/cpm
+          dockerfile: ./docker/jupyter-cpm/Dockerfile
+          build_context_path: ./docker/jupyter-cpm
           image_suffix: -cpm
           # Set both temp and final tags
           image_tags: ${{ needs.set-binary-env.outputs.docker_tags }},${{ needs.set-binary-env.outputs.docker_final_tags }}

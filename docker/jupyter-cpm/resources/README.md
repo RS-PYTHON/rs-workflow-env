@@ -112,3 +112,39 @@ project.
 
 To run the notebooks, a Jupyter kernel with the EOPF CPM must be
 created as described previously.
+
+## Using Dask and the Dask Dashboard
+
+The platform provides a Dask processing unit to launch on-demand distributed Dask tasks on autoscaled Kubernetes nodes.
+
+### Launching a Dask Cluster
+
+In your notebook or script, initialize the gateway and create a cluster:
+
+```python
+from dask_gateway import Gateway
+
+# Connect to Dask Gateway (address and authentication are passed automatically via environment variables)
+gateway = Gateway()
+
+# Create a cluster with the CPM image
+image = "ghcr.io/rs-python/rs-workflow-env-cpm:latest"
+cluster = gateway.new_cluster(image=image, worker_cores=2, worker_memory=8)
+
+# Scale workers as needed
+cluster.scale(2)
+
+# Print the dashboard link
+print("Dashboard link:", cluster.dashboard_link)
+```
+
+### Accessing the Dask Dashboard
+
+1. **Via the JupyterLab Dask Extension (Left Sidebar):**
+   - Click the Dask icon in the left sidebar (`dask-dashboard-launcher`).
+   - Enter your cluster's dashboard URL (from `cluster.dashboard_link`) into the input field at the top and press **Enter**.
+   - Click on the dashboard metric buttons (Status, CPU, Memory, Workers, Task Stream, Progress) to open live monitoring tabs directly inside JupyterLab.
+
+2. **Via Web Browser:**
+   - Open the URL printed by `cluster.dashboard_link` in a new browser tab.
+
