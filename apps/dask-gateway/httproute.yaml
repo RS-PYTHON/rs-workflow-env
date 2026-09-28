@@ -22,7 +22,7 @@ spec:
   parentRefs:
   - group: gateway.networking.k8s.io
     kind: ListenerSet
-    name: dask-dash
+    name: dash-dask
     namespace: dask-gateway
   rules:
   - backendRefs:

@@ -15,7 +15,7 @@
 apiVersion: gateway.networking.k8s.io/v1
 kind: ListenerSet
 metadata:
-  name: dask-dash
+  name: dash-dask
   namespace: dask-gateway
   annotations:
     cert-manager.io/cluster-issuer: "{{ cluster_issuer }}"
@@ -27,11 +27,11 @@ spec:
     kind: Gateway
   listeners:
   - name: https
-    hostname: dask-dash.{{ prefect3server.ops.subDomain }}.{{ platform_domain_name }}
+    hostname: dash-dask.{{ prefect3server.ops.subDomain }}.{{ platform_domain_name }}
     port: 443
     protocol: HTTPS
     tls:
       mode: Terminate
       certificateRefs:
-      - name: dask-dash-{{ prefect3server.ops.subDomain }}-{{ platform_domain_name | replace(".", "-") }}
+      - name: dash-dask-{{ prefect3server.ops.subDomain }}-{{ platform_domain_name | replace(".", "-") }}
         kind: Secret
