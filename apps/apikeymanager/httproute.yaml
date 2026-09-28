@@ -22,7 +22,7 @@ spec:
   parentRefs:
   - group: gateway.networking.k8s.io
     kind: ListenerSet
-    name: processing
+    name: apikeymanager
     namespace: processing
   rules:
   - backendRefs:
