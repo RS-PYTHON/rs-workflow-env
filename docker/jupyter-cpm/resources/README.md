@@ -147,4 +147,3 @@ print("Dashboard link:", cluster.dashboard_link)
 
 2. **Via Web Browser:**
    - Open the URL printed by `cluster.dashboard_link` in a new browser tab.
-
