@@ -17,6 +17,21 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/) 
 
 ### Added
 
+- [PR#161](https://github.com/RS-PYTHON/rs-workflow-env/pull/161) : feat: add dedicated httproute and jwt securitypolicy for prefect api - #161
+
+### Changed
+
+- [RSPY-1219](https://github.com/RS-PYTHON/rs-workflow-env/pull/155) : Increase limit memory for dask-gateway traefik pod - #155
+
+### Fixed
+
+- [PR#160](https://github.com/RS-PYTHON/rs-workflow-env/pull/160) : fix: remove oauth2 proxy
+
+
+## [1.0a13] - 2026-08-28
+
+### Added
+
 [RSPY-1131](https://github.com/RS-PYTHON/rs-workflow-env/pull/140) : Error building Dask base image py3.13.12-2026.3.0
 [RSPY-1109](https://github.com/RS-PYTHON/rs-workflow-env/pull/139) : Include python_socks in Jupyter kernels (required by prefect)
 [RSPY-1109](https://github.com/RS-PYTHON/rs-workflow-env/pull/138) : Include Prefect in Jupyter kernels
