@@ -13,6 +13,27 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/) 
 >- **Fixed** for any bug fixes.
 >- **Security** in case of vulnerabilities.
 
+## [1.0a14] - 2026-09-29
+
+### Added
+
+- [PR#161](https://github.com/RS-PYTHON/rs-workflow-env/pull/161) : feat: add dedicated httproute and jwt securitypolicy for prefect api
+- [PR#156](https://github.com/RS-PYTHON/rs-workflow-env/pull/156) : feat: enable gatewayapi with oidc and role filter for prefect server
+- [PR#157](https://github.com/RS-PYTHON/rs-workflow-env/pull/157) : test ci for new cpm dockerfile for RSPY-1204
+
+### Changed
+
+- [RSPY-1219](https://github.com/RS-PYTHON/rs-workflow-env/pull/155) : Increase limit memory for dask-gateway traefik pod
+- [RSPY-1157](https://github.com/RS-PYTHON/rs-workflow-env/pull/153) : convert-ADF-OL-L2-aux-files -> Add more memory for prefect runner
+
+### Fixed
+
+- [PR#160](https://github.com/RS-PYTHON/rs-workflow-env/pull/160) : fix: remove oauth2 proxy
+- [RSPY-1204](https://github.com/RS-PYTHON/rs-workflow-env/pull/158) : Add DASK_GATEWAY__ADDRESS and AUTH__TYPE for zero-arg Gateway()
+- [RSPY-1137](https://github.com/RS-PYTHON/rs-workflow-env/pull/154) : Remove hardcoded pip version when a pip-tools fix is released
+- [PR#164](https://github.com/RS-PYTHON/rs-workflow-env/pull/164) : fix gitlab url to be ansible variable
+- [PR#159](https://github.com/RS-PYTHON/rs-workflow-env/pull/159) : rspy 1204 add shared volume for cpm tests jupyter aswell as add gitlab runner
+
 ## [1.0a13] - 2026-08-28
 
 ### Added
