@@ -31,7 +31,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/) 
 - [PR#160](https://github.com/RS-PYTHON/rs-workflow-env/pull/160) : fix: remove oauth2 proxy
 - [RSPY-1204](https://github.com/RS-PYTHON/rs-workflow-env/pull/158) : Add DASK_GATEWAY__ADDRESS and AUTH__TYPE for zero-arg Gateway()
 - [RSPY-1137](https://github.com/RS-PYTHON/rs-workflow-env/pull/154) : Remove hardcoded pip version when a pip-tools fix is released
-
+- [PR#164](https://github.com/RS-PYTHON/rs-workflow-env/pull/164) : fix gitlab url to be ansible variable
+- [PR#159](https://github.com/RS-PYTHON/rs-workflow-env/pull/159) : rspy 1204 add shared volume for cpm tests jupyter aswell as add gitlab runner
 
 ## [1.0a13] - 2026-08-28
 
