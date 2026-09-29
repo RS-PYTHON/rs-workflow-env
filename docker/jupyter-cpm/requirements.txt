@@ -12,14 +12,18 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+bokeh==3.8.2
 boto3==1.43.75
-dask==2026.8.0
+dask==2026.3.0
 dask-gateway==2026.3.0
-distributed==2026.8.0
+dask-labextension==7.0.0
+distributed==2026.3.0
 eopf==3.0.0rc4
 ipywidgets==8.1.9
+jupyter-server-proxy==4.4.0
 jupyterhub==5.5.2
 jupyterlab==4.6.3
+lz4=4.4.5
 pytest==9.1.1
 pytest-cov==7.1.0
 s3cmd==2.4.0

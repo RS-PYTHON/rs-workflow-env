@@ -12,7 +12,8 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-gitlabUrl: https://gitlab.eopf.copernicus.eu
+gitlabUrl: "{{ gitlab_runner_cpm.url }}"
+
 
 runners:
   name: "cpm-runner-rspy"
