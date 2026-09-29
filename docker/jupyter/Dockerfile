@@ -118,7 +118,7 @@ RUN curl -L -o /tmp/firefox.tar.xz "https://download.mozilla.org/?product=firefo
     rm /tmp/firefox.tar.xz
 
 # Jupyter desktop proxy
-RUN pip install jupyter-remote-desktop-proxy
+RUN pip install jupyter-remote-desktop-proxy && layer-cleanup.sh
 
 COPY --chown=rspy:rspy ./resources/00-read-env.py /tmp/00-read-env.py
 COPY --chown=rspy:rspy ./resources/jupyter_server_config.py /tmp/jupyter_server_config.py
