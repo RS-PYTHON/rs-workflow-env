@@ -32,6 +32,10 @@ spec:
       port: 4200
       weight: 1
     matches:
-    - path:
+    - headers:
+      - name: Authorization
+        type: RegularExpression
+        value: ^[Bb]earer .*
+      path:
         type: PathPrefix
         value: /api
