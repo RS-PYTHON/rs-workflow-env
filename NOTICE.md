@@ -32,14 +32,14 @@ Below are all the FOSS (Free and open-source software) used and their respective
 
 - JupyterHub
   - Helm chart:
-    - Version: 4.3.2
-    - Licence: [Apache License 2.0](https://github.com/jupyterhub/zero-to-jupyterhub-k8s/blob/4.3.2/LICENSE)
+    - Version: 4.4.2
+    - Licence: [Apache License 2.0](https://github.com/jupyterhub/zero-to-jupyterhub-k8s/blob/4.4.2/LICENSE)
     - Source: <https://github.com/jupyterhub/zero-to-jupyterhub-k8s/tree/4.3.2>
     - Copyright: Copyright (c) Jupyter Development Team. [Authors and Contributors](https://github.com/jupyterhub/zero-to-jupyterhub-k8s/graphs/contributors)
   - Container image(s)
     - ghcr.io/rs-python/rs-workflow-env-jupyter:latest
       - License: [Apache License 2.0](https://github.com/RS-PYTHON/rs-workflow-env/blob/develop/LICENSE)
-    - quay.io/jupyterhub/k8s-image-awaiter:4.3.2
+    - quay.io/jupyterhub/k8s-image-awaiter:4.4.2
       - Licence: [Apache License 2.0](https://github.com/jupyterhub/zero-to-jupyterhub-k8s/blob/4.3.2/LICENSE)
     - quay.io/jupyterhub/k8s-hub:4.3.2
       - Licence: [Apache License 2.0](https://github.com/jupyterhub/zero-to-jupyterhub-k8s/blob/4.3.2/LICENSE)
