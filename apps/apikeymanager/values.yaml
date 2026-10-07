@@ -51,20 +51,7 @@ image:
 imagePullSecrets: {}
 
 ingress:
-  annotations:
-    cert-manager.io/cluster-issuer: "{{ cluster_issuer }}"
-  className: nginx
-  # -- Enabled/Disable ingress
   enabled: false
-  hosts:
-  - host: "apikeymanager.{{ platform_domain_name }}"
-    paths:
-    - path: /
-      pathType: Prefix
-  tls:
-   - secretName: apikeymanager-{{ platform_domain_name | replace(".", "-") }}
-     hosts:
-       - apikeymanager.{{ platform_domain_name }}
 
 affinity:
   nodeAffinity:
