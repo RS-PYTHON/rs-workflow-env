@@ -514,8 +514,14 @@ singleuser:
         start_timeout: 600
         node_selector:
           node-role.kubernetes.io/dask_worker_on_demand: ""
+        tolerations:
+          - key: role
+            operator: Equal
+            value: dask_worker_on_demand
+            effect: NoSchedule
         extra_tolerations:
           - key: role
+            operator: Equal
             value: dask_worker_on_demand
             effect: NoSchedule
         extra_volumes:
