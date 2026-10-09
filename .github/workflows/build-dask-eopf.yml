@@ -319,16 +319,19 @@ jobs:
               (github.event_name != 'workflow_dispatch') ||
               (inputs.target_system == 'cluster') ||
               (inputs.target_system == 'all')}}
+          # Build local versions only for a merge to develop or a manual run
           - target: local
             targetcondition: ${{
-              (github.event_name != 'workflow_dispatch') ||
-              (inputs.target_system == 'local') ||
-              (inputs.target_system == 'all')}}
+              (needs.set-binary-env.outputs.branch_name == 'develop') ||
+              ((github.event_name == 'workflow_dispatch') && (
+                (inputs.target_system == 'local') ||
+                (inputs.target_system == 'all')))}}
           - target: localcluster
             targetcondition: ${{
-              (github.event_name != 'workflow_dispatch') ||
-              (inputs.target_system == 'localcluster') ||
-              (inputs.target_system == 'all')}}
+              (needs.set-binary-env.outputs.branch_name == 'feat-1180/generate-cpmv3-payloads') ||
+              ((github.event_name == 'workflow_dispatch') && (
+                (inputs.target_system == 'local') ||
+                (inputs.target_system == 'all')))}}
 
     steps:
       - name: Display build info

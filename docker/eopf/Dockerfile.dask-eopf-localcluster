@@ -37,14 +37,15 @@ USER root
 COPY --from=docker-scripts ./layer-cleanup.sh ./restore-apt.sh /usr/local/bin/
 RUN chmod 755 /usr/local/bin/layer-cleanup.sh /usr/local/bin/restore-apt.sh
 
-# System installations
+# System installations (libexpat1 required for rasterio)
 RUN \
     restore-apt.sh && apt update && \
-    apt install -y git curl && \
+    apt install -y curl git libexpat1 && \
     layer-cleanup.sh
 
 # Install processor and eopf
 ADD ./resources/requirements-*.txt /opt
+COPY ./resources/system-requirements-*.txt /opt
 # NOTE, with older docker versions, use:
 # RUN --mount=type=secret,id=GITLAB_EOPF_TOKEN \
 # GITLAB_EOPF_TOKEN=$(cat /run/secrets/GITLAB_EOPF_TOKEN) pip install ...
@@ -56,8 +57,14 @@ RUN --mount=type=secret,id=GITLAB_EOPF_TOKEN,env=GITLAB_EOPF_TOKEN \
     rm -rf /opt/requirements-*.txt
 
 # Install complete dask subsets
-
 RUN pip install --only-binary=:all: dask[complete] && layer-cleanup.sh
+
+# Other installations and installation of system requirements if a file for it exists
+RUN restore-apt.sh && \
+    if [ -f "/opt/system-requirements-${IMAGE2BUILD}.txt" ]; \
+    then apt update && \
+    apt --no-install-recommends install -y $(grep -vE "^\s*#" /opt/system-requirements-"${IMAGE2BUILD}".txt | tr "\n" "\t"); fi && \
+    layer-cleanup.sh
 
 # Other installations
 RUN \
@@ -71,7 +78,6 @@ RUN \
     layer-cleanup.sh
 
 # Install and auto configure opentelemetry
-
 RUN pip install --only-binary=:all: opentelemetry-distro opentelemetry-exporter-otlp "opentelemetry-instrumentation-eopf>=0.2.10" && \
     opentelemetry-bootstrap -a install && \
     layer-cleanup.sh
