@@ -509,8 +509,15 @@ singleuser:
         image: ghcr.io/rs-python/rs-workflow-env-cpm:latest
         cpu_limit: 4
         cpu_guarantee: 1
-        mem_limit: 16G
-        mem_guarantee: 4G
+        mem_limit: 32G
+        mem_guarantee: 16G
+        start_timeout: 600
+        node_selector:
+          node-role.kubernetes.io/dask_worker_on_demand: ""
+        extra_tolerations:
+          - key: role
+            value: dask_worker_on_demand
+            effect: NoSchedule
         extra_volumes:
           - name: shared-cpm-tests
             persistentVolumeClaim:
