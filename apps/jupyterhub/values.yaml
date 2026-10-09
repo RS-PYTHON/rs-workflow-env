@@ -513,6 +513,7 @@ singleuser:
         mem_guarantee: 16G
         start_timeout: 600
         node_selector:
+          node-role.kubernetes.io/rs_env: null
           node-role.kubernetes.io/dask_worker_on_demand: ""
         tolerations:
           - key: role
