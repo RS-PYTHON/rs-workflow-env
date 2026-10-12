@@ -21,7 +21,7 @@
 
 #l0==1.5.0
 # Install from latest main commit of the git repository instead
-s3olci @ git+https://__token__:${GITLAB_EOPF_TOKEN}@gitlab.eopf.copernicus.eu/L0/l0@48050c5a09cd4a8c95c5d56105166440f9e86325  # October 8, 2026
+l0 @ git+https://__token__:${GITLAB_EOPF_TOKEN}@gitlab.eopf.copernicus.eu/L0/l0@48050c5a09cd4a8c95c5d56105166440f9e86325  # October 8, 2026
 
 # other python dependencies
 graphviz
