@@ -32,17 +32,28 @@ Below are all the FOSS (Free and open-source software) used and their respective
 
 - JupyterHub
   - Helm chart:
-    - Version: 4.3.2
-    - Licence: [Apache License 2.0](https://github.com/jupyterhub/zero-to-jupyterhub-k8s/blob/4.3.2/LICENSE)
+    - Version: 4.4.2
+    - Licence: [Apache License 2.0](https://github.com/jupyterhub/zero-to-jupyterhub-k8s/blob/4.4.2/LICENSE)
     - Source: <https://github.com/jupyterhub/zero-to-jupyterhub-k8s/tree/4.3.2>
     - Copyright: Copyright (c) Jupyter Development Team. [Authors and Contributors](https://github.com/jupyterhub/zero-to-jupyterhub-k8s/graphs/contributors)
   - Container image(s)
     - ghcr.io/rs-python/rs-workflow-env-jupyter:latest
       - License: [Apache License 2.0](https://github.com/RS-PYTHON/rs-workflow-env/blob/develop/LICENSE)
-    - quay.io/jupyterhub/k8s-image-awaiter:4.3.2
-      - Licence: [Apache License 2.0](https://github.com/jupyterhub/zero-to-jupyterhub-k8s/blob/4.3.2/LICENSE)
-    - quay.io/jupyterhub/k8s-hub:4.3.2
-      - Licence: [Apache License 2.0](https://github.com/jupyterhub/zero-to-jupyterhub-k8s/blob/4.3.2/LICENSE)
+    - quay.io/jupyterhub/k8s-image-awaiter:4.4.2
+      - Licence: [BSD 3-Clause License](https://github.com/jupyterhub/zero-to-jupyterhub-k8s/blob/4.4.2/LICENSE)
+   - quay.io/jupyterhub/k8s-secret-sync:4.4.2
+      - Licence: [BSD 3-Clause License](https://github.com/jupyterhub/zero-to-jupyterhub-k8s/blob/4.4.2/LICENSE)
+    - quay.io/jupyterhub/k8s-network-tools-4.4.2
+      - Licence: [BSD 3-Clause License](https://github.com/jupyterhub/zero-to-jupyterhub-k8s/blob/4.4.2/LICENSE)
+    - quay.io/jupyterhub/k8s-hub:4.4.2
+      - Licence: [BSD 3-Clause License](https://github.com/jupyterhub/zero-to-jupyterhub-k8s/blob/4.4.2/LICENSE)
+    - quay.io/jupyterhub/configurable-http-proxy:5.2.0
+      - Licence: [BSD 3-Clause License](https://github.com/jupyterhub/configurable-http-proxy/blob/5.2.0/LICENSE)
+    - docker.io/traefik:3.3.5
+      - Licence: [MIT License](https://github.com/traefik/traefik/blob/v3.3.5/LICENSE.md)
+    - registry.k8s.io/kube-scheduler:v1.30.14
+      - Licence: [Apache License 2.0](https://github.com/kubernetes/kube-scheduler/blob/release-1.30/LICENSE)
+
 
 - Prefect
   - Helm chart:
@@ -51,8 +62,8 @@ Below are all the FOSS (Free and open-source software) used and their respective
     - Source: <https://github.com/PrefectHQ/prefect-helm/tree/2026.6.18212926>
     - Copyright: Copyright The Prefect Development Team. [Authors and Contributors](https://github.com/PrefectHQ/prefect-helm/graphs/contributors)
   - Container image(s)
-    - prefecthq/prefect:3.7.5-python3.13-kubernetes
-      - License: [Apache License 2.0](https://github.com/PrefectHQ/prefect/blob/3.7.5/LICENSE)
+    - prefecthq/prefect:3.8.7-python3.13-kubernetes
+      - License: [Apache License 2.0](https://github.com/PrefectHQ/prefect/blob/3.8.7/LICENSE)
 
 ## Licenses
 
