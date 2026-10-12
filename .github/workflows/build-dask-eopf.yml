@@ -328,7 +328,7 @@ jobs:
                 (inputs.target_system == 'all')))}}
           - target: localcluster
             targetcondition: ${{
-              (needs.set-binary-env.outputs.branch_name == 'feat-1180/generate-cpmv3-payloads') ||
+              (needs.set-binary-env.outputs.branch_name == 'develop') ||
               ((github.event_name == 'workflow_dispatch') && (
                 (inputs.target_system == 'local') ||
                 (inputs.target_system == 'all')))}}
