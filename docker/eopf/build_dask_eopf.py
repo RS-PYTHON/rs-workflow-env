@@ -80,8 +80,8 @@ all_procs = {
         image2build="dask-cpm3",
     ),
     "l0": Image(
-        python_version="3.11.7",
-        dask_version="2024.5.2",
+        python_version="3.13.12",
+        dask_version="2026.3.0",
         k8s_name="ghcr.io/rs-python/dask/l0/k8s",
         local_name="ghcr.io/rs-python/dask/l0/local",
         local_cluster_name="ghcr.io/rs-python/dask/l0/localcluster",
