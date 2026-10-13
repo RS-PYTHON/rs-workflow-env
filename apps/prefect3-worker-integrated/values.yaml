@@ -243,6 +243,16 @@ worker:
                         "name": "prefect-job",
                         "image": "ghcr.io/rs-python/prefect/rs-client-libraries/k8s:latest",
                         "imagePullPolicy": "IfNotPresent",
+                        "securityContext": {
+                          "runAsNonRoot": true,
+                          "runAsUser": 1000,
+                          "allowPrivilegeEscalation": false,
+                          "capabilities": {
+                            "drop": [
+                              "ALL"
+                            ]
+                          }
+                        },
                         "volumeMounts": [
                           {
                             "name": "rspython-ops-ads-01",
