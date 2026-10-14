@@ -72,7 +72,7 @@ all_procs = {
     # Image for CPM >=3
     # WARNING: Up to first official relase, release-candidate revision is hard-coded in requirements-dask-cpm3.txt
     "cpm3": Image(
-        python_version="3.13.12",
+        python_version="3.13.16",
         dask_version="2026.3.0",
         k8s_name="ghcr.io/rs-python/dask/cpm3/k8s",
         local_name="ghcr.io/rs-python/dask/cpm3/local",
@@ -88,7 +88,7 @@ all_procs = {
         image2build="dask-l0",
     ),
     "s1ard": Image(
-        python_version="3.13.12",
+        python_version="3.13.16",
         dask_version="2026.3.0",
         k8s_name="ghcr.io/rs-python/dask/s1ard/k8s",
         local_name="ghcr.io/rs-python/dask/s1ard/local",
