@@ -23,6 +23,11 @@
 deps:
 
   - python_version: "3.13.16"
+    dask_version: "2026.3.0"
+    cpm_version: "3.0.0rc4"
+    used_by: [dpr]
+
+  - python_version: "3.13.16"
     dask_version: "2026.7.1"
     cpm_version: "3.0.0rc4"
     used_by: [dpr, staging]
