@@ -31,3 +31,5 @@ deps:
     dask_version: "2026.7.1"
     cpm_version: "3.0.0rc4"
     used_by: [dpr, staging]
+
+  - python_version: "3.13.16"
