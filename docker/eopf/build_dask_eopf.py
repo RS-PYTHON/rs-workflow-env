@@ -60,15 +60,6 @@ class Image:
 
 # All possible processor images
 all_procs = {
-    # Image for CPM >=2.7.0,<3
-    "cpm2": Image(
-        python_version="3.11.7",
-        dask_version="2026.1.2",
-        k8s_name="ghcr.io/rs-python/dask/cpm2/k8s",
-        local_name="ghcr.io/rs-python/dask/cpm2/local",
-        local_cluster_name="ghcr.io/rs-python/dask/cpm2/localcluster",
-        image2build="dask-cpm2",
-    ),
     # Image for CPM >=3
     # WARNING: Up to first official relase, release-candidate revision is hard-coded in requirements-dask-cpm3.txt
     "cpm3": Image(

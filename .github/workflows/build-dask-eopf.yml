@@ -23,7 +23,7 @@
 # - Test rs-demo with the newly built images
 #
 # On manual trigger:
-# - The user chooses which processor to build (cpm2, cpm3, l0, s1ard, s3olci, mockup or all) and for which target system (cluster, local, localcluster or all), and also to rebuild the base images or not
+# - The user chooses which processor to build (cpm3, l0, s1ard, s3olci, mockup or all) and for which target system (cluster, local, localcluster or all), and also to rebuild the base images or not
 # - Changes are checked like in automatic mode
 # - The images built are the ones for the detected changes like in automatic mode AND the ones requested by the user
 # - rs-demo tests are run like in automatic mode
@@ -60,7 +60,6 @@ on:
         type: choice
         options:
           - all
-          - cpm2
           - cpm3
           - l0
           - s1ard
@@ -97,7 +96,6 @@ jobs:
       # to trigger all the image builds anytime the workflow is triggered manually.
       base: ${{ steps.filter.outputs.base }}
       common: ${{ steps.filter.outputs.common }}
-      cpm2: ${{ steps.filter.outputs.cpm2 }}
       cpm3: ${{ steps.filter.outputs.cpm3 }}
       l0: ${{ steps.filter.outputs.l0 }}
       s1ard: ${{ steps.filter.outputs.s1ard }}
@@ -121,7 +119,6 @@ jobs:
               - docker/eopf/Dockerfile.dask-eopf-localcluster
               - docker/eopf/resources/layer-cleanup.sh
               - docker/eopf/resources/restore-apt.sh
-            cpm2: ['docker/**/*dask-cpm.*']
             cpm3: ['docker/**/*dask-cpm.*']
             l0: ['docker/**/*dask-l0.*', 'docker/**/l0/*']
             s1ard: ['docker/**/*dask-s1ard.*']
@@ -136,7 +133,6 @@ jobs:
           if [[ \
             (${{ steps.filter.outputs.base }} == 'true') || \
             (${{ steps.filter.outputs.common }} == 'true') || \
-            (${{ steps.filter.outputs.cpm2 }} == 'true') || \
             (${{ steps.filter.outputs.cpm3 }} == 'true') || \
             (${{ steps.filter.outputs.l0 }} == 'true') || \
             (${{ steps.filter.outputs.s1ard }} == 'true') || \
@@ -251,21 +247,9 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        proc: [cpm2, cpm3, l0, s1ard, s3olci]
+        proc: [cpm3, l0, s1ard, s3olci]
         target: [cluster, local, localcluster] # No option = main image for cluster deployment, "local" is for local deployment and "localcluster" is for local debugging
         include:
-          - proc: cpm2
-            proccondition: ${{
-              ((github.event_name != 'workflow_dispatch') && (
-                (needs.changes.outputs.cpm2 == 'true') ||
-                (needs.changes.outputs.common == 'true') ||
-                (needs.changes.outputs.base == 'true')
-              )) ||
-              ((github.event_name == 'workflow_dispatch') && (
-                (inputs.processor == 'cpm2') ||
-                (inputs.processor == 'all')
-              ))}}
-            python-package: eopf
           - proc: cpm3
             proccondition: ${{
               ((github.event_name != 'workflow_dispatch') && (
