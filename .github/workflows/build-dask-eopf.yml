@@ -412,6 +412,10 @@ jobs:
           echo "python_tag=${python_tag:-}" >> $GITHUB_OUTPUT
         shell: bash
 
+      - name: Restore the Trivy databases from the cache
+        if: ${{ matrix.proccondition && matrix.targetcondition }}
+        uses: RS-PYTHON/actions/.github/actions/restore-trivy-cache@develop
+
       - name: Run Trivy vulnerability scanner
         if: ${{ matrix.proccondition && matrix.targetcondition }}
         uses: aquasecurity/trivy-action@master
@@ -420,6 +424,7 @@ jobs:
           TRIVY_JAVA_DB_REPOSITORY: public.ecr.aws/aquasecurity/trivy-java-db:1
         with:
           version: v0.69.3
+          cache: false # restored by restore-trivy-cache
           image-ref: ${{ steps.build.outputs.repository_and_tag }}
           format: sarif
           output: trivy-results-docker.sarif
