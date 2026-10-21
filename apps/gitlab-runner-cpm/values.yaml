@@ -13,45 +13,91 @@
 # limitations under the License.
 
 gitlabUrl: "{{ gitlab_runner_cpm.url }}"
+
+envVars:
+  - name: FF_USE_ADVANCED_POD_SPEC_CONFIGURATION
+    value: "true"
+
 runners:
   name: "cpm-runner-rspy"
   secret: runner-credentials-cpm
+
   config: |
     [[runners]]
       limit = 10
+
       environment = [
         "GET_SOURCES_ATTEMPTS=3",
         "GIT_HTTP_LOW_SPEED_LIMIT=1000",
         "GIT_HTTP_LOW_SPEED_TIME=30",
         "GIT_CONFIG_COUNT=1",
         "GIT_CONFIG_KEY_0=http.version",
-        "GIT_CONFIG_VALUE_0=HTTP/1.1"
+        "GIT_CONFIG_VALUE_0=HTTP/1.1",
+        "FF_USE_ADVANCED_POD_SPEC_CONFIGURATION=true"
       ]
+
       [runners.kubernetes]
         poll_timeout = 600
         namespace = "{{ jupyterhub.ops.namespace }}"
+
         [runners.kubernetes.node_selector]
-          "node-role.kubernetes.io/rs_env" = ""
-        [runners.kubernetes.node_tolerations]
-          "role=rs_env" = "NoSchedule"
+          "node-role.kubernetes.io/infra" = ""
 
-      # Mount the 105GB dpr-common dataset into build pods
-      [[runners.kubernetes.volumes.pvc]]
-        name = "shared-cpm-ci-data"
-        mount_path = "/data/cache-ci"
+        [runners.kubernetes.pod_labels]
+          "app.kubernetes.io/name" = "gitlab-runner-job"
+          "app.kubernetes.io/instance" = "cpm-runner-rspy"
 
-      # Mount shared-cpm-tests dataset into build pods
-      [[runners.kubernetes.volumes.pvc]]
-        name = "shared-cpm-tests"
-        mount_path = "/mnt/test-data"
+        # Create one dynamically provisioned PVC per CI job and spread
+        # CI job pods across the infra nodes.
+        [[runners.kubernetes.pod_spec]]
+          name = "workspace-pvc-and-spread"
+          patch_type = "strategic"
+          patch = '''
+            topologySpreadConstraints:
+            - maxSkew: 1
+              topologyKey: kubernetes.io/hostname
+              whenUnsatisfiable: ScheduleAnyway
+              labelSelector:
+                matchLabels:
+                  app.kubernetes.io/name: gitlab-runner-job
+                  app.kubernetes.io/instance: cpm-runner-rspy
+
+            containers:
+            - name: build
+              volumeMounts:
+              - name: builds
+                mountPath: /builds
+
+            - name: helper
+              volumeMounts:
+              - name: builds
+                mountPath: /builds
+
+            volumes:
+            - name: builds
+              ephemeral:
+                volumeClaimTemplate:
+                  spec:
+                    storageClassName: csi-cinder-high-speed
+                    accessModes:
+                    - ReadWriteOnce
+                    resources:
+                      requests:
+                        storage: 100Gi
+          '''
+
+        [[runners.kubernetes.volumes.pvc]]
+          name = "shared-cpm-ci-data"
+          mount_path = "/data/cache-ci"
+          mount_propagation = "None"
+
+        [[runners.kubernetes.volumes.pvc]]
+          name = "shared-cpm-tests"
+          mount_path = "/mnt/test-data"
+          mount_propagation = "None"
 
 nodeSelector:
-  node-role.kubernetes.io/rs_env: ""
-
-tolerations:
-  - key: role
-    value: rs_env
-    effect: NoSchedule
+  node-role.kubernetes.io/infra: ""
 
 rbac:
   create: true
