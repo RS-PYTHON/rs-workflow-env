@@ -7,13 +7,14 @@ dependencies, with a Dask version compatible with them. This page describes thes
 ## Python and Dask versions
 
 A Dask client (Jupyter kernel, rs-server-staging, rs-dpr-service) must use **the same Python and Dask versions** as
-the Dask cluster it connects to. As the processors don't all use the same versions (they depend on the version of
-[EOPF CPM](https://cpm.pages.eopf.copernicus.eu/eopf-cpm/main/index.html) they use), several combinations coexist.
-They are listed in [`docker/scripts/dask-cluster-versions.yml`](https://github.com/RS-PYTHON/rs-workflow-env/blob/develop/docker/scripts/dask-cluster-versions.yml),
+the Dask cluster it connects to. Currently, the staging and all the processors use the same combination (Python
+3.13.16 and Dask 2026.7.1, with [EOPF CPM](https://cpm.pages.eopf.copernicus.eu/eopf-cpm/main/index.html) 3), but the
+design supports several combinations coexisting, as the processors depend on the version of EOPF CPM they use.
+The combinations are listed in [`docker/scripts/dask-cluster-versions.yml`](https://github.com/RS-PYTHON/rs-workflow-env/blob/develop/docker/scripts/dask-cluster-versions.yml),
 which is the reference used to build:
 
 - the Dask base images,
-- one Jupyter kernel per combination in the JupyterHub image, so a notebook can connect to any Dask cluster,
+- one Jupyter kernel per combination in the JupyterHub image, so a notebook can connect to the Dask clusters,
 - one rs-dpr-service image per combination (`rs-dpr-service_py<python>-<dask>`), see
   [DPR processors](https://github.com/RS-PYTHON/rs-dpr-service/blob/develop/docs/doc/index.md#deployment).
 
@@ -43,7 +44,7 @@ The Dask images are built in two steps: first the base images, then the processo
 images. The base images contain [Dask](https://www.dask.org/), [distributed](https://distributed.dask.org/) and
 [Dask Gateway](https://gateway.dask.org/) (plus `dask-gateway-server` for the local mode). They are built for each
 target (`k8s` or `local`) and each Python and Dask version, with the tag `<target>-py<python version>-<dask version>`,
-e.g. `ghcr.io/rs-python/dask/dask-gateway:k8s-py3.13.16-2026.3.0`.
+e.g. `ghcr.io/rs-python/dask/dask-gateway:k8s-py3.13.16-2026.7.1`.
 
 The files to build them are in the [`docker/base`](https://github.com/RS-PYTHON/rs-workflow-env/tree/develop/docker/base)
 folder: Dockerfiles for the Dask (`Dockerfile.dask.k8s`, `Dockerfile.dask.local`), Jupyter and Python base images, and
@@ -63,7 +64,8 @@ three images are built:
 | `ghcr.io/rs-python/dask/<processor>/localcluster` | Debugging in local mode: rs-dpr-service and the processor in the same image, run with a Dask `LocalCluster` (see the [experimental configurations](https://github.com/RS-PYTHON/rs-dpr-service/blob/develop/docs/doc/index.md#experimental-configurations)). |
 
 The images are available for the Level-0 processors (`l0`), the Sentinel-1 ARD processor (`s1ard`), the Sentinel-3
-OLCI processors (`s3olci`), and generic images with the EOPF CPM major versions (`cpm2`, `cpm3`). The processors and
+OLCI processors (`s3olci`), and a generic image with EOPF CPM 3 (`cpm3`). The EOPF CPM 2 images (`cpm2`) are no longer
+built. The processors and
 their dependencies are installed from the `requirements-dask-<processor>.txt` files (and optional
 `system-requirements-*` and `post-install-*` files) of the
 [`docker/eopf/resources`](https://github.com/RS-PYTHON/rs-workflow-env/tree/develop/docker/eopf/resources) folder.
