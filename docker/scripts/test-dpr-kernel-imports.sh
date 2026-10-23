@@ -26,10 +26,9 @@ set -x
 
 image=${1:-}
 deps_file=${2:-}
-notebook_cpm2=${3:-}
 notebook_cpm3=${4:-}
-if [[ (-z ${image:-}) || (-z ${deps_file:-}) || (-z ${notebook_cpm2:-}) || (-z ${notebook_cpm3:-}) ]]; then
-    echo "usage: $0 IMAGE PATH_TO_DEPS_FILE PATH_TO_CPM2_NOTEBOOK PATH_TO_CPM3_NOTEBOOK"
+if [[ (-z ${image:-}) || (-z ${deps_file:-}) || (-z ${notebook_cpm3:-}) ]]; then
+    echo "usage: $0 IMAGE PATH_TO_DEPS_FILE PATH_TO_CPM3_NOTEBOOK"
     exit 2
 fi
 
@@ -41,7 +40,6 @@ chmod +x /usr/local/bin/yq
 # dpr kernels are dependency sets whose "used_by" list contains "dpr" (see dask-cluster-versions.yml)
 deps=$(yq -o json "$deps_file" | jq -c '.deps[] | select(.used_by | index("dpr") != null)')
 
-notebook_cpm2_abs=$(realpath "$notebook_cpm2")
 notebook_cpm3_abs=$(realpath "$notebook_cpm3")
 failed_kernels=()
 
@@ -52,10 +50,9 @@ while IFS= read -r dep; do
     dep_name="py${python_version}-${dask_version}"
 
     case ${cpm_version%%.*} in
-        2) notebook_abs=$notebook_cpm2_abs ;;
         3) notebook_abs=$notebook_cpm3_abs ;;
         *)
-            echo "❌ Kernel '$dep_name' has an unrecognized cpm_version '$cpm_version' (expected a 2.x or 3.x major version): add a matching test notebook"
+            echo "❌ Kernel '$dep_name' has an unrecognized cpm_version '$cpm_version' (expected a 3.x major version): add a matching test notebook"
             failed_kernels+=("$dep_name")
             continue
             ;;

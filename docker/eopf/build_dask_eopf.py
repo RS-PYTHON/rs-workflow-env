@@ -60,28 +60,19 @@ class Image:
 
 # All possible processor images
 all_procs = {
-    # Image for CPM >=2.7.0,<3
-    "cpm2": Image(
-        python_version="3.11.7",
-        dask_version="2026.1.2",
-        k8s_name="ghcr.io/rs-python/dask/cpm2/k8s",
-        local_name="ghcr.io/rs-python/dask/cpm2/local",
-        local_cluster_name="ghcr.io/rs-python/dask/cpm2/localcluster",
-        image2build="dask-cpm2",
-    ),
     # Image for CPM >=3
     # WARNING: Up to first official relase, release-candidate revision is hard-coded in requirements-dask-cpm3.txt
     "cpm3": Image(
         python_version="3.13.16",
-        dask_version="2026.3.0",
+        dask_version="2026.7.1",
         k8s_name="ghcr.io/rs-python/dask/cpm3/k8s",
         local_name="ghcr.io/rs-python/dask/cpm3/local",
         local_cluster_name="ghcr.io/rs-python/dask/cpm3/localcluster",
         image2build="dask-cpm3",
     ),
     "l0": Image(
-        python_version="3.11.7",
-        dask_version="2024.5.2",
+        python_version="3.13.16",
+        dask_version="2026.7.1",
         k8s_name="ghcr.io/rs-python/dask/l0/k8s",
         local_name="ghcr.io/rs-python/dask/l0/local",
         local_cluster_name="ghcr.io/rs-python/dask/l0/localcluster",
@@ -89,15 +80,15 @@ all_procs = {
     ),
     "s1ard": Image(
         python_version="3.13.16",
-        dask_version="2026.3.0",
+        dask_version="2026.7.1",
         k8s_name="ghcr.io/rs-python/dask/s1ard/k8s",
         local_name="ghcr.io/rs-python/dask/s1ard/local",
         local_cluster_name="ghcr.io/rs-python/dask/s1ard/localcluster",
         image2build="dask-s1ard",
     ),
     "s3olci": Image(
-        python_version="3.11.7",
-        dask_version="2024.5.2",
+        python_version="3.13.16",
+        dask_version="2026.7.1",
         k8s_name="ghcr.io/rs-python/dask/s3olci/k8s",
         local_name="ghcr.io/rs-python/dask/s3olci/local",
         local_cluster_name="ghcr.io/rs-python/dask/s3olci/localcluster",

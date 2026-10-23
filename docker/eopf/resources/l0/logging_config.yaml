@@ -12,27 +12,25 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+
 version: 1
-
-disable_existing_loggers: false
-
 loggers:
   eopf:
     handlers:
       - console
+    propagate: 0
 
-  l0:
+  l0.cadu_processing:
     handlers:
-      - file
+      - console
+    propagate: 0
 
 formatters:
   console:
     format: "%(asctime)s - %(name)s - %(levelname)s - %(message)s"
-    datefmt: '%Y-%m-%d %H:%M:%S'
 
   file:
-    format: "%(asctime)s : %(levelname)s : %(module)s : %(funcName)s : %(lineno)d - %(message)s"
-    datefmt: '%Y-%m-%d %H:%M:%S'
+    format: "%(asctime)s : %(levelname)s : %(module)s : %(funcName)s : %(lineno)d : (Process Details : (%(process)d, %(processName)s), Thread Details : (%(thread)d, %(threadName)s))\nLog : %(message)s"
 
 
 handlers:
@@ -40,7 +38,7 @@ handlers:
     class: logging.FileHandler
     level: DEBUG
     formatter: file
-    filename: ./reports/logging_config.log
+    filename: l0.log
 
   console:
     class: logging.StreamHandler
@@ -48,7 +46,7 @@ handlers:
     formatter: console
 
 root:
-  level: INFO
+  level: DEBUG
   handlers:
     - file
     - console
