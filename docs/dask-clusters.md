@@ -47,6 +47,15 @@ print(cluster.name, cluster.dashboard_link)
 More examples, e.g. to set the node affinity of the workers, are given in
 [Dask Gateway](https://github.com/RS-PYTHON/rs-infra-core/blob/develop/docs/how-to/dask-gateway.md).
 
+## CPM test clusters with shared disk
+
+For CPM workflows and integration tests requiring shared disk access (such as Sentinel-2 processing):
+
+* Set `options.mount_cpm_shared_disk = True`, or
+* Use a CPM image (e.g. `image="ghcr.io/rs-python/rs-workflow-env-cpm:latest"` or any image containing `cpm` in its name).
+
+The shared disk (`shared-cpm-tests` PVC) is automatically mounted at `/mnt/test-data` on all Dask workers and the scheduler.
+
 ## List and delete clusters
 
 ```python
