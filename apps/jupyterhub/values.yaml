@@ -499,10 +499,10 @@ singleuser:
     - display_name: "Default (latest) environment"
       description: "Latest RS-Python environment"
       default: true
-    - display_name: "Release v1.0a14"
-      description: "RS-Python release v1.0a14"
+    - display_name: "Release v1.0a15"
+      description: "RS-Python release v1.0a15"
       kubespawner_override:
-        image: ghcr.io/rs-python/rs-workflow-env-jupyter:v1.0a14
+        image: ghcr.io/rs-python/rs-workflow-env-jupyter:v1.0a15
     - display_name: "CPM Dev Environment"
       description: "CPM Studio environment with shared test data"
       kubespawner_override:
