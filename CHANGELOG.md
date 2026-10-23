@@ -13,6 +13,32 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/) 
 >- **Fixed** for any bug fixes.
 >- **Security** in case of vulnerabilities.
 
+## [1.0a15] - 2026-10-23
+
+### Added
+
+- [PR#177](https://github.com/RS-PYTHON/rs-workflow-env/pull/177) : feat: update security policy to not run as root on prefect runner
+- [RSPY-954](https://github.com/RS-PYTHON/rs-workflow-env/pull/180) : Document the virtual environment
+- [RSPY-1229](https://github.com/RS-PYTHON/rs-workflow-env/pull/181) : Download and cache the Trivy databases once per day
+- [PR#182](https://github.com/RS-PYTHON/rs-workflow-env/pull/182) : feat: add ephemeral volume and topologySpreadConstraints
+
+### Changed
+
+- [PR#169](https://github.com/RS-PYTHON/rs-workflow-env/pull/169) : Update to OpenTelemetry 1.45.0/0.66b0
+- [PR#170](https://github.com/RS-PYTHON/rs-workflow-env/pull/170) : Update to S1 ARD 1.2.0
+- [PR#173](https://github.com/RS-PYTHON/rs-workflow-env/pull/173) : Update to OpenTelemetry 1.45.1/0.66b1
+- [RSPY-1069](https://github.com/RS-PYTHON/rs-workflow-env/pull/166) : Update prefect image to 3.8.7 in server and workers
+- [RSPY-1186](https://github.com/RS-PYTHON/rs-workflow-env/pull/175) : Migrate SAFE conversion to cpmv3
+- [RSPY-1069](https://github.com/RS-PYTHON/rs-workflow-env/pull/172) : Update Python version to 3.13.16
+- [PR#179](https://github.com/RS-PYTHON/rs-workflow-env/pull/179) : Update python_version 3.13.12 -> 3.13.16
+- [PR#178](https://github.com/RS-PYTHON/rs-workflow-env/pull/178) : Use dask 2026.7.1
+- [RSPY-1182](https://github.com/RS-PYTHON/rs-workflow-env/pull/174) : Migrate S3 OLCI processing to CPMv3
+
+### Fixed
+
+- [PR#167](https://github.com/RS-PYTHON/rs-workflow-env/pull/167) : Fix/remove cpm test volumes
+- [PR#171](https://github.com/RS-PYTHON/rs-workflow-env/pull/171) : fix: httproute for prefect-api
+
 ## [1.0a14] - 2026-09-29
 
 ### Added
