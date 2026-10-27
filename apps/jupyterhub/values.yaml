@@ -125,6 +125,8 @@ hub:
               return
 
           spawner.node_selector = {}
+          spawner.supplemental_gids = [1000, 1001]
+          spawner.environment["UMASK"] = "0002"
 
           volume_name = "shared-cpm-tests"
 

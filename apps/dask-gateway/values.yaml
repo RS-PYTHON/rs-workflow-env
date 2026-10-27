@@ -71,6 +71,14 @@ gateway:
                     for v in volumes
                 ):
                     volumes.append(volume)
+
+                sec_ctx = pod_cfg.setdefault("securityContext", {})
+                sec_ctx["fsGroup"] = 1001
+                supp_groups = sec_ctx.setdefault("supplementalGroups", [])
+                for gid in (1000, 1001):
+                    if gid not in supp_groups:
+                        supp_groups.append(gid)
+
                 config[key] = pod_cfg
 
             for key in ("worker_extra_container_config", "scheduler_extra_container_config"):
@@ -81,6 +89,11 @@ gateway:
                     for m in volume_mounts
                 ):
                     volume_mounts.append(volume_mount)
+
+                env = ctr_cfg.setdefault("env", [])
+                if not any(isinstance(e, dict) and e.get("name") == "UMASK" for e in env):
+                    env.append({"name": "UMASK", "value": "0002"})
+
                 config[key] = ctr_cfg
 
             return config
