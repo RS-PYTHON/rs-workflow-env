@@ -33,7 +33,8 @@ runners:
         "GIT_CONFIG_COUNT=1",
         "GIT_CONFIG_KEY_0=http.version",
         "GIT_CONFIG_VALUE_0=HTTP/1.1",
-        "FF_USE_ADVANCED_POD_SPEC_CONFIGURATION=true"
+        "FF_USE_ADVANCED_POD_SPEC_CONFIGURATION=true",
+        "UMASK=0002"
       ]
 
       [runners.kubernetes]
@@ -53,6 +54,10 @@ runners:
           name = "workspace-pvc-and-spread"
           patch_type = "strategic"
           patch = '''
+            securityContext:
+              fsGroup: 1001
+              supplementalGroups: [1000, 1001]
+
             topologySpreadConstraints:
             - maxSkew: 1
               topologyKey: kubernetes.io/hostname
