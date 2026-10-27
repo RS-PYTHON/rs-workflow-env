@@ -26,16 +26,12 @@ spec:
     volumeHandle: 2d877e2f-5ff4-4ed8-8141-ba13a59d0aa6
     volumeAttributes:
       cephfs-mounter: fuse
-      shareAccessIDs: d87fb4c6-9d49-4216-96af-284c860284bc
       shareID: 2d877e2f-5ff4-4ed8-8141-ba13a59d0aa6
-      storage.kubernetes.io/csiProvisionerIdentity: 1789626076806-330-nfs.manila.csi.openstack.org
+      shareAccessIDs: d87fb4c6-9d49-4216-96af-284c860284bc
     nodePublishSecretRef:
       name: csi-manila-secrets
       namespace: default
     nodeStageSecretRef:
-      name: csi-manila-secrets
-      namespace: default
-    controllerExpandSecretRef:
       name: csi-manila-secrets
       namespace: default
   persistentVolumeReclaimPolicy: Retain
