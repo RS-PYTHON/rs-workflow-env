@@ -17,10 +17,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/) 
 
 ### Added
 
-- Support shared-disk (`shared-cpm-tests` at `/mnt/test-data`) in Dask Gateway for CPM test workloads via `mount_cpm_shared_disk` or CPM image detection
-- S3 migration script (`scripts/migrate-cpm-s3-data.py` & `.sh`) to migrate CPM test datasets from SDE `dpr-common` to RSPY `cpm-input`
-- Operational script (`apps/gitlab-runner-cpm/scripts/sync-dpr-common-dataset.sh`) to synchronize the 105 GB `dpr-common` dataset into `/data/cache-ci/`
-- Documentation for CPM V3 GitLab Runner and CPM Dask clusters with shared-disk
+- Support shared-disk (`shared-cpm-tests` at `/mnt/test-data`) in Dask Gateway for CPM test workloads via `mount_cpm_shared_disk` or CPM image/cluster name detection
+- Documentation for CPM Dask clusters with shared-disk
 
 ## [1.0a14] - 2026-09-29
 
