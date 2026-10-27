@@ -35,42 +35,60 @@ gateway:
       value: rs_env
       effect: NoSchedule
   extraConfig:
-    clusteroptions: |
-        from dask_gateway_server.options import Options, Integer, Float, String, Mapping, Bool
+    10-extra-cpm-shared-volume: |
+        import copy
 
-        def option_handler(options):
-            worker_pod_config = dict(options.worker_extra_pod_config) if options.worker_extra_pod_config else {}
-            worker_container_config = dict(options.worker_extra_container_config) if options.worker_extra_container_config else {}
-            scheduler_pod_config = dict(options.scheduler_extra_pod_config) if options.scheduler_extra_pod_config else {}
-            scheduler_container_config = dict(options.scheduler_extra_container_config) if options.scheduler_extra_container_config else {}
-
+        def mount_cpm_volume(options, config):
             mount_cpm = (
                 getattr(options, "mount_cpm_shared_disk", False)
                 or ("cpm" in (options.image or "").lower())
                 or ("cpm" in (options.cluster_name or "").lower())
             )
 
-            if mount_cpm:
-                cpm_vol = {
-                    "name": "shared-cpm-tests",
-                    "persistentVolumeClaim": {"claimName": "shared-cpm-tests"},
-                }
-                cpm_mount = {
-                    "name": "shared-cpm-tests",
-                    "mountPath": "/mnt/test-data",
-                    "readOnly": False,
-                }
-                for pod_cfg in [worker_pod_config, scheduler_pod_config]:
-                    vols = pod_cfg.setdefault("volumes", [])
-                    if not any(isinstance(v, dict) and v.get("name") == "shared-cpm-tests" for v in vols):
-                        vols.append(cpm_vol)
+            if not mount_cpm:
+                return config
 
-                for ctr_cfg in [worker_container_config, scheduler_container_config]:
-                    mounts = ctr_cfg.setdefault("volumeMounts", [])
-                    if not any(isinstance(m, dict) and m.get("name") == "shared-cpm-tests" for m in mounts):
-                        mounts.append(cpm_mount)
+            volume_name = "shared-cpm-tests"
 
-            return {
+            volume = {
+                "name": volume_name,
+                "persistentVolumeClaim": {
+                    "claimName": "shared-cpm-tests",
+                },
+            }
+
+            volume_mount = {
+                "name": volume_name,
+                "mountPath": "/mnt/test-data",
+                "readOnly": False,
+            }
+
+            for key in ("worker_extra_pod_config", "scheduler_extra_pod_config"):
+                pod_cfg = copy.deepcopy(config.get(key) or {})
+                volumes = pod_cfg.setdefault("volumes", [])
+                if not any(
+                    isinstance(v, dict) and v.get("name") == volume_name
+                    for v in volumes
+                ):
+                    volumes.append(volume)
+                config[key] = pod_cfg
+
+            for key in ("worker_extra_container_config", "scheduler_extra_container_config"):
+                ctr_cfg = copy.deepcopy(config.get(key) or {})
+                volume_mounts = ctr_cfg.setdefault("volumeMounts", [])
+                if not any(
+                    isinstance(m, dict) and m.get("name") == volume_name
+                    for m in volume_mounts
+                ):
+                    volume_mounts.append(volume_mount)
+                config[key] = ctr_cfg
+
+            return config
+    clusteroptions: |
+        from dask_gateway_server.options import Options, Integer, Float, String, Mapping, Bool
+
+        def option_handler(options):
+            config = {
                 "worker_cores": options.worker_cores,
                 "worker_memory": "%fG" % options.worker_memory,
                 "scheduler_core_limit": options.scheduler_core_limit,
@@ -81,14 +99,15 @@ gateway:
                 "cluster_max_memory": options.cluster_max_memory,
                 "cluster_max_workers": options.cluster_max_workers,
                 "cluster_name": options.cluster_name,
-                "scheduler_extra_container_config": scheduler_container_config,
+                "scheduler_extra_container_config": options.scheduler_extra_container_config,
                 "scheduler_extra_pod_annotations": options.scheduler_extra_pod_annotations,
-                "scheduler_extra_pod_config": scheduler_pod_config,
+                "scheduler_extra_pod_config": options.scheduler_extra_pod_config,
                 "scheduler_extra_pod_labels": options.scheduler_extra_pod_labels,
                 "environment": options.environment,
-                "worker_extra_pod_config": worker_pod_config,
-                "worker_extra_container_config": worker_container_config,
+                "worker_extra_pod_config": options.worker_extra_pod_config,
+                "worker_extra_container_config": options.worker_extra_container_config,
             }
+            return mount_cpm_volume(options, config)
 
         c.Backend.cluster_options = Options(
             Float("worker_cores", 1, min=1, max=8, label="Worker Cores"),
