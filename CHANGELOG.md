@@ -13,13 +13,6 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/) 
 >- **Fixed** for any bug fixes.
 >- **Security** in case of vulnerabilities.
 
-## [Unreleased]
-
-### Added
-
-- Support shared-disk (`shared-cpm-tests` at `/mnt/test-data`) in Dask Gateway for CPM test workloads via `mount_cpm_shared_disk` or CPM image/cluster name detection
-- Documentation for CPM Dask clusters with shared-disk
-
 ## [1.0a14] - 2026-09-29
 
 ### Added
