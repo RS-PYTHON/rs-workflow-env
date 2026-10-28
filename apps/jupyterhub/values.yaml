@@ -114,6 +114,56 @@ hub:
             print(f"\n[ERROR]: Could not authenticate user: {e!r}\n")
 
       c.JupyterHub.authenticator_class = CustomGenericOAuthenticator
+    10-extra-cpm-shared-volume: |
+      async def mount_cpm_volume(spawner):
+
+          profile = spawner.user_options.get("profile")
+
+          spawner.log.info("PROFILE=%s", profile)
+
+          if profile != "cpm-dev-environment":
+              return
+
+          volume_name = "shared-cpm-tests"
+
+          volume = {
+              "name": volume_name,
+              "persistentVolumeClaim": {
+                  "claimName": "shared-cpm-tests",
+              },
+          }
+
+          volume_mount = {
+              "name": volume_name,
+              "mountPath": "/mnt/test-data",
+              "readOnly": False,
+          }
+
+          if isinstance(spawner.volumes, dict):
+              spawner.volumes[volume_name] = volume
+          else:
+              if not any(
+                  isinstance(v, dict) and v.get("name") == volume_name
+                  for v in spawner.volumes
+              ):
+                  spawner.volumes.append(volume)
+
+          if isinstance(spawner.volume_mounts, dict):
+              spawner.volume_mounts[volume_name] = volume_mount
+          else:
+              if not any(
+                  isinstance(m, dict) and m.get("name") == volume_name
+                  for m in spawner.volume_mounts
+              ):
+                  spawner.volume_mounts.append(volume_mount)
+
+          spawner.log.info(
+              "Added CPM shared volume %s at %s",
+              volume_name,
+              volume_mount["mountPath"],
+          )
+
+      c.Spawner.pre_spawn_hook = mount_cpm_volume
   service:
     type: ClusterIP
     annotations: {}
@@ -500,10 +550,12 @@ singleuser:
       description: "Latest RS-Python environment"
       default: true
     - display_name: "Release v1.0a14"
+      slug: release-v1-0a14
       description: "RS-Python release v1.0a14"
       kubespawner_override:
         image: ghcr.io/rs-python/rs-workflow-env-jupyter:v1.0a14
     - display_name: "CPM Dev Environment"
+      slug: cpm-dev-environment
       description: "CPM Studio environment with shared test data"
       kubespawner_override:
         image: ghcr.io/rs-python/rs-workflow-env-cpm:latest
@@ -511,13 +563,6 @@ singleuser:
         cpu_guarantee: 1
         mem_limit: 16G
         mem_guarantee: 4G
-        extra_volumes:
-          - name: shared-cpm-tests
-            persistentVolumeClaim:
-              claimName: shared-cpm-tests
-        extra_volume_mounts:
-          - name: shared-cpm-tests
-            mountPath: /mnt/test-data
 # scheduling relates to the user-scheduler pods and user-placeholder pods.
 scheduling:
   userScheduler:
