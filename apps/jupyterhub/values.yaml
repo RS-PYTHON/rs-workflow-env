@@ -115,8 +115,6 @@ hub:
 
       c.JupyterHub.authenticator_class = CustomGenericOAuthenticator
     10-extra-cpm-shared-volume: |
-      import copy
-
       async def mount_cpm_volume(spawner):
 
           profile = spawner.user_options.get("profile")
