@@ -25,6 +25,8 @@ runners:
   config: |
     [[runners]]
       limit = 10
+      # Runner job scripts do not apply the UMASK environment variable.
+      pre_build_script = "umask 0002"
 
       environment = [
         "GET_SOURCES_ATTEMPTS=3",
