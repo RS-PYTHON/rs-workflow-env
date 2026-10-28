@@ -119,35 +119,12 @@ hub:
 
       async def mount_cpm_volume(spawner):
 
-          # A spawner is reused across stops and profile changes. Undo only
-          # our previous spawn's overrides before applying the next profile.
-          previous = getattr(spawner, "_cpm_shared_volume_state", None)
-          if previous is not None:
-              for name, value in previous.items():
-                  if name != "UMASK":
-                      setattr(spawner, name, value)
-              if previous["UMASK"] is None:
-                  spawner.environment.pop("UMASK", None)
-              else:
-                  spawner.environment["UMASK"] = previous["UMASK"]
-              spawner._cpm_shared_volume_state = None
-
           profile = spawner.user_options.get("profile")
 
           spawner.log.info("PROFILE=%s", profile)
 
           if profile != "cpm-dev-environment":
               return
-
-          spawner._cpm_shared_volume_state = {
-              name: copy.deepcopy(getattr(spawner, name))
-              for name in ("node_selector", "supplemental_gids", "volumes", "volume_mounts")
-          }
-          spawner._cpm_shared_volume_state["UMASK"] = spawner.environment.get("UMASK")
-
-          spawner.node_selector = {}
-          spawner.supplemental_gids = sorted(set(spawner.supplemental_gids or []) | {1000, 1001})
-          spawner.environment["UMASK"] = "0002"
 
           volume_name = "shared-cpm-tests"
 

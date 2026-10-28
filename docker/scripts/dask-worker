@@ -14,11 +14,8 @@
 # limitations under the License.
 
 # wrapper for dask-worker
-import os
 import sys
 from distributed.cli.dask_worker import main
 if __name__ == '__main__':
-    if "UMASK" in os.environ:
-        os.umask(int(os.environ["UMASK"], 8))
     sys.argv[0] = sys.argv[0].removesuffix('.exe')
     sys.exit(main())

@@ -16,8 +16,6 @@
 
 set -e
 
-umask "${UMASK:-0022}"
-
 # Run home directory initialization if script exists
 if [[ -x /opt/eopf/bin/initializeHomeDirectory.bash ]]; then
     /opt/eopf/bin/initializeHomeDirectory.bash

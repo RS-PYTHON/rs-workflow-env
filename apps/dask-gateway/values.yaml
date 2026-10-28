@@ -73,7 +73,6 @@ gateway:
                     volumes.append(volume)
 
                 sec_ctx = pod_cfg.setdefault("securityContext", {})
-                sec_ctx["fsGroup"] = 1001
                 supp_groups = sec_ctx.setdefault("supplementalGroups", [])
                 for gid in (1000, 1001):
                     if gid not in supp_groups:
