@@ -35,11 +35,60 @@ gateway:
       value: rs_env
       effect: NoSchedule
   extraConfig:
+    10-extra-cpm-shared-volume: |
+        import copy
+
+        def mount_cpm_volume(options, config):
+            mount_cpm = (
+                getattr(options, "mount_cpm_shared_disk", False)
+                or ("cpm" in (options.image or "").lower())
+                or ("cpm" in (options.cluster_name or "").lower())
+            )
+
+            if not mount_cpm:
+                return config
+
+            volume_name = "shared-cpm-tests"
+
+            volume = {
+                "name": volume_name,
+                "persistentVolumeClaim": {
+                    "claimName": "shared-cpm-tests",
+                },
+            }
+
+            volume_mount = {
+                "name": volume_name,
+                "mountPath": "/mnt/test-data",
+                "readOnly": False,
+            }
+
+            for key in ("worker_extra_pod_config", "scheduler_extra_pod_config"):
+                pod_cfg = copy.deepcopy(config.get(key) or {})
+                volumes = pod_cfg.setdefault("volumes", [])
+                if not any(
+                    isinstance(v, dict) and v.get("name") == volume_name
+                    for v in volumes
+                ):
+                    volumes.append(volume)
+                config[key] = pod_cfg
+
+            for key in ("worker_extra_container_config", "scheduler_extra_container_config"):
+                ctr_cfg = copy.deepcopy(config.get(key) or {})
+                volume_mounts = ctr_cfg.setdefault("volumeMounts", [])
+                if not any(
+                    isinstance(m, dict) and m.get("name") == volume_name
+                    for m in volume_mounts
+                ):
+                    volume_mounts.append(volume_mount)
+                config[key] = ctr_cfg
+
+            return config
     clusteroptions: |
-        from dask_gateway_server.options import Options, Integer, Float, String, Mapping
+        from dask_gateway_server.options import Options, Integer, Float, String, Mapping, Bool
 
         def option_handler(options):
-            return {
+            config = {
                 "worker_cores": options.worker_cores,
                 "worker_memory": "%fG" % options.worker_memory,
                 "scheduler_core_limit": options.scheduler_core_limit,
@@ -58,6 +107,7 @@ gateway:
                 "worker_extra_pod_config": options.worker_extra_pod_config,
                 "worker_extra_container_config": options.worker_extra_container_config,
             }
+            return mount_cpm_volume(options, config)
 
         c.Backend.cluster_options = Options(
             Float("worker_cores", 1, min=1, max=8, label="Worker Cores"),
@@ -70,6 +120,7 @@ gateway:
             Float("cluster_max_memory", default=17179869184, min=1073741824, max=343597383680, label="Cluster max memory"),
             Integer("cluster_max_workers", 5, min=1, max=20, label="Cluster max workers"),
             String("cluster_name", default="MyDaskCluster", label="Cluster Name"),
+            Bool("mount_cpm_shared_disk", default=False, label="Mount CPM Shared Disk (/mnt/test-data)"),
             Mapping("scheduler_extra_container_config", default={"readinessProbe":{"failureThreshold":3,"httpGet":{"path":"/api/health","port":8788,"scheme":"HTTP"},"periodSeconds":5,"successThreshold":1,"timeoutSeconds":15}, "imagePullPolicy": "Always"}, label="scheduler_extra_container_config"),
             Mapping("scheduler_extra_pod_annotations", default={"usage":"unknown","access":"internal"}, label="Scheduler_extra_pod_annotations"),
             Mapping("scheduler_extra_pod_config", default={"affinity":{"nodeAffinity":{"requiredDuringSchedulingIgnoredDuringExecution":{"nodeSelectorTerms":[{"matchExpressions":[{"key":"node-role.kubernetes.io/access_csc","operator":"Exists"}]}]}}},"tolerations":[{"key":"role","operator":"Equal","value":"access_csc","effect":"NoSchedule"}]}, label="Scheduler_extra_pod_config"),
