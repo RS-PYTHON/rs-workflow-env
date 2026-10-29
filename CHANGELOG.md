@@ -151,11 +151,11 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/) 
 
 ### Added
 
-- [RSPY-1043](https://github.com/RS-PYTHON/rs-workflow-env/pull/58) : RSPY-1043 - Create a new Dask image with only CPM
+- [RSPY-1043](https://github.com/RS-PYTHON/rs-workflow-env/pull/58) : Create a new Dask image with only CPM
 - [PR#81](https://github.com/RS-PYTHON/rs-workflow-env/pull/81) : Configure SonarCloud and fix security issues
 - [PR#83](https://github.com/RS-PYTHON/rs-workflow-env/pull/83) : Use native aiobotocore instrumentation + recent eopf instrum lib
-- [RSPY-1003](https://github.com/RS-PYTHON/rs-workflow-env/pull/82) : RSPY-1003: Add s3-l1-olci processor 1.4.0 to the DPR service
-- [RSPY-970](https://github.com/RS-PYTHON/rs-workflow-env/pull/79) : RSPY-970: Improve the CI/CDs for the Dask images - Part 3
+- [RSPY-1003](https://github.com/RS-PYTHON/rs-workflow-env/pull/82) : Add s3-l1-olci processor 1.4.0 to the DPR service
+- [RSPY-970](https://github.com/RS-PYTHON/rs-workflow-env/pull/79) : Improve the CI/CDs for the Dask images - Part 3
 
 ## [1.0a8] - 2026-03-30
 
