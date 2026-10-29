@@ -23,8 +23,10 @@
 
 ARG PYTHON_VERSION=xxx
 ARG DASK_TAG=xxx
+# rs-dpr-service image tag, e.g. the current branch name
+ARG DPR_SERVICE_TAG=latest
 
-FROM ghcr.io/rs-python/rs-dpr-service_py${PYTHON_VERSION}-${DASK_TAG}:latest
+FROM ghcr.io/rs-python/rs-dpr-service_py${PYTHON_VERSION}-${DASK_TAG}:${DPR_SERVICE_TAG}
 
 ARG IMAGE2BUILD
 

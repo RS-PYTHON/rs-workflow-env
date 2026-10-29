@@ -138,10 +138,23 @@ jobs:
       - name: Deploy the workflow-env apps (check)
         run: |
           conda run -n rspy --no-capture-output env PYTHONUNBUFFERED=1 ANSIBLE_FORCE_COLOR=1 ansible-playbook --check apps.yaml -i inventory/mycluster/hosts.yaml -e '{"package_paths": ["./rs-workflow-env/apps/"]}' -e private_registry=true
+      - id: set-binary-env
+        name: Call action 'set-binary-env'
+        uses: RS-PYTHON/actions/.github/actions/set-binary-env@develop
+      - id: jupyter-tag
+        name: Resolve jupyter image tag
+        uses: RS-PYTHON/actions/.github/actions/get-image-tag@develop
+        with:
+          image: ghcr.io/rs-python/rs-workflow-env-jupyter
+          # Test image tags with the same name as current branch, else latest
+          tags: ${{ steps.set-binary-env.outputs.docker_tags }},latest
       - name: Deploy the workflow-env apps (for real)
+        env:
+          JUPYTER_TAG: ${{ steps.jupyter-tag.outputs.tag }}
         run: |
           sed -i 's!debug: false!debug: true!g' roles/app-installer/defaults/main.yaml
-          sed -i 's!\(ghcr.io/rs-python/rs-workflow-env-jupyter\):[^[:space:]]*!\1:latest!' ./rs-workflow-env/apps/jupyterhub/values.yaml
+          sed -i "s!\(ghcr.io/rs-python/rs-workflow-env-jupyter\):[^[:space:]]*!\1:${JUPYTER_TAG}!" ./rs-workflow-env/apps/jupyterhub/values.yaml
+          sed -i "/name: ghcr.io\/rs-python\/rs-workflow-env-jupyter$/{n;s!tag: .*!tag: \"${JUPYTER_TAG}\"!}" ./rs-workflow-env/apps/jupyterhub/values.yaml
           ./rs-workflow-env/.github/common/resources/configure-minikube-deployment.sh
           conda run -n rspy --no-capture-output env PYTHONUNBUFFERED=1 ANSIBLE_FORCE_COLOR=1 ansible-playbook apps.yaml -i inventory/mycluster/hosts.yaml -e '{"package_paths": ["./rs-workflow-env/apps/"]}'
       - name: 🩺 Kubernetes failure diagnostics
