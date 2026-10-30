@@ -67,10 +67,10 @@ listed by the EOPF CPM's
 [tags](https://gitlab.eopf.copernicus.eu/cpm/eopf-cpm/-/tags) page_.
 
 ```bash
-export EOPF_CPM_VERSION=1.5.0
+export EOPF_CPM_VERSION=3.0.0
 ```
 
-In the above example, version `1.5.0` is specified. Please replace
+In the above example, version `3.0.0` is specified. Please replace
 this version either with the latest one or the one applicable to
 you development context.
 
