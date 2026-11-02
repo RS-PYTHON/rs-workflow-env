@@ -63,7 +63,7 @@ all_procs = {
     # Image for CPM >=3
     # WARNING: Up to first official relase, release-candidate revision is hard-coded in requirements-dask-cpm3.txt
     "cpm3": Image(
-        python_version="3.13.16",
+        python_version="3.13.18",
         dask_version="2026.7.1",
         k8s_name="ghcr.io/rs-python/dask/cpm3/k8s",
         local_name="ghcr.io/rs-python/dask/cpm3/local",
@@ -71,7 +71,7 @@ all_procs = {
         image2build="dask-cpm3",
     ),
     "l0": Image(
-        python_version="3.13.16",
+        python_version="3.13.18",
         dask_version="2026.7.1",
         k8s_name="ghcr.io/rs-python/dask/l0/k8s",
         local_name="ghcr.io/rs-python/dask/l0/local",
@@ -79,7 +79,7 @@ all_procs = {
         image2build="dask-l0",
     ),
     "s1ard": Image(
-        python_version="3.13.16",
+        python_version="3.13.18",
         dask_version="2026.7.1",
         k8s_name="ghcr.io/rs-python/dask/s1ard/k8s",
         local_name="ghcr.io/rs-python/dask/s1ard/local",
@@ -87,7 +87,7 @@ all_procs = {
         image2build="dask-s1ard",
     ),
     "s3olci": Image(
-        python_version="3.13.16",
+        python_version="3.13.18",
         dask_version="2026.7.1",
         k8s_name="ghcr.io/rs-python/dask/s3olci/k8s",
         local_name="ghcr.io/rs-python/dask/s3olci/local",
@@ -138,6 +138,12 @@ parser.add_argument(
     help="Docker tag(s) to use, as a comma-separated list e.g. 'tag1,tag2' (default: latest)",
 )
 parser.add_argument(
+    "--dpr_service_tags",
+    default="latest",
+    help="For the LocalCluster image: rs-dpr-service base image tag(s) to test, as a comma-separated list "
+    "e.g. 'my-branch-name,latest'. The first existing tag is used (default: latest)",
+)
+parser.add_argument(
     "--labels",
     default="",
     help="List of docker label lines as 'key=value'",
@@ -179,6 +185,23 @@ for proc, local_cluster in procs_to_build:
             return THIS_DIR / "Dockerfile.dask-eopf-localcluster"
         # default
         return THIS_DIR / "Dockerfile.dask-eopf"
+
+    def get_dpr_service_tag(proc_image: Image) -> str:
+        """Return the first existing rs-dpr-service image tag from --dpr_service_tags"""
+        dpr_image = f"ghcr.io/rs-python/rs-dpr-service_py{proc_image.python_version}-{proc_image.dask_version}"
+        for dpr_tag in args.dpr_service_tags.split(","):
+            if (
+                dpr_tag
+                and subprocess.run(  # nosec
+                    ["docker", "manifest", "inspect", f"{dpr_image}:{dpr_tag}"],
+                    check=False,
+                    capture_output=True,
+                ).returncode
+                == 0
+            ):
+                print(f"Use '{dpr_image}:{dpr_tag}'")
+                return dpr_tag
+        raise RuntimeError(f"Could not find any of the tags '{args.dpr_service_tags}' for the image '{dpr_image}'")
 
     def run_command(cmd: list[str]):
         """Run command line"""
@@ -232,6 +255,10 @@ for proc, local_cluster in procs_to_build:
         "--build-arg", f"PYTHON_VERSION={image.python_version}",
         "--build-arg", f"DASK_TAG={image.dask_version}"
     ]
+
+    # The LocalCluster image is built from the rs-dpr-service image
+    if local_cluster:
+        command += ["--build-arg", f"DPR_SERVICE_TAG={get_dpr_service_tag(image)}"]
 
     # Extract base image used from the target name (k8s or local) and add it as an argument
     if not local_cluster:

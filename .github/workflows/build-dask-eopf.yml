@@ -242,6 +242,8 @@ jobs:
     env:
       # Use directly the final tags
       DOCKER_TAGS: ${{ needs.set-binary-env.outputs.docker_tags }},${{ needs.set-binary-env.outputs.docker_final_tags }}
+      # rs-dpr-service image tags for the localcluster images: same as current branch, else latest
+      DPR_SERVICE_TAGS: ${{ needs.set-binary-env.outputs.docker_tags }},latest
 
     # See: https://docs.github.com/en/actions/how-tos/write-workflows/choose-what-workflows-do/run-job-variations
     strategy:
@@ -370,6 +372,7 @@ jobs:
           ./docker/eopf/build_dask_eopf.py \
             --gitlab_eopf_token "${{ secrets.GITLAB_EOPF_TOKEN }}" \
             --docker_tags $DOCKER_TAGS \
+            --dpr_service_tags "${DPR_SERVICE_TAGS}" \
             --labels "${{ steps.meta.outputs.labels }}" \
             $options \
             ${{ matrix.proc }}
