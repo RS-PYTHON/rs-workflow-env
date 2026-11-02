@@ -119,7 +119,7 @@ jobs:
               - docker/eopf/Dockerfile.dask-eopf-localcluster
               - docker/eopf/resources/layer-cleanup.sh
               - docker/eopf/resources/restore-apt.sh
-            cpm3: ['docker/**/*dask-cpm.*']
+            cpm3: ['docker/**/*dask-cpm3.*']
             l0: ['docker/**/*dask-l0.*', 'docker/**/l0/*']
             s1ard: ['docker/**/*dask-s1ard.*']
             s3olci: ['docker/**/*dask-s3olci.*']
