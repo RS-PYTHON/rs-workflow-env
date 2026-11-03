@@ -27,7 +27,7 @@ resources:
 - servicemonitor.yaml
 - secret.yaml
 - httproute.yaml
-- sharedvolume-cpm-tests.yaml
+
 apiVersion: kustomize.config.k8s.io/v1beta1
 kind: Kustomization
 labels:
