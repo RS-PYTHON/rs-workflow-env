@@ -33,11 +33,12 @@ runners:
         "GIT_CONFIG_COUNT=1",
         "GIT_CONFIG_KEY_0=http.version",
         "GIT_CONFIG_VALUE_0=HTTP/1.1",
+        "UMASK=0002",
       ]
 
       [runners.kubernetes]
         poll_timeout = 600
-        namespace = "{{ jupyterhub.ops.namespace }}"
+        namespace = "cpm"
 
         [runners.kubernetes.node_selector]
           "node-role.kubernetes.io/infra" = ""
@@ -52,6 +53,11 @@ runners:
           name = "workspace-pvc-and-spread"
           patch_type = "strategic"
           patch = '''
+            securityContext:
+              fsGroup: 1001
+              supplementalGroups:
+              - 1000
+              - 1001
             topologySpreadConstraints:
             - maxSkew: 1
               topologyKey: kubernetes.io/hostname

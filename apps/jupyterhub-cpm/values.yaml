@@ -1,0 +1,779 @@
+# Copyright 2023-2026 Airbus, CS Group
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+# custom can contain anything you want to pass to the hub pod, as all passed
+# Helm template values will be made available there.
+custom: {}
+
+# imagePullSecret is configuration to create a k8s Secret that Helm chart's pods
+# can get credentials from to pull their images.
+imagePullSecret:
+  create: false
+  automaticReferenceInjection: true
+  registry:
+  username:
+  password:
+  email:
+# imagePullSecrets is configuration to reference the k8s Secret resources the
+# Helm chart's pods can get credentials from to pull their images.
+imagePullSecrets: []
+
+# hub relates to the hub pod, responsible for running JupyterHub, its configured
+# Authenticator class KubeSpawner, and its configured Proxy class
+# ConfigurableHTTPProxy. KubeSpawner creates the user pods, and
+# ConfigurableHTTPProxy speaks with the actual ConfigurableHTTPProxy server in
+# the proxy pod.
+hub:
+  # Add initContainer to install itsdangerous without having to modify the image
+  initContainers:
+    - name: install-python-packages
+      image: python:3.12-slim
+      command: ["sh", "-c", "pip install --target /srv/jupyterhub/ itsdangerous"]
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 1000
+      volumeMounts:
+        - name: shared-volume
+          mountPath: /srv/jupyterhub
+  extraVolumes:
+    - name: shared-volume
+      emptyDir: {}
+  extraVolumeMounts:
+    - name: shared-volume
+      mountPath: /srv/jupyterhub/python-packages
+  revisionHistoryLimit:
+  config:
+    GenericOAuthenticator:
+      client_id: jupyterhub
+      client_secret: "{{ jupyterhub_oidc_client_secret }}"
+      oauth_callback_url: "https://{{ jupyterhub.ops.subDomain }}.{{ platform_domain_name }}/jupyter-cpm/hub/oauth_callback"
+      authorize_url: "https://iam.{{ platform_domain_name }}/realms/rspy/protocol/openid-connect/auth"
+      token_url: "https://iam.{{ platform_domain_name }}/realms/rspy/protocol/openid-connect/token"
+      userdata_url: "https://iam.{{ platform_domain_name }}/realms/rspy/protocol/openid-connect/userinfo"
+      login_service: keycloak
+      username_claim: preferred_username
+      userdata_params:
+        state: state
+      auth_state_groups_key: oauth_user
+      claim_groups_key: realm_access.roles
+      allowed_groups: {{ jupyterhub.ops.allowedGroups | to_yaml }}
+      admin_groups: {{ jupyterhub.ops.adminGroups | to_yaml }}
+      scope:
+        - openid
+      enable_auth_state: true
+      manage_groups: true
+    JupyterHub:
+      admin_access: true
+      authenticator_class: generic-oauth
+  extraConfig:
+    # After the user has logged in to JupyterHub, pass the authentication information
+    # to the user container so it can be used from the notebooks and terminal.
+    pass_auth_state: |
+      import sys
+      sys.path.append('/srv/jupyterhub/python-packages')
+
+      import json
+      import itsdangerous
+      from base64 import b64encode
+      from oauthenticator.generic import GenericOAuthenticator
+
+      class CustomGenericOAuthenticator(GenericOAuthenticator):
+        """Customize the GenericOAuthenticator that we use above, in the config field."""
+
+        async def pre_spawn_start(self, user, spawner):
+          """Called when spawning the user pod."""
+
+          try:
+            # Get the authentication state that was calculated by the authenticator
+            auth_state = await user.get_auth_state()
+
+            # Encrypt it as a session cookie called "user", exactly in the same way than
+            # rs-server and apikey-manager do, see the SessionMiddleware source code.
+            session = {"user": auth_state["oauth_user"]}
+            session_b64 = b64encode(json.dumps(session).encode("utf-8"))
+            signer = itsdangerous.TimestampSigner("{{ rsserver_cookieSecret }}")
+            session_cookie = signer.sign(session_b64)
+
+            # Save this cookie in an environment variable for this user only
+            # for future use when requesting rs-server and the apikey-manager
+            # from the user jupyterhub environment = from a notebook or terminal
+            spawner.environment["RSPY_OAUTH2_COOKIE"] = session_cookie.decode("utf-8")
+
+          except Exception as e:
+            print(f"\n[ERROR]: Could not authenticate user: {e!r}\n")
+
+      c.JupyterHub.authenticator_class = CustomGenericOAuthenticator
+    10-extra-cpm-shared-volume: |
+      async def mount_cpm_volume(spawner):
+          spawner.node_selector = {}
+          spawner.supplemental_gids = [1000, 1001]
+
+          volume_name = "shared-cpm-tests"
+
+          volume = {
+              "name": volume_name,
+              "persistentVolumeClaim": {
+                  "claimName": "shared-cpm-tests",
+              },
+          }
+
+          volume_mount = {
+              "name": volume_name,
+              "mountPath": "/mnt/test-data",
+              "readOnly": False,
+          }
+
+          if isinstance(spawner.volumes, dict):
+              spawner.volumes[volume_name] = volume
+          else:
+              if not any(
+                  isinstance(v, dict) and v.get("name") == volume_name
+                  for v in spawner.volumes
+              ):
+                  spawner.volumes.append(volume)
+
+          if isinstance(spawner.volume_mounts, dict):
+              spawner.volume_mounts[volume_name] = volume_mount
+          else:
+              if not any(
+                  isinstance(m, dict) and m.get("name") == volume_name
+                  for m in spawner.volume_mounts
+              ):
+                  spawner.volume_mounts.append(volume_mount)
+
+          spawner.log.info(
+              "Added CPM shared volume %s at %s",
+              volume_name,
+              volume_mount["mountPath"],
+          )
+
+      c.Spawner.pre_spawn_hook = mount_cpm_volume
+  service:
+    type: ClusterIP
+    annotations: {}
+    ports:
+      nodePort:
+    extraPorts: []
+    loadBalancerIP:
+  baseUrl: /jupyter-cpm
+  cookieSecret:
+  concurrentSpawnLimit: 64
+  consecutiveFailureLimit: 5
+  activeServerLimit:
+  deploymentStrategy:
+    ## type: Recreate
+    ## - sqlite-pvc backed hubs require the Recreate deployment strategy as a
+    ##   typical PVC storage can only be bound to one pod at the time.
+    ## - JupyterHub isn't designed to support being run in parallell. More work
+    ##   needs to be done in JupyterHub itself for a fully highly available (HA)
+    ##   deployment of JupyterHub on k8s is to be possible.
+    type: Recreate
+  db:
+    type: sqlite-pvc
+    upgrade:
+    pvc:
+      annotations: {}
+      selector: {}
+      accessModes:
+        - ReadWriteOnce
+      storage: 1Gi
+      subPath:
+      storageClassName:
+    url:
+    password:
+  pdb:
+    enabled: false
+    maxUnavailable:
+    minAvailable: 1
+  networkPolicy:
+    enabled: false
+    ingress: []
+    egress: []
+    egressAllowRules:
+      cloudMetadataServer: true
+      dnsPortsCloudMetadataServer: true
+      dnsPortsKubeSystemNamespace: true
+      dnsPortsPrivateIPs: true
+      nonPrivateIPs: true
+      privateIPs: true
+    interNamespaceAccessLabels: ignore
+    allowedIngressPorts: []
+  allowNamedServers: false
+  namedServerLimitPerUser:
+  authenticatePrometheus:
+  redirectToServer:
+  shutdownOnLogout:
+  templatePaths: []
+  templateVars: {}
+  livenessProbe:
+    # The livenessProbe's aim to give JupyterHub sufficient time to startup but
+    # be able to restart if it becomes unresponsive for ~5 min.
+    enabled: true
+    initialDelaySeconds: 300
+    periodSeconds: 10
+    failureThreshold: 30
+    timeoutSeconds: 3
+  readinessProbe:
+    # The readinessProbe's aim is to provide a successful startup indication,
+    # but following that never become unready before its livenessProbe fail and
+    # restarts it if needed. To become unready following startup serves no
+    # purpose as there are no other pod to fallback to in our non-HA deployment.
+    enabled: true
+    initialDelaySeconds: 0
+    periodSeconds: 2
+    failureThreshold: 1000
+    timeoutSeconds: 1
+  existingSecret:
+  serviceAccount:
+    create: true
+    name:
+    annotations: {}
+  extraPodSpec: {}
+  resources:
+    limits:
+      cpu: 0.3
+      memory: 300Mi
+    requests:
+      cpu: 0.1
+      memory: 150Mi
+  services:
+    dask-gateway:
+      display: false
+      apiToken: {{ jupyterhub.ops.services.daskgateway.apitoken }}
+    dask-staging:
+      display: false
+      apiToken: {{ jupyterhub.ops.services.daskstaging.apitoken }}
+    metrics:
+      display: false
+      apiToken: {{ jupyterhub.ops.services.metrics.apitoken }}
+  loadRoles:
+    metrics:
+      description: Access to prometheus metrics
+      scopes: [read:metrics]
+      services: [metrics]
+
+rbac:
+  create: true
+
+# proxy relates to the proxy pod, the proxy-public service, and the autohttps
+# pod and proxy-http service.
+proxy:
+  secretToken:
+  annotations: {}
+  deploymentStrategy:
+    ## type: Recreate
+    ## - JupyterHub's interaction with the CHP proxy becomes a lot more robust
+    ##   with this configuration. To understand this, consider that JupyterHub
+    ##   during startup will interact a lot with the k8s service to reach a
+    ##   ready proxy pod. If the hub pod during a helm upgrade is restarting
+    ##   directly while the proxy pod is making a rolling upgrade, the hub pod
+    ##   could end up running a sequence of interactions with the old proxy pod
+    ##   and finishing up the sequence of interactions with the new proxy pod.
+    ##   As CHP proxy pods carry individual state this is very error prone. One
+    ##   outcome when not using Recreate as a strategy has been that user pods
+    ##   have been deleted by the hub pod because it considered them unreachable
+    ##   as it only configured the old proxy pod but not the new before trying
+    ##   to reach them.
+    type: Recreate
+    ## rollingUpdate:
+    ## - WARNING:
+    ##   This is required to be set explicitly blank! Without it being
+    ##   explicitly blank, k8s will let eventual old values under rollingUpdate
+    ##   remain and then the Deployment becomes invalid and a helm upgrade would
+    ##   fail with an error like this:
+    ##
+    ##     UPGRADE FAILED
+    ##     Error: Deployment.apps "proxy" is invalid: spec.strategy.rollingUpdate: Forbidden: may not be specified when strategy `type` is 'Recreate'
+    ##     Error: UPGRADE FAILED: Deployment.apps "proxy" is invalid: spec.strategy.rollingUpdate: Forbidden: may not be specified when strategy `type` is 'Recreate'
+    rollingUpdate:
+  # service relates to the proxy-public service
+  service:
+    type: ClusterIP
+    labels: {}
+    annotations: {}
+    nodePorts:
+      http:
+      https:
+    disableHttpPort: false
+    extraPorts: []
+    loadBalancerIP:
+    loadBalancerSourceRanges: []
+  # chp relates to the proxy pod, which is responsible for routing traffic based
+  # on dynamic configuration sent from JupyterHub to CHP's REST API.
+  chp:
+    revisionHistoryLimit:
+    containerSecurityContext:
+      runAsUser: 65534 # nobody user
+      runAsGroup: 65534 # nobody group
+      allowPrivilegeEscalation: false
+    extraCommandLineFlags: []
+    livenessProbe:
+      enabled: true
+      initialDelaySeconds: 60
+      periodSeconds: 10
+      failureThreshold: 30
+      timeoutSeconds: 3
+    readinessProbe:
+      enabled: true
+      initialDelaySeconds: 0
+      periodSeconds: 2
+      failureThreshold: 1000
+      timeoutSeconds: 1
+    resources:
+      limits:
+        memory: 256Mi
+      requests:
+        memory: 22Mi
+    defaultTarget:
+    errorTarget:
+    extraEnv: {}
+    nodeSelector:
+      node-role.kubernetes.io/rs_env: ""
+    tolerations:
+      - key: role
+        value: rs_env
+        effect: NoSchedule
+    networkPolicy:
+      enabled: true
+      ingress: []
+      egress: []
+      egressAllowRules:
+        cloudMetadataServer: true
+        dnsPortsCloudMetadataServer: true
+        dnsPortsKubeSystemNamespace: true
+        dnsPortsPrivateIPs: true
+        nonPrivateIPs: true
+        privateIPs: true
+      interNamespaceAccessLabels: ignore
+      allowedIngressPorts: [http, https]
+    pdb:
+      enabled: false
+      maxUnavailable:
+      minAvailable: 1
+    extraPodSpec: {}
+  # traefik relates to the autohttps pod, which is responsible for TLS
+  # termination when proxy.https.type=letsencrypt.
+  traefik:
+    revisionHistoryLimit:
+    containerSecurityContext:
+      runAsUser: 65534 # nobody user
+      runAsGroup: 65534 # nobody group
+      allowPrivilegeEscalation: false
+    hsts:
+      includeSubdomains: false
+      preload: false
+      maxAge: 15724800 # About 6 months
+    resources:
+      limits:
+        memory: 42Mi
+      requests:
+        memory: 24Mi
+    labels: {}
+    extraInitContainers: []
+    extraEnv: {}
+    extraVolumes: []
+    extraVolumeMounts: []
+    extraStaticConfig: {}
+    extraDynamicConfig: {}
+    nodeSelector:
+      node-role.kubernetes.io/rs_env: ""
+    tolerations:
+      - key: role
+        value: rs_env
+        effect: NoSchedule
+    extraPorts: []
+    networkPolicy:
+      enabled: true
+      ingress: []
+      egress: []
+      egressAllowRules:
+        cloudMetadataServer: true
+        dnsPortsCloudMetadataServer: true
+        dnsPortsKubeSystemNamespace: true
+        dnsPortsPrivateIPs: true
+        nonPrivateIPs: true
+        privateIPs: true
+      interNamespaceAccessLabels: ignore
+      allowedIngressPorts: [http, https]
+    pdb:
+      enabled: false
+      maxUnavailable:
+      minAvailable: 1
+    serviceAccount:
+      create: true
+      name:
+      annotations: {}
+    extraPodSpec: {}
+  secretSync:
+    containerSecurityContext:
+      runAsUser: 65534 # nobody user
+      runAsGroup: 65534 # nobody group
+      allowPrivilegeEscalation: false
+    resources: {}
+  labels: {}
+  https:
+    enabled: false
+
+# singleuser relates to the configuration of KubeSpawner which runs in the hub
+# pod, and its spawning of user pods such as jupyter-myusername.
+singleuser:
+  podNameTemplate:
+  extraTolerations:
+    - key: role
+      value: rs_env
+      effect: NoSchedule
+  nodeSelector:
+    node-role.kubernetes.io/rs_env: ""
+  extraNodeAffinity:
+    required: []
+    preferred: []
+  extraPodAffinity:
+    required: []
+    preferred: []
+  extraPodAntiAffinity:
+    required: []
+    preferred: []
+  networkTools:
+    resources: {}
+  cloudMetadata:
+    # block set to true will append a privileged initContainer using the
+    # iptables to block the sensitive metadata server at the provided ip.
+    blockWithIptables: false
+    ip: 169.254.169.254
+  networkPolicy:
+    enabled: false
+    ingress: []
+    egress: []
+    egressAllowRules:
+      cloudMetadataServer: false
+      dnsPortsCloudMetadataServer: true
+      dnsPortsKubeSystemNamespace: true
+      dnsPortsPrivateIPs: true
+      nonPrivateIPs: true
+      privateIPs: false
+    interNamespaceAccessLabels: ignore
+    allowedIngressPorts: []
+  events: true
+  extraAnnotations: {}
+  extraLabels:
+    hub.jupyter.org/network-access-hub: "true"
+  extraFiles: {}
+  extraEnv:
+    DASK_GATEWAY_ADDRESS: "http://traefik-dask-gateway-cpm.cpm.svc.cluster.local"
+    DASK_GATEWAY__ADDRESS: "http://traefik-dask-gateway-cpm.cpm.svc.cluster.local"
+    DASK_GATEWAY__AUTH__TYPE: "jupyterhub"
+    DASK_GATEWAY_PUBLIC: "https://dash-dask.{{ jupyterhub.ops.subDomain }}.{{ platform_domain_name }}"
+    UMASK: "0002"
+    RSPY_DASK_STAGING_CLUSTER_NAME: "dask-staging"
+    PREFECT_API_URL: "http://{{ prefect3server.ops.name }}-server.{{ prefect3server.ops.namespace }}.svc.cluster.local:4200/api"
+    PREFECT_WORK_POOL_MONITORING: "{{ prefect3worker.monitoring.name }}"
+    PREFECT_WORK_POOL_INTEGRATED: "{{ prefect3worker.integrated.name }}"
+    PREFECT_WORK_POOL_SANDBOX: "{{ prefect3worker.sandbox.name }}"
+    RSPY_CATALOG_BUCKET: "{{ rspy.catalog_bucket }}"
+    RSPY_DPR_SIMU_URL: "http://mockup-processor-dpr.processing.svc.cluster.local:8080"
+    RSPY_GRAFANA_URL: "https://monitoring.{{ platform_domain_name }}"
+    RSPY_PREFECT_URL: "https://{{ prefect3server.ops.subDomain }}.{{ platform_domain_name }}"
+    RSPY_TEMP_BUCKET: "{{ rspy.tmp_bucket }}"
+    RSPY_UAC_CHECK_URL: "http://apikeymanager.processing.svc.cluster.local:8000/auth/check_key"
+    RSPY_UAC_HOMEPAGE: "https://apikeymanager.{{ platform_domain_name }}/docs"
+    RSPY_WEBSITE: "https://{{ platform_domain_name }}"
+    S3_ENDPOINT: "{{ s3.endpoint }}"
+    S3_REGION: "{{ s3.region }}"
+    TEMPO_ENDPOINT: "http://alloy.monitoring.svc.cluster.local:4317"
+    OTEL_PYTHON_REQUESTS_TRACE_HEADERS: "{{ jupyterhub.ops.services.otel.trace_headers }}"
+    OTEL_PYTHON_REQUESTS_TRACE_BODY: "{{ jupyterhub.ops.services.otel.trace_body }}"
+    WORKER_EXTRA_POD_CONFIG_EOPF: |
+      {% raw %}{{"affinity":{{"nodeAffinity":{{"requiredDuringSchedulingIgnoredDuringExecution":{{"nodeSelectorTerms":[{{"matchExpressions":[{{"key":"node-role.kubernetes.io/rs_env","operator":"Exists"}}]}}]}}}}}}}}{% endraw %}
+
+    WORKER_EXTRA_POD_CONFIG_STAGING: |
+      {% raw %}{{"affinity":{{"nodeAffinity":{{"requiredDuringSchedulingIgnoredDuringExecution":{{"nodeSelectorTerms":[{{"matchExpressions":[{{"key":"node-role.kubernetes.io/access_csc","operator":"Exists"}}]}}]}}}}}},"tolerations":[{{"key":"role","operator":"Equal","value":"access_csc","effect":"NoSchedule"}}]}}{% endraw %}
+
+  lifecycleHooks: {}
+  initContainers: []
+  extraContainers: []
+  allowPrivilegeEscalation: false
+  uid: 1001
+  fsGid: 1001
+  serviceAccountName:
+  storage:
+    type: dynamic
+    extraLabels: {}
+    extraVolumes:
+      - name: shared-cpm-tests
+        persistentVolumeClaim:
+          claimName: shared-cpm-tests
+    extraVolumeMounts:
+      - name: shared-cpm-tests
+        mountPath: /mnt/test-data
+    static:
+      pvcName:
+      subPath: "{username}"
+    capacity: 10Gi
+    homeMountPath: /home/rspy
+    dynamic:
+      storageClass: csi-cinder-high-speed-retain
+      pvcNameTemplate: claim-{username}{servername}
+      volumeNameTemplate: volume-{username}{servername}
+      storageAccessModes: [ReadWriteOnce]
+  # Defines the default image
+  image:
+    name: ghcr.io/rs-python/rs-workflow-env-cpm
+    tag: "latest"
+    pullPolicy: Always
+    pullSecrets: []
+    #  - name: {{ github.registrySecret.name }}
+  startTimeout: 300
+  cpu:
+    limit: 0.75
+    guarantee: 0.1
+  memory:
+    limit: 3.5G
+    guarantee: 400M
+  extraResource:
+    limits: {}
+    guarantees: {}
+  cmd: null
+  defaultUrl:
+  extraPodConfig:
+    securityContext:
+      supplementalGroups:
+        - 1000
+        - 1001
+  profileList:
+    - display_name: "CPM Dev Environment"
+      slug: cpm-dev-environment
+      description: "CPM Studio environment with shared test data"
+      kubespawner_override:
+        image: ghcr.io/rs-python/rs-workflow-env-cpm:latest
+        cpu_limit: 4
+        cpu_guarantee: 1
+        mem_limit: 16G
+        mem_guarantee: 4G
+# scheduling relates to the user-scheduler pods and user-placeholder pods.
+scheduling:
+  userScheduler:
+    enabled: true
+    revisionHistoryLimit:
+    replicas: 2
+    logLevel: 4
+    # plugins are configured on the user-scheduler to make us score how we
+    # schedule user pods in a way to help us schedule on the most busy node. By
+    # doing this, we help scale down more effectively. It isn't obvious how to
+    # enable/disable scoring plugins, and configure them, to accomplish this.
+    #
+    # plugins ref: https://kubernetes.io/docs/reference/scheduling/config/#scheduling-plugins-1
+    # migration ref: https://kubernetes.io/docs/reference/scheduling/config/#scheduler-configuration-migrations
+    #
+    plugins:
+      score:
+        # These scoring plugins are enabled by default according to
+        # https://kubernetes.io/docs/reference/scheduling/config/#scheduling-plugins
+        # 2022-02-22.
+        #
+        # Enabled with high priority:
+        # - NodeAffinity
+        # - InterPodAffinity
+        # - NodeResourcesFit
+        # - ImageLocality
+        # Remains enabled with low default priority:
+        # - TaintToleration
+        # - PodTopologySpread
+        # - VolumeBinding
+        # Disabled for scoring:
+        # - NodeResourcesBalancedAllocation
+        #
+        disabled:
+          # We disable these plugins (with regards to scoring) to not interfere
+          # or complicate our use of NodeResourcesFit.
+          - name: NodeResourcesBalancedAllocation
+          # Disable plugins to be allowed to enable them again with a different
+          # weight and avoid an error.
+          - name: NodeAffinity
+          - name: InterPodAffinity
+          - name: NodeResourcesFit
+          - name: ImageLocality
+        enabled:
+          - name: NodeAffinity
+            weight: 14631
+          - name: InterPodAffinity
+            weight: 1331
+          - name: NodeResourcesFit
+            weight: 121
+          - name: ImageLocality
+            weight: 11
+    pluginConfig:
+      # Here we declare that we should optimize pods to fit based on a
+      # MostAllocated strategy instead of the default LeastAllocated.
+      - name: NodeResourcesFit
+        args:
+          scoringStrategy:
+            resources:
+              - name: cpu
+                weight: 1
+              - name: memory
+                weight: 1
+            type: MostAllocated
+    containerSecurityContext:
+      runAsUser: 65534 # nobody user
+      runAsGroup: 65534 # nobody group
+      allowPrivilegeEscalation: false
+    nodeSelector:
+      node-role.kubernetes.io/rs_env: ""
+    tolerations:
+      - key: role
+        value: rs_env
+        effect: NoSchedule
+    labels: {}
+    annotations: {}
+    pdb:
+      enabled: true
+      maxUnavailable: 1
+      minAvailable:
+    resources:
+      limits:
+        memory: 56Mi
+      requests:
+        memory: 14Mi
+    serviceAccount:
+      create: true
+      name:
+      annotations: {}
+    extraPodSpec: {}
+  podPriority:
+    enabled: false
+    globalDefault: false
+    defaultPriority: 0
+    imagePullerPriority: -5
+    userPlaceholderPriority: -10
+  userPlaceholder:
+    enabled: true
+    revisionHistoryLimit:
+    replicas: 0
+    labels: {}
+    annotations: {}
+    containerSecurityContext:
+      runAsUser: 65534 # nobody user
+      runAsGroup: 65534 # nobody group
+      allowPrivilegeEscalation: false
+    resources: {}
+  corePods:
+    tolerations:
+      - key: hub.jupyter.org/dedicated
+        value: core
+        effect: NoSchedule
+      - key: hub.jupyter.org_dedicated
+        value: core
+        effect: NoSchedule
+    nodeAffinity:
+      matchNodePurpose: ignore
+  userPods:
+    tolerations:
+      - key: hub.jupyter.org/dedicated
+        value: user
+        effect: NoSchedule
+      - key: hub.jupyter.org_dedicated
+        value: user
+        effect: NoSchedule
+    nodeAffinity:
+      matchNodePurpose: ignore
+
+# prePuller relates to the hook|continuous-image-puller DaemonsSets
+prePuller:
+  revisionHistoryLimit:
+  labels: {}
+  annotations: {}
+  resources:
+    limits:
+      memory: 8Mi
+    requests:
+      memory: 216Ki
+  containerSecurityContext:
+    runAsUser: 65534 # nobody user
+    runAsGroup: 65534 # nobody group
+    allowPrivilegeEscalation: false
+  extraTolerations:
+    - key: role
+      value: rs_env
+      effect: NoSchedule
+  # hook relates to the hook-image-awaiter Job and hook-image-puller DaemonSet
+  hook:
+    enabled: true
+    pullOnlyOnChanges: true
+    containerSecurityContext:
+      runAsUser: 65534 # nobody user
+      runAsGroup: 65534 # nobody group
+      allowPrivilegeEscalation: false
+    podSchedulingWaitDuration: 10
+    nodeSelector:
+      node-role.kubernetes.io/rs_env: ""
+    tolerations:
+      - key: role
+        value: rs_env
+        effect: NoSchedule
+    resources: {}
+    serviceAccount:
+      create: true
+      name:
+      annotations: {}
+  continuous:
+    enabled: true
+  pullProfileListImages: true
+  extraImages: {}
+  pause:
+    containerSecurityContext:
+      runAsUser: 65534 # nobody user
+      runAsGroup: 65534 # nobody group
+      allowPrivilegeEscalation: false
+
+ingress:
+  enabled: false
+  ingressClassName: "nginx"
+  hosts:
+    - "{{ jupyterhub.ops.subDomain }}.{{ platform_domain_name }}"
+  pathSuffix:
+  pathType: Prefix
+  tls:
+    - secretName: jupyterhub-tls
+      hosts:
+        - "{{ jupyterhub.ops.subDomain }}.{{ platform_domain_name }}"
+
+  annotations:
+    cert-manager.io/cluster-issuer: "{{ cluster_issuer }}"
+    nginx.ingress.kubernetes.io/backend-protocol: HTTP
+    nginx.ingress.kubernetes.io/proxy-buffer-size: 32k
+    # This line allow files under 64MB to be uploaded in jupyterlab
+    nginx.ingress.kubernetes.io/proxy-body-size: 64m
+
+# cull relates to the jupyterhub-idle-culler service, responsible for evicting
+# inactive singleuser pods.
+#
+# The configuration below, except for enabled, corresponds to command-line flags
+# for jupyterhub-idle-culler as documented here:
+# https://github.com/jupyterhub/jupyterhub-idle-culler#as-a-standalone-script
+#
+cull:
+  enabled: true
+  users: false # --cull-users
+  adminUsers: true # --cull-admin-users
+  removeNamedServers: false # --remove-named-servers
+  timeout: 3600 # --timeout
+  every: 600 # --cull-every
+  concurrency: 10 # --concurrency
+  maxAge: 0 # --max-age
+
+debug:
+  enabled: false
+
+global:
+  safeToShowValues: false
