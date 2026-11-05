@@ -249,13 +249,10 @@ hub:
   services:
     dask-gateway:
       display: false
-      apiToken: {{ jupyterhub.ops.services.daskgateway.apitoken }}
-    dask-staging:
-      display: false
-      apiToken: {{ jupyterhub.ops.services.daskstaging.apitoken }}
+      apiToken: {{ jupyterhub.cpm.services.daskgateway.apitoken }}
     metrics:
       display: false
-      apiToken: {{ jupyterhub.ops.services.metrics.apitoken }}
+      apiToken: {{ jupyterhub.cpm.services.metrics.apitoken }}
   loadRoles:
     metrics:
       description: Access to prometheus metrics

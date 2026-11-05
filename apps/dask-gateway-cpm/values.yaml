@@ -16,7 +16,7 @@ gateway:
   auth:
     type: jupyterhub
     jupyterhub:
-      apiToken: {{ jupyterhub.ops.services.daskgateway.apitoken }}
+      apiToken: {{ jupyterhub.cpm.services.daskgateway.apitoken }}
       apiUrl: http://hub.cpm.svc.cluster.local:8081/jupyter-cpm/hub/api
   affinity:
     nodeAffinity:
@@ -35,73 +35,27 @@ gateway:
       value: rs_env
       effect: NoSchedule
   extraConfig:
-    10-extra-cpm-shared-volume: |
-      import copy
-
-      def mount_cpm_volume(options, config):
-          if not getattr(options, "mount_cpm_shared_disk", True):
-              return config
-
-          volume_name = "shared-cpm-tests"
-
-          volume = {
-              "name": volume_name,
-              "persistentVolumeClaim": {
-                  "claimName": "shared-cpm-tests",
-              },
-          }
-
-          volume_mount = {
-              "name": volume_name,
-              "mountPath": "/mnt/test-data",
-              "readOnly": False,
-          }
-
-          for key in ("worker_extra_pod_config", "scheduler_extra_pod_config"):
-              pod_cfg = copy.deepcopy(config.get(key) or {})
-              volumes = pod_cfg.setdefault("volumes", [])
-              if not any(
-                  isinstance(v, dict) and v.get("name") == volume_name
-                  for v in volumes
-              ):
-                  volumes.append(volume)
-
-              sec_ctx = pod_cfg.setdefault("securityContext", {})
-              sec_ctx.setdefault("fsGroup", 1001)
-              supp_groups = sec_ctx.setdefault("supplementalGroups", [])
-              for gid in (1000, 1001):
-                  if gid not in supp_groups:
-                      supp_groups.append(gid)
-
-              config[key] = pod_cfg
-
-          for key in ("worker_extra_container_config", "scheduler_extra_container_config"):
-              ctr_cfg = copy.deepcopy(config.get(key) or {})
-              volume_mounts = ctr_cfg.setdefault("volumeMounts", [])
-              if not any(
-                  isinstance(m, dict) and m.get("name") == volume_name
-                  for m in volume_mounts
-              ):
-                  volume_mounts.append(volume_mount)
-
-              env = ctr_cfg.setdefault("env", [])
-              if not any(isinstance(e, dict) and e.get("name") == "UMASK" for e in env):
-                  env.append({"name": "UMASK", "value": "0002"})
-
-              config[key] = ctr_cfg
-
-          return config
     clusteroptions: |
-      from dask_gateway_server.options import Options, Integer, Float, String, Mapping, Bool
+      from dask_gateway_server.options import Options, Integer, Float, String, Mapping
+
+      # CPM nodepool for the dask scheduler and workers
+      CPM_AFFINITY = {"nodeAffinity": {"requiredDuringSchedulingIgnoredDuringExecution": {"nodeSelectorTerms": [{"matchExpressions": [{"key": "node-role.kubernetes.io/cpm_ci", "operator": "Exists"}]}]}}}
+      CPM_TOLERATIONS = [{"key": "role", "operator": "Equal", "value": "cpm_ci", "effect": "NoSchedule"}]
+
+      # CPM shared disk, mounted by default in the scheduler and the workers
+      CPM_VOLUMES = [{"name": "shared-cpm-tests", "persistentVolumeClaim": {"claimName": "shared-cpm-tests"}}]
+      CPM_VOLUME_MOUNTS = [{"name": "shared-cpm-tests", "mountPath": "/mnt/test-data", "readOnly": False}]
+      CPM_SECURITY_CONTEXT = {"fsGroup": 1001, "supplementalGroups": [1000, 1001]}
+      CPM_ENV = [{"name": "UMASK", "value": "0002"}]
 
       def option_handler(options):
-          config = {
+          return {
               "worker_cores": options.worker_cores,
               "worker_memory": "%fG" % options.worker_memory,
               "scheduler_core_limit": options.scheduler_core_limit,
               "scheduler_memory_limit": "%fG" % options.scheduler_memory_limit,
               "image": options.image,
-              "namespace": "cpm",
+              "namespace": options.namespace,
               "cluster_max_cores": options.cluster_max_cores,
               "cluster_max_memory": options.cluster_max_memory,
               "cluster_max_workers": options.cluster_max_workers,
@@ -114,7 +68,6 @@ gateway:
               "worker_extra_pod_config": options.worker_extra_pod_config,
               "worker_extra_container_config": options.worker_extra_container_config,
           }
-          return mount_cpm_volume(options, config)
 
       c.Backend.cluster_options = Options(
           Float("worker_cores", 1, min=1, max=8, label="Worker Cores"),
@@ -127,14 +80,13 @@ gateway:
           Float("cluster_max_memory", default=17179869184, min=1073741824, max=343597383680, label="Cluster max memory"),
           Integer("cluster_max_workers", 5, min=1, max=20, label="Cluster max workers"),
           String("cluster_name", default="MyDaskCluster", label="Cluster Name"),
-          Bool("mount_cpm_shared_disk", default=True, label="Mount CPM Shared Disk (/mnt/test-data)"),
-          Mapping("scheduler_extra_container_config", default={"readinessProbe":{"failureThreshold":3,"httpGet":{"path":"/api/health","port":8788,"scheme":"HTTP"},"periodSeconds":5,"successThreshold":1,"timeoutSeconds":15}, "imagePullPolicy": "Always"}, label="scheduler_extra_container_config"),
-          Mapping("scheduler_extra_pod_annotations", default={"usage":"unknown","access":"internal"}, label="Scheduler_extra_pod_annotations"),
-          Mapping("scheduler_extra_pod_config", default={"affinity":{"nodeAffinity":{"requiredDuringSchedulingIgnoredDuringExecution":{"nodeSelectorTerms":[{"matchExpressions":[{"key":"node-role.kubernetes.io/access_csc","operator":"Exists"}]}]}}},"tolerations":[{"key":"role","operator":"Equal","value":"access_csc","effect":"NoSchedule"}]}, label="Scheduler_extra_pod_config"),
-          Mapping("scheduler_extra_pod_labels", default={"user":"unknown","team":"unknown","cluster_name":"MyDaskCluster"}, label="Scheduler_extra_pod_labels"),
-          Mapping("environment", default={"S3_ENDPOINT":"{{ s3.endpoint }}","S3_REGION":"{{ s3.region }}","TEMPO_ENDPOINT":"http://alloy.monitoring.svc.cluster.local:4317", "OTEL_PYTHON_REQUESTS_TRACE_HEADERS":"0", "OTEL_PYTHON_REQUESTS_TRACE_BODY":"0"}, label="Environment variables"),
-          Mapping("worker_extra_pod_config", default={"affinity":{"nodeAffinity":{"requiredDuringSchedulingIgnoredDuringExecution":{"nodeSelectorTerms":[{"matchExpressions":[{"key":"node-role.kubernetes.io/access_csc","operator":"Exists"}]}]}}},"tolerations":[{"key":"role","operator":"Equal","value":"access_csc","effect":"NoSchedule"}]}, label="Worker_extra_pod_config"),
-          Mapping("worker_extra_container_config", default={"envFrom":[{"secretRef":{"name": "obs"}}]}, label="Worker_extra_container_config"),
+          Mapping("scheduler_extra_container_config", default={"readinessProbe": {"failureThreshold": 3, "httpGet": {"path": "/api/health", "port": 8788, "scheme": "HTTP"}, "periodSeconds": 5, "successThreshold": 1, "timeoutSeconds": 15}, "imagePullPolicy": "Always", "volumeMounts": CPM_VOLUME_MOUNTS, "env": CPM_ENV}, label="scheduler_extra_container_config"),
+          Mapping("scheduler_extra_pod_annotations", default={"usage": "unknown", "access": "internal"}, label="Scheduler_extra_pod_annotations"),
+          Mapping("scheduler_extra_pod_config", default={"affinity": CPM_AFFINITY, "tolerations": CPM_TOLERATIONS, "volumes": CPM_VOLUMES, "securityContext": CPM_SECURITY_CONTEXT}, label="Scheduler_extra_pod_config"),
+          Mapping("scheduler_extra_pod_labels", default={"user": "unknown", "team": "unknown", "cluster_name": "MyDaskCluster"}, label="Scheduler_extra_pod_labels"),
+          Mapping("environment", default={"TEMPO_ENDPOINT": "http://alloy.monitoring.svc.cluster.local:4317", "OTEL_PYTHON_REQUESTS_TRACE_HEADERS": "0", "OTEL_PYTHON_REQUESTS_TRACE_BODY": "0"}, label="Environment variables"),
+          Mapping("worker_extra_pod_config", default={"affinity": CPM_AFFINITY, "tolerations": CPM_TOLERATIONS, "volumes": CPM_VOLUMES, "securityContext": CPM_SECURITY_CONTEXT}, label="Worker_extra_pod_config"),
+          Mapping("worker_extra_container_config", default={"volumeMounts": CPM_VOLUME_MOUNTS, "env": CPM_ENV}, label="Worker_extra_container_config"),
           handler=option_handler,
       )
 
@@ -149,11 +101,11 @@ gateway:
             requiredDuringSchedulingIgnoredDuringExecution:
               nodeSelectorTerms:
                 - matchExpressions:
-                  - key: "node-role.kubernetes.io/rs_env"
+                  - key: "node-role.kubernetes.io/cpm_ci"
                     operator: Exists
         tolerations:
           - key: role
-            value: rs_env
+            value: cpm_ci
             effect: NoSchedule
     worker:
       extraPodConfig:
@@ -162,11 +114,11 @@ gateway:
             requiredDuringSchedulingIgnoredDuringExecution:
               nodeSelectorTerms:
                 - matchExpressions:
-                  - key: "node-role.kubernetes.io/rs_env"
+                  - key: "node-role.kubernetes.io/cpm_ci"
                     operator: Exists
         tolerations:
           - key: role
-            value: rs_env
+            value: cpm_ci
             effect: NoSchedule
 
 controller:
