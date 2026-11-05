@@ -13,9 +13,42 @@
 # limitations under the License.
 
 apiVersion: v1
+kind: PersistentVolume
+metadata:
+  name: pv-shared-cpm-ci-data-cpm
+spec:
+  accessModes:
+    - ReadWriteMany
+  capacity:
+    storage: 200Gi
+  csi:
+    driver: nfs.manila.csi.openstack.org
+    volumeHandle: a7661e6a-4916-4702-9a4c-79be921e1843
+    volumeAttributes:
+      cephfs-mounter: fuse
+      shareID: a7661e6a-4916-4702-9a4c-79be921e1843
+      shareAccessIDs: 24fed7f2-1223-4aa2-be68-841292768cdd
+    controllerExpandSecretRef:
+      name: csi-manila-secrets
+      namespace: default
+    nodePublishSecretRef:
+      name: csi-manila-secrets
+      namespace: default
+    nodeStageSecretRef:
+      name: csi-manila-secrets
+      namespace: default
+  persistentVolumeReclaimPolicy: Retain
+  storageClassName: csi-manila-nfs
+  volumeMode: Filesystem
+  claimRef:
+    name: shared-cpm-ci-data
+    namespace: cpm
+---
+apiVersion: v1
 kind: PersistentVolumeClaim
 metadata:
   name: shared-cpm-ci-data
+  namespace: cpm
 spec:
   accessModes:
     - ReadWriteMany
@@ -23,3 +56,4 @@ spec:
     requests:
       storage: 200Gi
   storageClassName: csi-manila-nfs
+  volumeName: pv-shared-cpm-ci-data-cpm

@@ -116,7 +116,6 @@ hub:
       c.JupyterHub.authenticator_class = CustomGenericOAuthenticator
     10-extra-cpm-shared-volume: |
       async def mount_cpm_volume(spawner):
-          spawner.node_selector = {}
           spawner.supplemental_gids = [1000, 1001]
 
           volume_name = "shared-cpm-tests"
