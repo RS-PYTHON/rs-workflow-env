@@ -1,0 +1,162 @@
+# Copyright 2023-2026 Airbus, CS Group
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+gateway:
+  auth:
+    type: jupyterhub
+    jupyterhub:
+      apiToken: {{ jupyterhub.cpm.services.daskgateway.apitoken }}
+      apiUrl: http://hub.cpm.svc.cluster.local:8081/jupyter-cpm/hub/api
+  affinity:
+    nodeAffinity:
+      requiredDuringSchedulingIgnoredDuringExecution:
+        nodeSelectorTerms:
+          - matchExpressions:
+            - key: "node-role.kubernetes.io/rs_env"
+              operator: Exists
+  resources:
+    limits:
+      memory: 84Mi
+    requests:
+      memory: 62Mi
+  tolerations:
+    - key: role
+      value: rs_env
+      effect: NoSchedule
+  extraConfig:
+    clusteroptions: |
+      from dask_gateway_server.options import Options, Integer, Float, String, Mapping
+
+      # CPM nodepool for the dask scheduler and workers
+      CPM_AFFINITY = {"nodeAffinity": {"requiredDuringSchedulingIgnoredDuringExecution": {"nodeSelectorTerms": [{"matchExpressions": [{"key": "node-role.kubernetes.io/cpm_ci", "operator": "Exists"}]}]}}}
+      CPM_TOLERATIONS = [{"key": "role", "operator": "Equal", "value": "cpm_ci", "effect": "NoSchedule"}]
+
+      # CPM shared disk, mounted by default in the scheduler and the workers
+      CPM_VOLUMES = [{"name": "shared-cpm-tests", "persistentVolumeClaim": {"claimName": "shared-cpm-tests"}}]
+      CPM_VOLUME_MOUNTS = [{"name": "shared-cpm-tests", "mountPath": "/mnt/test-data", "readOnly": False}]
+      CPM_SECURITY_CONTEXT = {"fsGroup": 1001, "supplementalGroups": [1000, 1001]}
+      CPM_ENV = [{"name": "UMASK", "value": "0002"}]
+
+      def option_handler(options):
+          return {
+              "worker_cores": options.worker_cores,
+              "worker_memory": "%fG" % options.worker_memory,
+              "scheduler_core_limit": options.scheduler_core_limit,
+              "scheduler_memory_limit": "%fG" % options.scheduler_memory_limit,
+              "image": options.image,
+              "namespace": options.namespace,
+              "cluster_max_cores": options.cluster_max_cores,
+              "cluster_max_memory": options.cluster_max_memory,
+              "cluster_max_workers": options.cluster_max_workers,
+              "cluster_name": options.cluster_name,
+              "scheduler_extra_container_config": options.scheduler_extra_container_config,
+              "scheduler_extra_pod_annotations": options.scheduler_extra_pod_annotations,
+              "scheduler_extra_pod_config": options.scheduler_extra_pod_config,
+              "scheduler_extra_pod_labels": options.scheduler_extra_pod_labels,
+              "environment": options.environment,
+              "worker_extra_pod_config": options.worker_extra_pod_config,
+              "worker_extra_container_config": options.worker_extra_container_config,
+          }
+
+      c.Backend.cluster_options = Options(
+          Float("worker_cores", 1, min=1, max=8, label="Worker Cores"),
+          Float("worker_memory", 4, min=1, max=128, label="Worker Memory (GiB)"),
+          Float("scheduler_core_limit", 1, min=1, max=2, label="Scheduler Max Cores"),
+          Float("scheduler_memory_limit", 2, min=1, max=64, label="Scheduler Max Memory (GiB)"),
+          String("image", default="ghcr.io/rs-python/rs-workflow-env-cpm:latest", label="Image"),
+          String("namespace", default="cpm", label="Namespace"),
+          Float("cluster_max_cores", 4, min=1, max=80, label="Cluster max cores"),
+          Float("cluster_max_memory", default=17179869184, min=1073741824, max=343597383680, label="Cluster max memory"),
+          Integer("cluster_max_workers", 5, min=1, max=20, label="Cluster max workers"),
+          String("cluster_name", default="MyDaskCluster", label="Cluster Name"),
+          Mapping("scheduler_extra_container_config", default={"readinessProbe": {"failureThreshold": 3, "httpGet": {"path": "/api/health", "port": 8788, "scheme": "HTTP"}, "periodSeconds": 5, "successThreshold": 1, "timeoutSeconds": 15}, "imagePullPolicy": "Always", "volumeMounts": CPM_VOLUME_MOUNTS, "env": CPM_ENV}, label="scheduler_extra_container_config"),
+          Mapping("scheduler_extra_pod_annotations", default={"usage": "unknown", "access": "internal"}, label="Scheduler_extra_pod_annotations"),
+          Mapping("scheduler_extra_pod_config", default={"affinity": CPM_AFFINITY, "tolerations": CPM_TOLERATIONS, "volumes": CPM_VOLUMES, "securityContext": CPM_SECURITY_CONTEXT}, label="Scheduler_extra_pod_config"),
+          Mapping("scheduler_extra_pod_labels", default={"user": "unknown", "team": "unknown", "cluster_name": "MyDaskCluster"}, label="Scheduler_extra_pod_labels"),
+          Mapping("environment", default={"TEMPO_ENDPOINT": "http://alloy.monitoring.svc.cluster.local:4317", "OTEL_PYTHON_REQUESTS_TRACE_HEADERS": "0", "OTEL_PYTHON_REQUESTS_TRACE_BODY": "0"}, label="Environment variables"),
+          Mapping("worker_extra_pod_config", default={"affinity": CPM_AFFINITY, "tolerations": CPM_TOLERATIONS, "volumes": CPM_VOLUMES, "securityContext": CPM_SECURITY_CONTEXT}, label="Worker_extra_pod_config"),
+          Mapping("worker_extra_container_config", default={"volumeMounts": CPM_VOLUME_MOUNTS, "env": CPM_ENV}, label="Worker_extra_container_config"),
+          handler=option_handler,
+      )
+
+  backend:
+    imagePullSecrets:
+      - name: ghcr-k8s
+    namespace: cpm
+    scheduler:
+      extraPodConfig:
+        affinity:
+          nodeAffinity:
+            requiredDuringSchedulingIgnoredDuringExecution:
+              nodeSelectorTerms:
+                - matchExpressions:
+                  - key: "node-role.kubernetes.io/cpm_ci"
+                    operator: Exists
+        tolerations:
+          - key: role
+            value: cpm_ci
+            effect: NoSchedule
+    worker:
+      extraPodConfig:
+        affinity:
+          nodeAffinity:
+            requiredDuringSchedulingIgnoredDuringExecution:
+              nodeSelectorTerms:
+                - matchExpressions:
+                  - key: "node-role.kubernetes.io/cpm_ci"
+                    operator: Exists
+        tolerations:
+          - key: role
+            value: cpm_ci
+            effect: NoSchedule
+
+controller:
+  affinity:
+    nodeAffinity:
+      requiredDuringSchedulingIgnoredDuringExecution:
+        nodeSelectorTerms:
+          - matchExpressions:
+            - key: "node-role.kubernetes.io/rs_env"
+              operator: Exists
+  resources:
+    limits:
+      memory: 96Mi
+    requests:
+      memory: 64Mi
+  tolerations:
+    - key: role
+      value: rs_env
+      effect: NoSchedule
+
+traefik:
+  additionalArguments:
+    - --providers.kubernetescrd.allowcrossnamespace=false
+  service:
+    type: ClusterIP
+  affinity:
+    nodeAffinity:
+      requiredDuringSchedulingIgnoredDuringExecution:
+        nodeSelectorTerms:
+          - matchExpressions:
+            - key: "node-role.kubernetes.io/rs_env"
+              operator: Exists
+  resources:
+    limits:
+      memory: 64Mi
+    requests:
+      memory: 24Mi
+  tolerations:
+    - key: role
+      value: rs_env
+      effect: NoSchedule
