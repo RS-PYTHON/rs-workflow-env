@@ -13,42 +13,9 @@
 # limitations under the License.
 
 apiVersion: v1
-kind: PersistentVolume
-metadata:
-  name: pv-shared-cpm-tests-cpm
-spec:
-  accessModes:
-    - ReadWriteMany
-  capacity:
-    storage: 500Gi
-  csi:
-    driver: nfs.manila.csi.openstack.org
-    volumeHandle: 2d877e2f-5ff4-4ed8-8141-ba13a59d0aa6
-    volumeAttributes:
-      cephfs-mounter: fuse
-      shareID: 2d877e2f-5ff4-4ed8-8141-ba13a59d0aa6
-      shareAccessIDs: d87fb4c6-9d49-4216-96af-284c860284bc
-    controllerExpandSecretRef:
-      name: csi-manila-secrets
-      namespace: default
-    nodePublishSecretRef:
-      name: csi-manila-secrets
-      namespace: default
-    nodeStageSecretRef:
-      name: csi-manila-secrets
-      namespace: default
-  persistentVolumeReclaimPolicy: Retain
-  storageClassName: csi-manila-nfs
-  volumeMode: Filesystem
-  claimRef:
-    name: shared-cpm-tests
-    namespace: cpm
----
-apiVersion: v1
 kind: PersistentVolumeClaim
 metadata:
   name: shared-cpm-tests
-  namespace: cpm
 spec:
   accessModes:
     - ReadWriteMany
@@ -56,4 +23,3 @@ spec:
     requests:
       storage: 500Gi
   storageClassName: csi-manila-nfs
-  volumeName: pv-shared-cpm-tests-cpm
