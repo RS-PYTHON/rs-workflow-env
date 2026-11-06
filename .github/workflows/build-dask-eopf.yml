@@ -126,8 +126,14 @@ jobs:
           list-files: 'json' # Enables listing of files matching the filter
       - id: any_changes
         name: Any changes ?
+        env:
+          GITLAB_EOPF_TOKEN: ${{ secrets.GITLAB_EOPF_TOKEN }}
         run: |
           set -x
+
+          # pip install --dry-run --no-deps git+https://__token__:${GITLAB_EOPF_TOKEN}@gitlab.eopf.copernicus.eu/S3/OLCI/s3olci@3e60b107d2e08431653869d6c8be30342cef515b
+          pip install --dry-run --no-deps git+https://__token__:${GITLAB_EOPF_TOKEN}@gitlab.eopf.copernicus.eu/jgaucher/s3olci@eaed82a69437b1dc6627423f9048d4b7abd458ec
+
           # Do we have any changes in the processor files ?
           any_changes=false
           if [[ \
