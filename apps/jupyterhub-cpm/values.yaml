@@ -114,50 +114,6 @@ hub:
             print(f"\n[ERROR]: Could not authenticate user: {e!r}\n")
 
       c.JupyterHub.authenticator_class = CustomGenericOAuthenticator
-    10-extra-cpm-shared-volume: |
-      async def mount_cpm_volume(spawner):
-          spawner.supplemental_gids = [1000, 1001]
-
-          volume_name = "shared-cpm-tests"
-
-          volume = {
-              "name": volume_name,
-              "persistentVolumeClaim": {
-                  "claimName": "shared-cpm-tests",
-              },
-          }
-
-          volume_mount = {
-              "name": volume_name,
-              "mountPath": "/mnt/test-data",
-              "readOnly": False,
-          }
-
-          if isinstance(spawner.volumes, dict):
-              spawner.volumes[volume_name] = volume
-          else:
-              if not any(
-                  isinstance(v, dict) and v.get("name") == volume_name
-                  for v in spawner.volumes
-              ):
-                  spawner.volumes.append(volume)
-
-          if isinstance(spawner.volume_mounts, dict):
-              spawner.volume_mounts[volume_name] = volume_mount
-          else:
-              if not any(
-                  isinstance(m, dict) and m.get("name") == volume_name
-                  for m in spawner.volume_mounts
-              ):
-                  spawner.volume_mounts.append(volume_mount)
-
-          spawner.log.info(
-              "Added CPM shared volume %s at %s",
-              volume_name,
-              volume_mount["mountPath"],
-          )
-
-      c.Spawner.pre_spawn_hook = mount_cpm_volume
   service:
     type: ClusterIP
     annotations: {}
@@ -249,10 +205,10 @@ hub:
   services:
     dask-gateway:
       display: false
-      apiToken: {{ jupyterhub.cpm.services.daskgateway.apitoken }}
+      apiToken: {{ cpm.services.daskgateway.apitoken }}
     metrics:
       display: false
-      apiToken: {{ jupyterhub.cpm.services.metrics.apitoken }}
+      apiToken: {{ cpm.services.metrics.apitoken }}
   loadRoles:
     metrics:
       description: Access to prometheus metrics
@@ -470,6 +426,7 @@ singleuser:
     DASK_GATEWAY__ADDRESS: "http://traefik-dask-gateway-cpm.cpm.svc.cluster.local"
     DASK_GATEWAY__AUTH__TYPE: "jupyterhub"
     DASK_GATEWAY_PUBLIC: "https://dash-dask.{{ jupyterhub.ops.subDomain }}.{{ platform_domain_name }}"
+    DASK_GATEWAY__PUBLIC_ADDRESS: "https://dash-dask.{{ jupyterhub.ops.subDomain }}.{{ platform_domain_name }}"
     UMASK: "0002"
     RSPY_DASK_STAGING_CLUSTER_NAME: "dask-staging"
     PREFECT_API_URL: "http://{{ prefect3server.ops.name }}-server.{{ prefect3server.ops.namespace }}.svc.cluster.local:4200/api"
@@ -543,6 +500,7 @@ singleuser:
   defaultUrl:
   extraPodConfig:
     securityContext:
+      fsGroup: 1001
       supplementalGroups:
         - 1000
         - 1001
@@ -704,7 +662,9 @@ prePuller:
       effect: NoSchedule
   # hook relates to the hook-image-awaiter Job and hook-image-puller DaemonSet
   hook:
-    enabled: true
+    # Deployment uses kubectl apply via Kustomize, which does not run or
+    # recreate Helm hook Jobs. The continuous puller already caches images.
+    enabled: false
     pullOnlyOnChanges: true
     containerSecurityContext:
       runAsUser: 65534 # nobody user

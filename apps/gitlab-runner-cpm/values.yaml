@@ -92,6 +92,9 @@ runners:
 
             volumes:
             - name: builds
+              # Strategic patches merge with Runner's default emptyDir.
+              # Remove it before selecting the ephemeral PVC volume type.
+              emptyDir: null
               ephemeral:
                 volumeClaimTemplate:
                   spec:

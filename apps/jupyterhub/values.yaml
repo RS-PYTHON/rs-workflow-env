@@ -114,7 +114,6 @@ hub:
             print(f"\n[ERROR]: Could not authenticate user: {e!r}\n")
 
       c.JupyterHub.authenticator_class = CustomGenericOAuthenticator
-
   service:
     type: ClusterIP
     annotations: {}
@@ -500,11 +499,25 @@ singleuser:
     - display_name: "Default (latest) environment"
       description: "Latest RS-Python environment"
       default: true
-    - display_name: "Release v1.0a15"
-      slug: release-v1-0a15
-      description: "RS-Python release v1.0a15"
+    - display_name: "Release v1.0a14"
+      slug: release-v1-0a14
+      description: "RS-Python release v1.0a14"
       kubespawner_override:
-        image: ghcr.io/rs-python/rs-workflow-env-jupyter:v1.0a15
+        image: ghcr.io/rs-python/rs-workflow-env-jupyter:v1.0a14
+    - display_name: "test nodepool and tolerations"
+      slug: test-update-prefect-and-jupyter
+      description: "test nodepool and tolerations"
+      kubespawner_override:
+        cpu_limit: 4
+        cpu_guarantee: 0.1
+        mem_limit: 32G
+        mem_guarantee: 16G
+        start_timeout: 600
+        tolerations:
+          - key: role
+            operator: Equal
+            value: dask_worker_on_demand
+            effect: NoSchedule
 # scheduling relates to the user-scheduler pods and user-placeholder pods.
 scheduling:
   userScheduler:
@@ -655,6 +668,7 @@ prePuller:
   hook:
     enabled: true
     pullOnlyOnChanges: true
+    # image and the configuration below relates to the hook-image-awaiter Job
     containerSecurityContext:
       runAsUser: 65534 # nobody user
       runAsGroup: 65534 # nobody group
