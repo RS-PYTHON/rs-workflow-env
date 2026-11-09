@@ -377,10 +377,18 @@ jobs:
             $options \
             ${{ matrix.proc }}
 
-          # Get the last docker image name and tag that was built
-          last_built=$(docker images | awk 'NR==2')
-          repository=$(echo "$last_built" | awk '{print $1}')
-          repository_and_tag=$(echo "$last_built" | awk '{print $1 ":" $2}')
+          # Get the docker image name and tag that was built.
+          # NOTE: don't take the first line of 'docker images': the runner contains other images
+          # (e.g. dependabot) and the human-readable output format changes between docker versions.
+          repository=$(docker images \
+            --filter "reference=ghcr.io/rs-python/dask/${{ matrix.proc }}/*" \
+            --format '{{.Repository}}' | head -n 1)
+          tag=$(tr ',' '\n' <<< "$DOCKER_TAGS" | grep -m 1 .)
+          if [[ -z "$repository" || -z "$tag" ]]; then
+            echo "::error::Built image not found: repository='$repository' tag='$tag'" >&2
+            exit 1
+          fi
+          repository_and_tag="${repository}:${tag}"
 
           # Get the version of the python package from inside the docker image.
           # We will use is as an additional docker tag, only when pushing the 'latest' tag.
