@@ -20,6 +20,8 @@ envVars:
 
 runners:
   name: "cpm-runner-rspy"
+  # Existing Secret, provisioned separately from this application. Reuse the
+  # authentication token for the CPM group's registered runner (#172).
   secret: runner-credentials-cpm
 
   config: |
