@@ -29,7 +29,7 @@ runners:
       environment = [
         "GET_SOURCES_ATTEMPTS=3",
         "GIT_HTTP_LOW_SPEED_LIMIT=1000",
-        "GIT_HTTP_LOW_SPEED_TIME=30",
+        "GIT_HTTP_LOW_SPEED_TIME=300",
         "GIT_CONFIG_COUNT=1",
         "GIT_CONFIG_KEY_0=http.version",
         "GIT_CONFIG_VALUE_0=HTTP/1.1",
