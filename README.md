@@ -78,6 +78,15 @@ with different names and namespaces, as described in
 
 ## Contributing
 
+The Python code included in the applications, e.g. the Dask Gateway backend
+[`apps/dask-gateway/named_kube_backend.py`](apps/dask-gateway/named_kube_backend.py), is tested by the pytests of
+the `tests` folder, run by the CI:
+
+```shell
+pip install .[dev]
+pytest tests --cov
+```
+
 See the [contribution guidelines](https://github.com/RS-PYTHON/rs-documentation/blob/develop/docs/developers/contributing.md).
 Report bugs in the [issue tracker](https://github.com/RS-PYTHON/rs-workflow-env/issues). In case of sensitive bugs like
 security vulnerabilities, please contact <ops_coprs@airbus.com> directly instead of using the issue tracker.

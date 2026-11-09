@@ -14,6 +14,25 @@
 
 [project]
 name = "rs-workflow-env"
+version = "0.0.0"
+requires-python = ">=3.13"
+dependencies = []
+
+[project.optional-dependencies]
+# For the pytests of the python code included in the apps (see tests/)
+dev = [
+    "dask-gateway-server[kubernetes]==2026.3.0", # same version as the dask-gateway helm chart
+    "jinja2",
+    "pytest",
+    "pytest-cov",
+    "pyyaml",
+]
+
+[tool.setuptools]
+packages = [] # nothing to package, the project is only installed for the pytests
+
+[tool.bandit]
+exclude_dirs = ["tests"]
 
 [tool.mypy]
 warn_redundant_casts = true

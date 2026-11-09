@@ -79,6 +79,12 @@ gateway:
             Mapping("worker_extra_container_config", default={"envFrom":[{"secretRef":{"name": "obs"}}]}, label="Worker_extra_container_config"),
             handler=option_handler,
         )
+    # Name the clusters, and so the scheduler and worker pods, after their label (the cluster_name option)
+    # instead of a random uuid. The code is included from named_kube_backend.py at deployment time.
+    namedbackend: |
+        {% filter indent(8) %}{% include 'named_kube_backend.py' %}{% endfilter %}
+
+        c.DaskGateway.backend_class = NamedKubeBackend
 
   backend:
     imagePullSecrets:
