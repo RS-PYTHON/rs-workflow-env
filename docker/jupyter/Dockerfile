@@ -84,6 +84,7 @@ RUN conda update -n base -c conda-forge conda && \
     netCDF4 \
     h5netcdf \
     geopandas \
+    odfpy \
     matplotlib \
     nc-time-axis \
     sentineltoolbox \
