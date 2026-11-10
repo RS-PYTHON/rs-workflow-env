@@ -20,6 +20,8 @@ envVars:
 
 runners:
   name: "cpm-runner-rspy"
+  # Existing Secret, provisioned separately from this application. Reuse the
+  # authentication token for the CPM group's registered runner (#172).
   secret: runner-credentials-cpm
 
   config: |
@@ -29,30 +31,47 @@ runners:
       environment = [
         "GET_SOURCES_ATTEMPTS=3",
         "GIT_HTTP_LOW_SPEED_LIMIT=1000",
-        "GIT_HTTP_LOW_SPEED_TIME=30",
+        "GIT_HTTP_LOW_SPEED_TIME=300",
         "GIT_CONFIG_COUNT=1",
         "GIT_CONFIG_KEY_0=http.version",
         "GIT_CONFIG_VALUE_0=HTTP/1.1",
-        "FF_USE_ADVANCED_POD_SPEC_CONFIGURATION=true"
+        "FF_USE_ADVANCED_POD_SPEC_CONFIGURATION=true",
+        "UMASK=0002",
       ]
 
       [runners.kubernetes]
         poll_timeout = 600
-        namespace = "{{ jupyterhub.ops.namespace }}"
+        namespace = "cpm"
+        cpu_request = "500m"
+        memory_request = "5Gi"
+        memory_limit = "14Gi"
 
         [runners.kubernetes.node_selector]
-          "node-role.kubernetes.io/infra" = ""
+          "node-role.kubernetes.io/cpm_ci" = ""
+
+        [runners.kubernetes.node_tolerations]
+          "role=cpm_ci" = "NoSchedule"
 
         [runners.kubernetes.pod_labels]
           "app.kubernetes.io/name" = "gitlab-runner-job"
           "app.kubernetes.io/instance" = "cpm-runner-rspy"
 
         # Create one dynamically provisioned PVC per CI job and spread
-        # CI job pods across the infra nodes.
+        # CI job pods across the dedicated CI nodes.
         [[runners.kubernetes.pod_spec]]
           name = "workspace-pvc-and-spread"
           patch_type = "strategic"
           patch = '''
+            securityContext:
+              fsGroup: 1001
+              supplementalGroups:
+              - 1000
+              - 1001
+            tolerations:
+            - key: role
+              operator: Equal
+              value: cpm_ci
+              effect: NoSchedule
             topologySpreadConstraints:
             - maxSkew: 1
               topologyKey: kubernetes.io/hostname
@@ -75,6 +94,9 @@ runners:
 
             volumes:
             - name: builds
+              # Strategic patches merge with Runner's default emptyDir.
+              # Remove it before selecting the ephemeral PVC volume type.
+              emptyDir: null
               ephemeral:
                 volumeClaimTemplate:
                   spec:
