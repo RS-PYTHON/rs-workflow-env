@@ -11,6 +11,25 @@ the user point of view, and [Dask images](dask_images.md) for the images.
 | Staging (`dask-staging`) | The administrators, at deployment time | The `dask-cluster-staging` application of [rs-server-deployment](https://github.com/RS-PYTHON/rs-server-deployment/blob/develop/README.md) runs a small pod that creates the staging cluster with the `rs_server_staging.dask` inventory parameters (number and size of the workers) and recreates it if it disappears. |
 | DPR processors | The administrators or the users | From JupyterHub, with the notebooks of [rs-demo](https://github.com/RS-PYTHON/rs-demo), or with Python code. |
 
+## Cluster and pod names
+
+Dask Gateway gives each cluster a unique name, built from its label: the label in lowercase, with the characters
+other than letters and digits replaced by `-`, without the leading `dask-`, cut to 40 characters, followed by 12
+random hexadecimal characters. The scheduler and worker pods are named after it, so they can be identified in
+Kubernetes (`kubectl get pods`, Grafana, logs):
+
+| Label (`cluster_name` option) | Cluster name | Pods |
+|---|---|---|
+| `dask-s1ard.userA.latest` | `s1ard-usera-latest-3f2a9c1b7e4d` | `dask-scheduler-s1ard-usera-latest-3f2a9c1b7e4d`, `dask-worker-s1ard-usera-latest-3f2a9c1b7e4d-xxxxx` |
+| `dask-staging` | `staging-8b0d5e2f4a17` | `dask-scheduler-staging-8b0d5e2f4a17`, `dask-worker-staging-8b0d5e2f4a17-xxxxx` |
+| empty | random uuid, e.g. `0b3f6e1c9d2a4f5e8a7b6c5d4e3f2a1b` | `dask-scheduler-0b3f6e1c9d2a4f5e8a7b6c5d4e3f2a1b`... |
+
+The `dask-scheduler-` and `dask-worker-` prefixes are set by Dask Gateway. The cluster name is used to connect to a
+cluster (`gateway.connect(...)`), but the flows and services find their cluster by its label, which is unchanged.
+The naming is done by the `NamedKubeBackend` class of
+[`apps/dask-gateway/named_kube_backend.py`](../apps/dask-gateway/named_kube_backend.py), included in the
+`gateway.extraConfig` of the Dask Gateway `values.yaml` at deployment time.
+
 ## Create a cluster from JupyterHub
 
 The `notebooks/init-dask-clusters` folder of [rs-demo](https://github.com/RS-PYTHON/rs-demo) contains one notebook per
