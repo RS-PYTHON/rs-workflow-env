@@ -19,7 +19,7 @@
 
 #s3olci==2.0.0rc1
 # Install from latest main commit of the git repository instead
-s3olci @ git+https://__token__:${GITLAB_EOPF_TOKEN}@gitlab.eopf.copernicus.eu/S3/OLCI/s3olci@3e60b107d2e08431653869d6c8be30342cef515b  # Oct 06, 2026
+s3olci @ git+https://__token__:${GITLAB_EOPF_TOKEN}@gitlab.eopf.copernicus.eu/refsystem/s-3-olci-jgaucher@6c7d23cb661c12d8a297d1f820312364bde6ac41 # November 6, 2026
 
 # other python dependencies
 graphviz
