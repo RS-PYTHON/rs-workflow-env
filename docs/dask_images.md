@@ -68,6 +68,16 @@ their dependencies are installed from the `requirements-dask-<processor>.txt` fi
 `system-requirements-*` and `post-install-*` files) of the
 [`docker/eopf/resources`](https://github.com/RS-PYTHON/rs-workflow-env/tree/develop/docker/eopf/resources) folder.
 
+The generic images are used by the SAFE to Zarr conversion processors of rs-dpr-service:
+
+| Image | EOPF CPM | Python / Dask | rs-dpr-service processor |
+|---|---|---|---|
+| `cpm2` | 2.8.1 | 3.11.18 / 2026.1.2 | `conv_safe_zarr_cpm2`: Zarr products in the CPM 2.x format, e.g. the Sentinel-1 SLC products read by the S1 ARD processor, that can't read the SLC products converted by CPM 3.0.0. |
+| `cpm3` | 3.0.x | 3.13.18 / 2026.7.1 | `conv_safe_zarr` |
+
+EOPF CPM 2.8.1 requires Dask 2026.1.2, and a Python version older than 3.13 (its `rasterio==1.3.10` dependency has
+no Python 3.13 wheel), hence a specific Python and Dask combination in `dask-cluster-versions.yml`.
+
 The image of the mockup processor (`ghcr.io/rs-python/dask/mockup/<target>`) is built by
 [rs-testmeans](https://github.com/RS-PYTHON/rs-testmeans).
 

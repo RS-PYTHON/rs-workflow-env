@@ -83,22 +83,29 @@ done
 if [[ "$TARGET" == "all" || "$TARGET" == "python" ]]; then
 
     python_dockerfile="Dockerfile.python"
-    python_base="python:${PYTHON_VERSION}-slim-bookworm"
 
-    python_target="ghcr.io/rs-python/${python_base}"
+    # Default python version, and the python versions of the dask base images (they use the python base image)
+    python_versions=$( (echo "$PYTHON_VERSION"; yq -o json "${CUSTOM_REQ}/dask-cluster-versions.yml" | \
+        jq -r '.deps[].python_version') | sort -u)
 
-    # Build the docker image
-    docker build \
-        --build-arg "BASE=${python_base}" \
-        --progress plain \
-        -f "${SCRIPT_DIR}/${python_dockerfile}" \
-        -t "$python_target" \
-        "$CUSTOM_REQ"
+    for python_version in $python_versions; do
+        python_base="python:${python_version}-slim-bookworm"
 
-    # Push the docker image to the registry, if the --push option is specified.
-    if [[ "$PUSH" == "true" ]]; then
-        docker push "$python_target"
-    fi
+        python_target="ghcr.io/rs-python/${python_base}"
+
+        # Build the docker image
+        docker build \
+            --build-arg "BASE=${python_base}" \
+            --progress plain \
+            -f "${SCRIPT_DIR}/${python_dockerfile}" \
+            -t "$python_target" \
+            "$CUSTOM_REQ"
+
+        # Push the docker image to the registry, if the --push option is specified.
+        if [[ "$PUSH" == "true" ]]; then
+            docker push "$python_target"
+        fi
+    done
 fi
 
 ########

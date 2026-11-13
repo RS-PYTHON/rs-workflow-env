@@ -60,6 +60,15 @@ class Image:
 
 # All possible processor images
 all_procs = {
+    # Image for CPM 2.8.1, e.g. to convert the Sentinel-1 SLC SAFE products in the Zarr format read by S1 ARD
+    "cpm2": Image(
+        python_version="3.11.18",
+        dask_version="2026.1.2",
+        k8s_name="ghcr.io/rs-python/dask/cpm2/k8s",
+        local_name="ghcr.io/rs-python/dask/cpm2/local",
+        local_cluster_name="ghcr.io/rs-python/dask/cpm2/localcluster",
+        image2build="dask-cpm2",
+    ),
     # Image for CPM >=3
     # WARNING: Up to first official relase, release-candidate revision is hard-coded in requirements-dask-cpm3.txt
     "cpm3": Image(
