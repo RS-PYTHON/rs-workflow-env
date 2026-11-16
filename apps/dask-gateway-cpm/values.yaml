@@ -18,6 +18,7 @@ gateway:
     jupyterhub:
       apiToken: {{ cpm.services.daskgateway.apitoken }}
       apiUrl: http://hub.cpm.svc.cluster.local:8081/jupyter-cpm/hub/api
+      jupyterhubServiceName: dask-gateway
   affinity:
     nodeAffinity:
       requiredDuringSchedulingIgnoredDuringExecution:
@@ -39,10 +40,10 @@ gateway:
       # Recent distributed releases use `dask scheduler` / `dask worker`.
       # Apply the shared disk umask before starting either process.
       c.KubeClusterConfig.scheduler_cmd = [
-          "bash", "-c", 'umask "${UMASK:-0002}"; exec dask scheduler "$@"', "dask-scheduler",
+          "bash", "-c", 'umask "${UMASK:-0000}"; exec dask scheduler "$@"', "dask-scheduler",
       ]
       c.KubeClusterConfig.worker_cmd = [
-          "bash", "-c", 'umask "${UMASK:-0002}"; exec dask worker "$@"', "dask-worker",
+          "bash", "-c", 'umask "${UMASK:-0000}"; exec dask worker "$@"', "dask-worker",
       ]
     10-extra-cpm-shared-volume: |
       import copy
@@ -76,6 +77,9 @@ gateway:
                   volumes.append(volume)
 
               sec_ctx = pod_cfg.setdefault("securityContext", {})
+              # The pod sandbox requires a user when a primary group is set.
+              sec_ctx.setdefault("runAsUser", 1001)
+              sec_ctx.setdefault("runAsGroup", 1001)
               sec_ctx.setdefault("fsGroup", 1001)
               supp_groups = sec_ctx.setdefault("supplementalGroups", [])
               for gid in (1000, 1001):
@@ -95,7 +99,7 @@ gateway:
 
               env = ctr_cfg.setdefault("env", [])
               if not any(isinstance(e, dict) and e.get("name") == "UMASK" for e in env):
-                  env.append({"name": "UMASK", "value": "0002"})
+                  env.append({"name": "UMASK", "value": "0000"})
 
               config[key] = ctr_cfg
 
@@ -123,10 +127,14 @@ gateway:
               "worker_extra_pod_config": options.worker_extra_pod_config,
               "worker_extra_container_config": options.worker_extra_container_config,
           }
+          # Omit the override in automatic mode so existing CPU-based defaults remain.
+          if options.worker_threads:
+              config["worker_threads"] = options.worker_threads
           return mount_cpm_volume(options, config)
 
       c.Backend.cluster_options = Options(
           Float("worker_cores", 1, min=1, max=8, label="Worker Cores"),
+          Integer("worker_threads", 0, min=0, max=256, label="Worker Threads (0 = auto)"),
           Float("worker_memory", 4, min=1, max=128, label="Worker Memory (GiB)"),
           Float("scheduler_core_limit", 1, min=1, max=2, label="Scheduler Max Cores"),
           Float("scheduler_memory_limit", 2, min=1, max=64, label="Scheduler Max Memory (GiB)"),
@@ -188,7 +196,7 @@ controller:
               operator: Exists
   resources:
     limits:
-      memory: 96Mi
+      memory: 256Mi
     requests:
       memory: 64Mi
   tolerations:

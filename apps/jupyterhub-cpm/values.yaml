@@ -206,10 +206,22 @@ hub:
     dask-gateway:
       display: false
       apiToken: {{ cpm.services.daskgateway.apitoken }}
+    gitlab-ci:
+      display: false
+      apiToken: {{ cpm.services.gitlabci.apitoken }}
     metrics:
       display: false
       apiToken: {{ cpm.services.metrics.apitoken }}
   loadRoles:
+    user:
+      scopes:
+        - self
+        - access:services!service=dask-gateway
+    gitlab-ci:
+      description: Allow CPM CI to use Dask Gateway without JupyterHub admin access
+      scopes:
+        - access:services!service=dask-gateway
+      services: [gitlab-ci]
     metrics:
       description: Access to prometheus metrics
       scopes: [read:metrics]

@@ -464,7 +464,14 @@ singleuser:
     type: dynamic
     extraLabels: {}
     extraVolumes:
+      - name: l0-notebook-defaults
+        configMap:
+          name: l0-notebook-defaults-v1
     extraVolumeMounts:
+      - name: l0-notebook-defaults
+        mountPath: /opt/rs-demo/notebooks/init-dask-clusters/init_dask_cluster_l0.ipynb
+        subPath: init_dask_cluster_l0.ipynb
+        readOnly: true
     static:
       pvcName:
       subPath: "{username}"
