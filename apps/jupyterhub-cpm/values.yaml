@@ -76,6 +76,11 @@ hub:
     JupyterHub:
       admin_access: true
       authenticator_class: generic-oauth
+    Spawner:
+      server_token_scopes:
+        - users:activity!user
+        - access:servers!server
+        - access:services!service=dask-gateway
   extraConfig:
     # After the user has logged in to JupyterHub, pass the authentication information
     # to the user container so it can be used from the notebooks and terminal.
@@ -395,10 +400,10 @@ singleuser:
   podNameTemplate:
   extraTolerations:
     - key: role
-      value: rs_env
+      value: cpm_notebook
       effect: NoSchedule
   nodeSelector:
-    node-role.kubernetes.io/rs_env: ""
+    nodepool: cpm-notebook
   extraNodeAffinity:
     required: []
     preferred: []
@@ -500,8 +505,8 @@ singleuser:
     #  - name: {{ github.registrySecret.name }}
   startTimeout: 300
   cpu:
-    limit: 0.75
-    guarantee: 0.1
+    limit: 16
+    guarantee: 16
   memory:
     limit: 3.5G
     guarantee: 400M
@@ -519,11 +524,11 @@ singleuser:
   profileList:
     - display_name: "CPM Dev Environment"
       slug: cpm-dev-environment
-      description: "CPM Studio environment with shared test data"
+      description: "CPM Studio environment with 16 vCPUs and shared test data"
       kubespawner_override:
         image: ghcr.io/rs-python/rs-workflow-env-cpm:latest
-        cpu_limit: 4
-        cpu_guarantee: 1
+        cpu_limit: 16
+        cpu_guarantee: 16
         mem_limit: 16G
         mem_guarantee: 4G
 # scheduling relates to the user-scheduler pods and user-placeholder pods.
@@ -670,7 +675,7 @@ prePuller:
     allowPrivilegeEscalation: false
   extraTolerations:
     - key: role
-      value: rs_env
+      value: cpm_notebook
       effect: NoSchedule
   # hook relates to the hook-image-awaiter Job and hook-image-puller DaemonSet
   hook:
@@ -684,10 +689,10 @@ prePuller:
       allowPrivilegeEscalation: false
     podSchedulingWaitDuration: 10
     nodeSelector:
-      node-role.kubernetes.io/rs_env: ""
+      nodepool: cpm-notebook
     tolerations:
       - key: role
-        value: rs_env
+        value: cpm_notebook
         effect: NoSchedule
     resources: {}
     serviceAccount:
