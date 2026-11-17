@@ -30,6 +30,9 @@ spec:
     hostname: dash-dask.{{ prefect3server.ops.subDomain }}.{{ platform_domain_name }}
     port: 443
     protocol: HTTPS
+    allowedRoutes:
+      namespaces:
+        from: All
     tls:
       mode: Terminate
       certificateRefs:

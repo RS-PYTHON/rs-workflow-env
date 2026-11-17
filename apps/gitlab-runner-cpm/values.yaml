@@ -14,45 +14,110 @@
 
 gitlabUrl: "{{ gitlab_runner_cpm.url }}"
 
+concurrent: {{ gitlab_runner_cpm.concurrent | default(4) | int }}
+
+resources:
+  requests:
+    cpu: 100m
+    memory: 128Mi
+  limits:
+    memory: 512Mi
+
 envVars:
   - name: FF_USE_ADVANCED_POD_SPEC_CONFIGURATION
     value: "true"
 
 runners:
   name: "cpm-runner-rspy"
+  # Existing Secret, provisioned separately from this application. Reuse the
+  # authentication token for the CPM group's registered runner (#172).
   secret: runner-credentials-cpm
 
   config: |
     [[runners]]
-      limit = 10
+      limit = {{ gitlab_runner_cpm.concurrent | default(4) | int }}
 
       environment = [
         "GET_SOURCES_ATTEMPTS=3",
         "GIT_HTTP_LOW_SPEED_LIMIT=1000",
-        "GIT_HTTP_LOW_SPEED_TIME=30",
+        "GIT_HTTP_LOW_SPEED_TIME=300",
         "GIT_CONFIG_COUNT=1",
         "GIT_CONFIG_KEY_0=http.version",
         "GIT_CONFIG_VALUE_0=HTTP/1.1",
-        "FF_USE_ADVANCED_POD_SPEC_CONFIGURATION=true"
+        "FF_USE_ADVANCED_POD_SPEC_CONFIGURATION=true",
+        "DASK_GATEWAY__ADDRESS=http://traefik-dask-gateway-cpm.cpm.svc.cluster.local",
+        "DASK_GATEWAY__AUTH__TYPE=jupyterhub",
+        {{ ('PYTEST_ADDOPTS=' ~ (gitlab_runner_cpm.pytest_addopts | default('--maxfail=1 --tb=short --show-capture=no -o faulthandler_timeout=120'))) | to_json }},
+        "UMASK=0002",
       ]
+
+      # Existing GitLab project/group variables override runner environment.
+      # Migrate only the obsolete CPM gateway route; preserve custom gateways.
+      pre_build_script = '''
+        case "${DASK_GATEWAY__ADDRESS:-}" in
+          ""|http://traefik-dask-gateway-cpm/services/dask-gateway|http://traefik-dask-gateway-cpm/services/dask-gateway/)
+            export DASK_GATEWAY__ADDRESS=http://traefik-dask-gateway-cpm.cpm.svc.cluster.local
+            ;;
+        esac
+
+        # Keep dependency downloads across disposable build pods. Partition by
+        # project, ref protection and UID; retain explicit project overrides.
+        if [ -z "${UV_CACHE_DIR:-}" ]; then
+          # Manila may not honor supplemental groups. Only this parent is
+          # shared across UIDs; sticky mode prevents removing another UID's
+          # directory. Everything below uid-* is created privately by its UID.
+          mkdir -p -m 1777 /data/cache-ci/uv
+          export UV_CACHE_DIR="/data/cache-ci/uv/uid-$(id -u)/project-${CI_PROJECT_ID}/protected-${CI_COMMIT_REF_PROTECTED:-false}"
+        fi
+        export UV_LINK_MODE="${UV_LINK_MODE:-copy}"
+        (umask 0077; mkdir -p "$UV_CACHE_DIR")
+
+        # uv resolves Git through PATH. Retry only transient network failures
+        # in clone/fetch, never the surrounding test or documentation command.
+        if command -v git >/dev/null 2>&1 && [ "$(command -v git)" != /opt/cpm-ci/bin/git ]; then
+          export CPM_CI_REAL_GIT="$(command -v git)"
+          export PATH="/opt/cpm-ci/bin:$PATH"
+        fi
+      '''
 
       [runners.kubernetes]
         poll_timeout = 600
-        namespace = "{{ jupyterhub.ops.namespace }}"
+        namespace = "cpm"
+        cpu_request = "{{ gitlab_runner_cpm.cpu_request | default('2') }}"
+        cpu_limit = "{{ gitlab_runner_cpm.cpu_limit | default('4') }}"
+        # Two local Dask workers each budget 8GiB; reserve room for pytest too.
+        memory_request = "{{ gitlab_runner_cpm.memory | default('20Gi') }}"
+        memory_limit = "{{ gitlab_runner_cpm.memory | default('20Gi') }}"
+        helper_cpu_request = "250m"
+        helper_memory_request = "256Mi"
+        helper_memory_limit = "2Gi"
 
         [runners.kubernetes.node_selector]
-          "node-role.kubernetes.io/infra" = ""
+          "node-role.kubernetes.io/cpm_ci" = ""
+
+        [runners.kubernetes.node_tolerations]
+          "role=cpm_ci" = "NoSchedule"
 
         [runners.kubernetes.pod_labels]
           "app.kubernetes.io/name" = "gitlab-runner-job"
           "app.kubernetes.io/instance" = "cpm-runner-rspy"
 
         # Create one dynamically provisioned PVC per CI job and spread
-        # CI job pods across the infra nodes.
+        # CI job pods across the dedicated CI nodes.
         [[runners.kubernetes.pod_spec]]
           name = "workspace-pvc-and-spread"
           patch_type = "strategic"
           patch = '''
+            securityContext:
+              fsGroup: 1001
+              supplementalGroups:
+              - 1000
+              - 1001
+            tolerations:
+            - key: role
+              operator: Equal
+              value: cpm_ci
+              effect: NoSchedule
             topologySpreadConstraints:
             - maxSkew: 1
               topologyKey: kubernetes.io/hostname
@@ -67,6 +132,9 @@ runners:
               volumeMounts:
               - name: builds
                 mountPath: /builds
+              - name: git-network-retry
+                mountPath: /opt/cpm-ci/bin
+                readOnly: true
 
             - name: helper
               volumeMounts:
@@ -74,7 +142,14 @@ runners:
                 mountPath: /builds
 
             volumes:
+            - name: git-network-retry
+              configMap:
+                name: gitlab-runner-cpm-git-retry
+                defaultMode: 0555
             - name: builds
+              # Strategic patches merge with Runner's default emptyDir.
+              # Remove it before selecting the ephemeral PVC volume type.
+              emptyDir: null
               ephemeral:
                 volumeClaimTemplate:
                   spec:

@@ -1,0 +1,187 @@
+# Copyright 2023-2026 Airbus, CS Group
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: l0-notebook-defaults-v1
+immutable: true
+data:
+  init_dask_cluster_l0.ipynb: |
+    {
+     "cells": [
+      {
+       "cell_type": "markdown",
+       "id": "e5afb4d1-54ed-4af9-9dc4-93be919a8f77",
+       "metadata": {
+        "editable": true,
+        "slideshow": {
+         "slide_type": ""
+        },
+        "tags": []
+       },
+       "source": [
+        "# Initialize dask cluster for **L0**"
+       ]
+      },
+      {
+       "cell_type": "code",
+       "execution_count": null,
+       "id": "e2f87cf5-a3d4-4d97-b84b-202764d154a2",
+       "metadata": {
+        "editable": true,
+        "slideshow": {
+         "slide_type": ""
+        },
+        "tags": []
+       },
+       "outputs": [],
+       "source": [
+        "import dask, platform\n",
+        "print(f\"Python version: {platform.python_version()}\")\n",
+        "print(f\"Dask version: {dask.__version__}\")\n",
+        "\n",
+        "# This notebook should be called from the right Jupyter virtual environment kernel.\n",
+        "# You can change this notebook kernel using the list on the top-right corner of this page.\n",
+        "assert platform.python_version() == \"3.13.18\"\n",
+        "assert dask.__version__ == \"2026.7.1\""
+       ]
+      },
+      {
+       "cell_type": "code",
+       "execution_count": null,
+       "id": "99e54eac-8d6f-47c8-988b-4dba892d02cc",
+       "metadata": {
+        "editable": true,
+        "slideshow": {
+         "slide_type": ""
+        },
+        "tags": [
+         "parameters"
+        ]
+       },
+       "outputs": [],
+       "source": [
+        "# Parameters. NOTE: the cell must be tagged as \"parameters\" !\n",
+        "# See: https://papermill.readthedocs.io/en/latest/usage-parameterize.html\n",
+        "scale=1\n",
+        "image_name=\"ghcr.io/rs-python/dask/l0/k8s\"\n",
+        "image_tag=\"latest\"\n",
+        "cluster_label=\"\" # by default: <proc>.<user>.<docker-tag>\n",
+        "worker_cores=4\n",
+        "worker_memory=58\n",
+        "scheduler_memory_limit=60\n",
+        "big_resources=False"
+       ]
+      },
+      {
+       "cell_type": "code",
+       "execution_count": null,
+       "id": "9207b2ca-7e7c-4854-8af1-de3d8743227e",
+       "metadata": {},
+       "outputs": [],
+       "source": [
+        "# Init cluster from this venv kernel\n",
+        "from resources.dask_clusters.dask_utils import *\n",
+        "from resources.dask_clusters.dask_venv import *\n",
+        "from resources.dask_clusters.cluster_config import * # see cluster_config.__init__\n",
+        "\n",
+        "gateway, cluster, client = init_dask_cluster_l0_venv(\n",
+        "    scale=scale,\n",
+        "    image=f\"{image_name}:{image_tag}\",\n",
+        "    cluster_label=cluster_label,\n",
+        "    worker_cores=worker_cores,\n",
+        "    worker_memory=worker_memory,\n",
+        "    scheduler_memory_limit=scheduler_memory_limit,    \n",
+        "    worker_extra_pod_config=dpr_olci_worker_pod_config if big_resources else dpr_worker_pod_config,\n",
+        "    scheduler_extra_pod_config=dpr_scheduler_pod_config,\n",
+        "    worker_extra_container_config=dpr_container_config,\n",
+        "    scheduler_extra_container_config=dpr_container_config,\n",
+        ")\n",
+        "display(cluster)"
+       ]
+      },
+      {
+       "cell_type": "markdown",
+       "id": "11854d53",
+       "metadata": {},
+       "source": [
+        "## Shutdown dask cluster"
+       ]
+      },
+      {
+       "cell_type": "code",
+       "execution_count": null,
+       "id": "027219c4",
+       "metadata": {},
+       "outputs": [],
+       "source": [
+        "# Choose to shutdown the dask cluster\n",
+        "shutdown_checkbox"
+       ]
+      },
+      {
+       "cell_type": "code",
+       "execution_count": null,
+       "id": "28276524",
+       "metadata": {},
+       "outputs": [],
+       "source": [
+        "if shutdown_checkbox.value:\n",
+        "    shutdown_dask_clusters(gateway, cluster.name)\n",
+        "    close_dask_clusters(gateway, cluster, client)"
+       ]
+      },
+      {
+       "cell_type": "markdown",
+       "id": "0ef4d9b9",
+       "metadata": {},
+       "source": [
+        "## Only from command line"
+       ]
+      },
+      {
+       "cell_type": "code",
+       "execution_count": null,
+       "id": "ff4363e9",
+       "metadata": {},
+       "outputs": [],
+       "source": [
+        "print(KEEP_THIS_NOTEBOOK_OPEN)\n",
+        "!tail -f /dev/null"
+       ]
+      }
+     ],
+     "metadata": {
+      "kernelspec": {
+       "display_name": "py3.13.18-2026.7.1",
+       "language": "python",
+       "name": "py3.13.18-2026.7.1"
+      },
+      "language_info": {
+       "codemirror_mode": {
+        "name": "ipython",
+        "version": 3
+       },
+       "file_extension": ".py",
+       "mimetype": "text/x-python",
+       "name": "python",
+       "nbconvert_exporter": "python",
+       "pygments_lexer": "ipython3",
+       "version": "3.13.18"
+      }
+     },
+     "nbformat": 4,
+     "nbformat_minor": 5
+    }
