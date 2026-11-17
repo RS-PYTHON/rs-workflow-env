@@ -31,7 +31,11 @@ spec:
       name: traefik-dask-gateway
       port: 80
       weight: 1
+    # Only the cluster dashboards: /clusters/<namespace>.<cluster name>/..., where the namespace is the 'namespace'
+    # cluster option: dask-gateway for the staging cluster (rs-server-deployment), or the namespace of the clusters
+    # created by the notebooks (DASK_GATEWAY_NAMESPACE of JupyterHub). The cluster name is built from the cluster
+    # label (see named_kube_backend.py), it is a DNS-1123 label.
     matches:
     - path:
         type: RegularExpression
-        value: "^/clusters/dask-gateway\\.[0-9a-z]{32}/.*"
+        value: "^/clusters/(dask-gateway|{{ jupyterhub.ops.services.daskgateway.namespace | default('processing') }})\\.[a-z0-9]([-a-z0-9]*[a-z0-9])?/.*"

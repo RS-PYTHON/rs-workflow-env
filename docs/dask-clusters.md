@@ -24,7 +24,13 @@ Kubernetes (`kubectl get pods`, Grafana, logs):
 | `dask-staging` | `staging-8b0d5e2f4a17` | `dask-scheduler-staging-8b0d5e2f4a17`, `dask-worker-staging-8b0d5e2f4a17-xxxxx` |
 | empty | random uuid, e.g. `0b3f6e1c9d2a4f5e8a7b6c5d4e3f2a1b` | `dask-scheduler-0b3f6e1c9d2a4f5e8a7b6c5d4e3f2a1b`... |
 
-The `dask-scheduler-` and `dask-worker-` prefixes are set by Dask Gateway. The cluster name is used to connect to a
+The `dask-scheduler-` and `dask-worker-` prefixes are set by Dask Gateway. The dashboard of a cluster is published at
+`https://dash-dask.<JupyterHub sub-domain>.<platform domain>/clusters/<namespace>.<cluster name>/status`, e.g.
+`/clusters/processing.s1ard-usera-latest-3f2a9c1b7e4d/status`, where the namespace is the `namespace` cluster option
+(`DASK_GATEWAY_NAMESPACE` of JupyterHub for the rs-demo notebooks, set by the
+`jupyterhub.ops.services.daskgateway.namespace` inventory variable, `processing` by default, and `dask-gateway` for the
+staging cluster). This is the dashboard link displayed by the notebooks. The dashboards of the clusters of the other
+namespaces are not published. The cluster name is used to connect to a
 cluster (`gateway.connect(...)`), but the flows and services find their cluster by its label, which is unchanged.
 The naming is done by the `NamedKubeBackend` class of
 [`apps/dask-gateway/named_kube_backend.py`](../apps/dask-gateway/named_kube_backend.py), included in the

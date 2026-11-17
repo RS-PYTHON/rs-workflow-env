@@ -14,32 +14,14 @@
 
 """Tests of the Dask Gateway backend that names the clusters after their label."""
 
-import importlib.util
 import re
-import sys
-from pathlib import Path
 
-import jinja2
 import pytest
-import yaml
 from dask_gateway_server.backends.kubernetes import KubeBackend, KubeClusterConfig
 from traitlets.config import Config
+from utils import DASK_GATEWAY_DIR, load_named_kube_backend, render_yaml
 
-APP_DIR = Path(__file__).resolve().parent.parent / "apps" / "dask-gateway"
-
-
-def load_module():
-    """Import the named_kube_backend.py module (its directory name contains a '-', so it isn't a python package)."""
-    spec = importlib.util.spec_from_file_location("named_kube_backend", APP_DIR / "named_kube_backend.py")
-    assert spec
-    assert spec.loader
-    module = importlib.util.module_from_spec(spec)
-    sys.modules[spec.name] = module
-    spec.loader.exec_module(module)
-    return module
-
-
-backend_module = load_module()
+backend_module = load_named_kube_backend()
 
 # Cluster name compatible with a DNS-1035 label once prefixed by "dask-" (Service name) and with a label value
 CLUSTER_NAME_REGEX = re.compile(r"^[a-z0-9]([-a-z0-9]*[a-z0-9])?$")
@@ -113,13 +95,7 @@ def test_values_extra_config():
     The values.yaml file, rendered with Jinja as the rs-infra-core app installer does (Ansible template module),
     includes the backend code and makes Dask Gateway use it.
     """
-    env = jinja2.Environment(
-        loader=jinja2.FileSystemLoader(APP_DIR),
-        trim_blocks=True,  # Ansible default
-        undefined=jinja2.ChainableUndefined,  # ignore the inventory variables
-        autoescape=False,  # nosec B701: this is a YAML file, not HTML
-    )
-    values = yaml.safe_load(env.get_template("values.yaml").render())
+    values = render_yaml(DASK_GATEWAY_DIR, "values.yaml")
     extra_config = values["gateway"]["extraConfig"]
 
     # The chart executes the extraConfig entries in alphabetical order, after setting the default backend class
