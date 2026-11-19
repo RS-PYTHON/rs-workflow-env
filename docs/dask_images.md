@@ -71,6 +71,38 @@ their dependencies are installed from the `requirements-dask-<processor>.txt` fi
 The image of the mockup processor (`ghcr.io/rs-python/dask/mockup/<target>`) is built by
 [rs-testmeans](https://github.com/RS-PYTHON/rs-testmeans).
 
+### Confidential processors
+
+The CRISTAL L0 processor (`cristal-l0`) is confidential: it is installed from the package registries of the GMV GitLab,
+and its images are pushed only to the OVH private registry (Harbor), never to the GitHub registry, as
+`<OVH registry>/cristal/dask/cristal-l0/<k8s|local>` (no `localcluster` image). The private Harbor project `cristal`
+is created by the CI if it does not exist.
+
+They are built by the
+[`build-cristal-l0.yml`](https://github.com/RS-PYTHON/rs-workflow-env/blob/develop/.github/workflows/build-cristal-l0.yml)
+workflow, with the following GitHub secrets of rs-workflow-env:
+
+| Secret | Value |
+|---|---|
+| `GMV_GITLAB_URL` | URL of the GMV GitLab, e.g. `https://gitlab.example.com`. |
+| `GMV_GITLAB_TOKEN` | GMV GitLab access token (personal or group) with the `read_api` scope on the CRISTAL L0 and CRISTAL common projects, to download their Python packages. |
+| `CRISTAL_L0_PROJECT_ID` | Numeric ID of the CRISTAL L0 project in the GMV GitLab (package `cri-l0-dp`), e.g. `123`: see "Project ID" in the project overview page or in Settings > General. |
+| `CRISTAL_COMMON_PROJECT_ID` | Numeric ID of the CRISTAL common project in the GMV GitLab (package `cadu_processor`). |
+| `GMV_GITLAB_IP` | Optional: IP address of the GMV GitLab, while its domain name is not in the DNS. The build then adds the GitLab host name to `/etc/hosts` and pip does not verify the GitLab certificate. Remove this secret once the GMV DNS is available. |
+| `OVH_REGISTRY_URL` | URL of the OVH registry: the `registry-url` output of the rs-infra-core `registry` Terraform. |
+| `OVH_REGISTRY_USERNAME` | User of the OVH registry: the `user` output of the same Terraform. |
+| `OVH_REGISTRY_PASSWORD` | Password of the OVH registry: the `password` output of the same Terraform. |
+
+These values, and the host names derived from them, are masked in the logs. The Trivy scan results are not uploaded
+to the GitHub Security tab: use the Harbor scanner of the OVH registry.
+
+To build the image manually, set the `GMV_GITLAB_URL`, `GMV_GITLAB_TOKEN`, `CRISTAL_L0_PROJECT_ID` and `CRISTAL_COMMON_PROJECT_ID`
+environment variables (and `GMV_GITLAB_IP` if needed), and the private registry with `--registry`:
+
+```shell
+./docker/eopf/build_dask_eopf.py cristal-l0 -t <EOPF GitLab token> --registry <OVH registry host>/cristal --push
+```
+
 ## Staging images
 
 The staging images, `ghcr.io/rs-python/dask/staging/k8s` and `ghcr.io/rs-python/dask/staging/local`, are built from

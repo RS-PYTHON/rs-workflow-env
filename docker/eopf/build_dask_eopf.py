@@ -18,10 +18,12 @@
 
 import argparse
 import itertools
+import os
 import subprocess  # nosec
 import sys
 from dataclasses import dataclass
 from pathlib import Path
+from urllib.parse import urlparse
 
 # NOTE: run "./build_dask_eopf.py -h" to display help.
 
@@ -29,6 +31,17 @@ from pathlib import Path
 THIS_DIR = Path(__file__).parent
 
 DOCKER_SCRIPTS = THIS_DIR.parent / "scripts"
+
+# Default Docker registry of the images
+DEFAULT_REGISTRY = "ghcr.io/rs-python"
+
+# Environment variables that give access to the confidential GMV GitLab repositories.
+# They are passed to the docker build as secrets, never as build arguments, so they are not stored in the image.
+GMV_SECRETS = ["GMV_GITLAB_URL", "GMV_GITLAB_TOKEN", "CRISTAL_L0_PROJECT_ID", "CRISTAL_COMMON_PROJECT_ID"]
+
+# Optional IP address of the GMV GitLab, while its domain name is not in the DNS. When it is set, the build resolves
+# the GitLab host name to this address and the GitLab certificate is not verified.
+GMV_GITLAB_IP = "GMV_GITLAB_IP"
 
 ########
 # Init #
@@ -43,19 +56,19 @@ class Image:
     python_version: str
     dask_version: str
 
-    # Docker image name for cluster usage (registry)
-    k8s_name: str
-
-    # Docker image name for local mode usage (registry)
-    local_name: str = ""
-
-    # Name of the LocalCluster image (for debugging)
-    local_cluster_name: str = ""
-
     # This is used mainly to identify the files that are specific to the processor:
     # requirements-${IMAGE2BUILD}.txt, post-install-${IMAGE2BUILD}.sh, ...
     # But it's not used in the name of the docker image itself.
-    image2build: str = ""
+    image2build: str
+
+    # Confidential processor: its sources are not public and its image must not be pushed to the
+    # public registry. It needs the GMV_SECRETS environment variables and an explicit --registry.
+    # It is not built with the "all" option.
+    confidential: bool = False
+
+    def name(self, proc_name: str, prefix: str, target: str) -> str:
+        """Docker image name, e.g. ghcr.io/rs-python/dask/<proc>/<target> with target=k8s, local or localcluster"""
+        return f"{prefix}/dask/{proc_name}/{target}"
 
 
 # All possible processor images
@@ -65,34 +78,29 @@ all_procs = {
     "cpm3": Image(
         python_version="3.13.18",
         dask_version="2026.7.1",
-        k8s_name="ghcr.io/rs-python/dask/cpm3/k8s",
-        local_name="ghcr.io/rs-python/dask/cpm3/local",
-        local_cluster_name="ghcr.io/rs-python/dask/cpm3/localcluster",
         image2build="dask-cpm3",
     ),
     "l0": Image(
         python_version="3.13.18",
         dask_version="2026.7.1",
-        k8s_name="ghcr.io/rs-python/dask/l0/k8s",
-        local_name="ghcr.io/rs-python/dask/l0/local",
-        local_cluster_name="ghcr.io/rs-python/dask/l0/localcluster",
         image2build="dask-l0",
     ),
     "s1ard": Image(
         python_version="3.13.18",
         dask_version="2026.7.1",
-        k8s_name="ghcr.io/rs-python/dask/s1ard/k8s",
-        local_name="ghcr.io/rs-python/dask/s1ard/local",
-        local_cluster_name="ghcr.io/rs-python/dask/s1ard/localcluster",
         image2build="dask-s1ard",
     ),
     "s3olci": Image(
         python_version="3.13.18",
         dask_version="2026.7.1",
-        k8s_name="ghcr.io/rs-python/dask/s3olci/k8s",
-        local_name="ghcr.io/rs-python/dask/s3olci/local",
-        local_cluster_name="ghcr.io/rs-python/dask/s3olci/localcluster",
         image2build="dask-s3olci",
+    ),
+    # CRISTAL L0 processor, installed from the GMV GitLab
+    "cristal-l0": Image(
+        python_version="3.13.18",
+        dask_version="2026.7.1",
+        image2build="dask-cristal-l0",
+        confidential=True,
     ),
 }
 
@@ -149,12 +157,26 @@ parser.add_argument(
     help="List of docker label lines as 'key=value'",
 )
 parser.add_argument(
+    "-r",
+    "--registry",
+    default=DEFAULT_REGISTRY,
+    help=f"Docker registry and namespace of the built images (default: {DEFAULT_REGISTRY}). "
+    "Mandatory for the confidential processors, that must not be pushed to the default registry",
+)
+parser.add_argument(
     "--push",
     action="store_true",
     help="Push image to Docker registry",
 )
 
 args = parser.parse_args()
+registry_prefix = args.registry.rstrip("/")
+
+if (args.proc != "all") and all_procs[args.proc].confidential:
+    if registry_prefix == DEFAULT_REGISTRY:
+        parser.error(f"'{args.proc}' is confidential: set --registry to a private registry")
+    if missing := [var for var in GMV_SECRETS if not os.environ.get(var)]:
+        parser.error(f"'{args.proc}' is confidential: missing environment variable(s) {', '.join(missing)}")
 
 # Build label options: "--label key=value" for each line
 labels = []
@@ -171,11 +193,16 @@ build_all = args.proc == "all"
 
 # Nominal case: we build a single processor with or without local cluster
 if not build_all:
-    procs_to_build = [[args.proc, args.local_cluster]]
+    procs_to_build: list[tuple[str, bool]] = [(args.proc, args.local_cluster)]
 
 # Build all the processors, with and without local cluster
 else:
-    procs_to_build = list(itertools.product(all_procs.keys(), [False, True]))  # type: ignore[arg-type]
+    procs_to_build = list(
+        itertools.product(
+            [name for name, proc_image in all_procs.items() if not proc_image.confidential],
+            [False, True],
+        ),
+    )
 
 for proc, local_cluster in procs_to_build:
 
@@ -203,7 +230,7 @@ for proc, local_cluster in procs_to_build:
                 return dpr_tag
         raise RuntimeError(f"Could not find any of the tags '{args.dpr_service_tags}' for the image '{dpr_image}'")
 
-    def run_command(cmd: list[str]):
+    def run_command(cmd: list[str], secret_env: dict[str, str]):
         """Run command line"""
         print(f"""
 #########
@@ -216,7 +243,7 @@ for proc, local_cluster in procs_to_build:
         if code := subprocess.run(  # nosec
             cmd,
             check=False,
-            env={"GITLAB_EOPF_TOKEN": args.gitlab_eopf_token},
+            env={"GITLAB_EOPF_TOKEN": args.gitlab_eopf_token, **secret_env},
         ).returncode:
             joined = "' '"
             raise RuntimeError(
@@ -228,11 +255,16 @@ for proc, local_cluster in procs_to_build:
 
     # Docker image name
     if local_cluster:
-        registry = image.local_cluster_name
+        registry = image.name(proc, registry_prefix, "localcluster")
     elif args.local:
-        registry = image.local_name
+        registry = image.name(proc, registry_prefix, "local")
     else:
-        registry = image.k8s_name
+        registry = image.name(proc, registry_prefix, "k8s")
+
+    # Secrets of the confidential processors, read from the environment by "docker build --secret"
+    secrets = {var: os.environ[var] for var in GMV_SECRETS} if image.confidential else {}
+    if image.confidential and os.environ.get(GMV_GITLAB_IP):
+        secrets[GMV_GITLAB_IP] = os.environ[GMV_GITLAB_IP]
 
     command = [
         "docker",
@@ -241,6 +273,13 @@ for proc, local_cluster in procs_to_build:
         f"IMAGE2BUILD={image.image2build}",
         "--secret",
         "id=GITLAB_EOPF_TOKEN",
+    ]
+    for var in secrets:
+        command += ["--secret", f"id={var},env={var}"]
+    # Add the GMV GitLab to /etc/hosts of the build containers
+    if GMV_GITLAB_IP in secrets:
+        command += ["--add-host", f"{urlparse(secrets['GMV_GITLAB_URL']).hostname}={secrets[GMV_GITLAB_IP]}"]
+    command += [
         "-f",
         str(get_dockerfile(local_cluster)),
     ]
@@ -265,7 +304,7 @@ for proc, local_cluster in procs_to_build:
         command += ["--build-arg", f"BASE_IMAGE_TARGET={registry.rsplit('/', 1)[1]}"]
 
     # Build image
-    run_command(command + labels)
+    run_command(command + labels, secrets)
 
     # Push to registry
     if args.push:
@@ -275,6 +314,7 @@ for proc, local_cluster in procs_to_build:
                     [
                         "/bin/sh",
                         "-c",
-                        f"docker login https://ghcr.io/v2/rs-python && docker push '{registry}:{tag}'",
+                        f"docker login '{registry_prefix.split('/', 1)[0]}' && docker push '{registry}:{tag}'",
                     ],
+                    secrets,
                 )
