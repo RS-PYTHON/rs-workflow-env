@@ -51,8 +51,23 @@ COPY ./resources/system-requirements-*.txt /opt
 # NOTE, with older docker versions, use:
 # RUN --mount=type=secret,id=GITLAB_EOPF_TOKEN \
 # GITLAB_EOPF_TOKEN=$(cat /run/secrets/GITLAB_EOPF_TOKEN) pip install ...
+# Optional GMV secrets, only for the confidential processors (e.g. CRISTAL L0), read by the requirements file to install
+# the processor from the package registry of the GMV GitLab. As secrets, they are not written in the image.
+# If GMV_GITLAB_IP is set (no DNS for the GMV GitLab yet: its host name is added to /etc/hosts by "docker build --add-host"),
+# pip does not verify the GMV GitLab certificate, for this host only.
 RUN --mount=type=secret,id=GITLAB_EOPF_TOKEN,env=GITLAB_EOPF_TOKEN \
+    --mount=type=secret,id=GMV_GITLAB_URL,env=GMV_GITLAB_URL \
+    --mount=type=secret,id=GMV_GITLAB_TOKEN,env=GMV_GITLAB_TOKEN \
+    --mount=type=secret,id=CRISTAL_L0_PROJECT_ID,env=CRISTAL_L0_PROJECT_ID \
+    --mount=type=secret,id=CRISTAL_COMMON_PROJECT_ID,env=CRISTAL_COMMON_PROJECT_ID \
+    --mount=type=secret,id=GMV_GITLAB_IP,env=GMV_GITLAB_IP \
     git config --global url."https://__token__:${GITLAB_EOPF_TOKEN}@gitlab.eopf.copernicus.eu/".insteadOf "https://gitlab.eopf.copernicus.eu/" && \
+    if [ -n "${GMV_GITLAB_URL:-}" ]; then \
+        GMV_GITLAB_HOST="${GMV_GITLAB_URL#*://}" && \
+        GMV_GITLAB_HOST="${GMV_GITLAB_HOST%%/*}" && \
+        export GMV_GITLAB_HOST && \
+        if [ -n "${GMV_GITLAB_IP:-}" ]; then export PIP_TRUSTED_HOST="${GMV_GITLAB_HOST}"; fi; \
+    fi && \
     pip install --only-binary=:all: -U pip && \
     pip install --prefer-binary -U -r /opt/requirements-${IMAGE2BUILD}.txt && \
     layer-cleanup.sh && \

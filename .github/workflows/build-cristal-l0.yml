@@ -1,0 +1,247 @@
+# Copyright 2023-2026 Airbus, CS Group
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+# === Workflow behavior ===
+#
+# The CRISTAL L0 processor is confidential (ESA requirement): its sources come from the GMV GitLab and its
+# Docker images are pushed ONLY to the OVH private registry (Harbor), never to the GitHub registry.
+#
+# - The GMV GitLab URL, token and project IDs, and the OVH registry URL and credentials, are GitHub secrets.
+#   Values derived from them (host names) are masked too, so they never appear in the logs.
+# - The images are pushed to the private Harbor project 'cristal' of the OVH registry, created if missing.
+# - Temporary: while the GMV GitLab domain name is not in the DNS, the GMV_GITLAB_IP secret gives its IP address.
+#   The host name is then added to /etc/hosts of the build containers and pip does not verify its certificate.
+# - The workflow has no 'packages: write' permission, so it cannot push anything to the GitHub registry.
+# - No Trivy SARIF upload to the GitHub Security tab: use the Harbor scanner of the OVH registry instead.
+# - The workflow is skipped for pull requests from forks and Dependabot, that have no access to the secrets.
+#
+# On automatic triggers (push or pull request): build and push the image for cluster mode (and for local mode on develop)
+# On manual trigger: the user chooses the target system (cluster, local or all)
+# No LocalCluster image for CRISTAL L0: not needed.
+
+name: Build the CRISTAL L0 Docker images
+
+on:
+  pull_request:
+    types: [opened, synchronize, reopened]
+    paths:
+      - '.github/workflows/build-cristal-l0.yml'
+      - 'docker/eopf/build_dask_eopf.py'
+      - 'docker/eopf/Dockerfile.dask-eopf'
+      - 'docker/eopf/Dockerfile.dask-eopf-localcluster'
+      - 'docker/**/*dask-cristal-l0.*'
+  push:
+    branches: [develop, main]
+    tags: ['**']
+    paths:
+      - '.github/workflows/build-cristal-l0.yml'
+      - 'docker/eopf/build_dask_eopf.py'
+      - 'docker/eopf/Dockerfile.dask-eopf'
+      - 'docker/eopf/Dockerfile.dask-eopf-localcluster'
+      - 'docker/**/*dask-cristal-l0.*'
+  workflow_dispatch:
+    inputs:
+      target_system:
+        description: Whether to build images for cluster deployment, local deployment or both
+        required: false
+        default: 'cluster'
+        type: choice
+        options:
+          - all
+          - cluster
+          - local
+      add_docker_tags:
+        description: Add these tags to the docker images as e.g. 'custom-tag1,custom-tag-2'
+        required: false
+
+permissions:
+  contents: read
+
+env:
+  PROC: cristal-l0
+  # Private Harbor project of the OVH registry where the images are pushed, created if missing
+  OVH_REGISTRY_PROJECT: cristal
+
+jobs:
+  set-binary-env:
+    name: Set Docker environment
+    if: ${{
+      (github.actor != 'dependabot[bot]') &&
+      ((github.event_name != 'pull_request') || (github.event.pull_request.head.repo.full_name == github.repository))
+      }}
+    runs-on: ubuntu-latest
+    outputs:
+      branch_name: ${{ steps.set-binary-env.outputs.branch_name }}
+      docker_tags: ${{ steps.set-binary-env.outputs.docker_tags }}
+      docker_final_tags: ${{ steps.set-binary-env.outputs.docker_final_tags }}
+    steps:
+      - id: set-binary-env
+        name: Call action 'set-binary-env'
+        uses: RS-PYTHON/actions/.github/actions/set-binary-env@develop
+        with:
+          add_docker_tags: ${{ inputs.add_docker_tags }}
+
+  build-cristal-l0:
+    runs-on: ubuntu-latest
+    name: Build and push CRISTAL L0 image to OVH
+    needs: [set-binary-env]
+    permissions:
+      contents: read
+      packages: read # pull the Dask base images from the GitHub registry
+    env:
+      DOCKER_TAGS: ${{ needs.set-binary-env.outputs.docker_tags }},${{ needs.set-binary-env.outputs.docker_final_tags }}
+      GMV_GITLAB_URL: ${{ secrets.GMV_GITLAB_URL }}
+      GMV_GITLAB_TOKEN: ${{ secrets.GMV_GITLAB_TOKEN }}
+      CRISTAL_L0_PROJECT_ID: ${{ secrets.CRISTAL_L0_PROJECT_ID }}
+      CRISTAL_COMMON_PROJECT_ID: ${{ secrets.CRISTAL_COMMON_PROJECT_ID }}
+      GMV_GITLAB_IP: ${{ secrets.GMV_GITLAB_IP }} # optional, see above
+      OVH_REGISTRY_URL: ${{ secrets.OVH_REGISTRY_URL }}
+      OVH_REGISTRY_USERNAME: ${{ secrets.OVH_REGISTRY_USERNAME }}
+      OVH_REGISTRY_PASSWORD: ${{ secrets.OVH_REGISTRY_PASSWORD }}
+    strategy:
+      fail-fast: false
+      matrix:
+        target: [cluster, local]
+        include:
+          - target: cluster
+            option: ''
+            suffix: k8s
+            condition: ${{
+              (github.event_name != 'workflow_dispatch') ||
+              (inputs.target_system == 'cluster') ||
+              (inputs.target_system == 'all')}}
+          # Build the local version only for a merge to develop or a manual run
+          - target: local
+            option: --local
+            suffix: local
+            condition: ${{
+              (needs.set-binary-env.outputs.branch_name == 'develop') ||
+              ((github.event_name == 'workflow_dispatch') && (
+                (inputs.target_system == 'local') ||
+                (inputs.target_system == 'all')))}}
+
+    steps:
+      # Must be the first step: mask the values derived from the secrets, that GitHub doesn't mask by itself.
+      # No 'set -x' here: the values are masked only after the '::add-mask::' commands.
+      - id: mask
+        name: Check and mask the confidential values
+        if: ${{ matrix.condition }}
+        run: |
+          set -eu
+          for var in GMV_GITLAB_URL GMV_GITLAB_TOKEN CRISTAL_L0_PROJECT_ID CRISTAL_COMMON_PROJECT_ID \
+                     OVH_REGISTRY_URL OVH_REGISTRY_USERNAME OVH_REGISTRY_PASSWORD; do
+            if [[ -z "${!var}" ]]; then
+              echo "::error::Missing GitHub secret: $var"
+              exit 1
+            fi
+          done
+          gmv_host="${GMV_GITLAB_URL#*://}"
+          gmv_host="${gmv_host%%/*}"
+          ovh_url="${OVH_REGISTRY_URL%/}"
+          [[ "$ovh_url" == *://* ]] || ovh_url="https://${ovh_url}"
+          ovh_host="${ovh_url#*://}"
+          echo "::add-mask::${gmv_host}"
+          echo "::add-mask::${ovh_host}"
+          {
+            echo "OVH_REGISTRY_API=${ovh_url}/api/v2.0"
+            echo "OVH_REGISTRY_HOST=${ovh_host}"
+            echo "IMAGE=${ovh_host}/${OVH_REGISTRY_PROJECT}/dask/${PROC}/${{ matrix.suffix }}"
+          } >> "$GITHUB_ENV"
+        shell: bash
+
+      - name: Checkout
+        if: ${{ matrix.condition }}
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+
+      - name: Log into GitHub Container Registry (pull only)
+        if: ${{ matrix.condition }}
+        uses: docker/login-action@8aa5831fb8d48d8f76594c7ddde61ae58019f550 # v4.8.0
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Log into the OVH registry
+        if: ${{ matrix.condition }}
+        uses: docker/login-action@8aa5831fb8d48d8f76594c7ddde61ae58019f550 # v4.8.0
+        with:
+          registry: ${{ env.OVH_REGISTRY_HOST }}
+          username: ${{ secrets.OVH_REGISTRY_USERNAME }}
+          password: ${{ secrets.OVH_REGISTRY_PASSWORD }}
+
+      - name: Create the private Harbor project if missing
+        if: ${{ matrix.condition }}
+        run: |
+          set -eu
+          auth=(--user "${OVH_REGISTRY_USERNAME}:${OVH_REGISTRY_PASSWORD}")
+          code=$(curl -sS -o /dev/null -w '%{http_code}' "${auth[@]}" --head \
+            "${OVH_REGISTRY_API}/projects?project_name=${OVH_REGISTRY_PROJECT}")
+          if [[ "$code" == 200 ]]; then
+            echo "The Harbor project '${OVH_REGISTRY_PROJECT}' already exists"
+          elif [[ "$code" == 404 ]]; then
+            curl -sS --fail-with-body "${auth[@]}" -X POST -H 'Content-Type: application/json' \
+              -d "{\"project_name\": \"${OVH_REGISTRY_PROJECT}\", \"public\": false}" \
+              "${OVH_REGISTRY_API}/projects"
+            echo "The private Harbor project '${OVH_REGISTRY_PROJECT}' has been created"
+          else
+            echo "::error::Unexpected HTTP code from the OVH registry: $code"
+            exit 1
+          fi
+        shell: bash
+
+      - name: Extract Docker metadata
+        id: meta
+        if: ${{ matrix.condition }}
+        uses: docker/metadata-action@dc802804100637a589fabce1cb79ff13a1411302 # v6.2.0
+        with:
+          images: ${{ env.PROC }}
+
+      - name: Build the CRISTAL L0 image
+        if: ${{ matrix.condition }}
+        env:
+          GITLAB_EOPF_TOKEN: ${{ secrets.GITLAB_EOPF_TOKEN }}
+          LABELS: ${{ steps.meta.outputs.labels }}
+        run: |
+          set -eux
+          ./docker/eopf/build_dask_eopf.py \
+            --gitlab_eopf_token "${GITLAB_EOPF_TOKEN}" \
+            --registry "${OVH_REGISTRY_HOST}/${OVH_REGISTRY_PROJECT}" \
+            --docker_tags "${DOCKER_TAGS}" \
+            --labels "${LABELS}" \
+            ${{ matrix.option }} \
+            "${PROC}"
+        shell: bash
+
+      - name: Push to the OVH registry
+        if: ${{ matrix.condition }}
+        run: |
+          set -eux
+          for tag in ${DOCKER_TAGS//,/ }; do
+            docker push --quiet "${IMAGE}:${tag}"
+          done
+        shell: bash
+
+      - name: Check the image is in the OVH registry and not in the GitHub registry
+        if: ${{ matrix.condition }}
+        run: |
+          set -eu
+          for tag in ${DOCKER_TAGS//,/ }; do
+            digest=$(docker buildx imagetools inspect --format '{{json .Manifest.Digest}}' "${IMAGE}:${tag}")
+            echo "OVH registry: '${tag}' pushed with digest ${digest}" | tee -a "$GITHUB_STEP_SUMMARY"
+            if docker manifest inspect "ghcr.io/rs-python/dask/${PROC}/${{ matrix.suffix }}:${tag}" &> /dev/null; then
+              echo "::error::The confidential image '${PROC}:${tag}' must not be in the GitHub registry"
+              exit 1
+            fi
+          done
+        shell: bash
