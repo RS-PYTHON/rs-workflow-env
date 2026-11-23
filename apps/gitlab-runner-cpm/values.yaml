@@ -39,6 +39,9 @@ runners:
       [runners.kubernetes]
         poll_timeout = 600
         namespace = "{{ jupyterhub.ops.namespace }}"
+        cpu_request = "500m"
+        memory_request = "5Gi"
+        memory_limit = "12Gi"
 
         [runners.kubernetes.node_selector]
           "node-role.kubernetes.io/infra" = ""
