@@ -20,6 +20,8 @@
 --extra-index-url https://__token__:${GITLAB_EOPF_TOKEN}@gitlab.eopf.copernicus.eu/api/v4/projects/114/packages/pypi/simple # s1-ard-core
 --extra-index-url https://__token__:${GITLAB_EOPF_TOKEN}@gitlab.eopf.copernicus.eu/api/v4/projects/201/packages/pypi/simple # s1-ard
 
-# Install s1 ard.
-#git+https://__token__:${GITLAB_EOPF_TOKEN}@gitlab.eopf.copernicus.eu/S1/s1-ard@main
-s1-ard==1.2.0
+# Install s1 ard from the "rspy" branches of the refsystem forks, which include the fix from
+# https://gitlab.eopf.copernicus.eu/S1/s1-ard-core/-/merge_requests/20 (unique scatter keys in map_blocks).
+# s1-ard-core is pinned explicitly: pip ignores the [tool.uv.sources] of s1-ard and would install 1.2.0 from the registry.
+s1-ard-core @ git+https://__token__:${GITLAB_EOPF_TOKEN}@gitlab.eopf.copernicus.eu/refsystem/s1-ard-core@c4feacdbbb6eceb3dc3dfa1bdb39b2a9407deda3 # rspy, November 23, 2026
+s1-ard @ git+https://__token__:${GITLAB_EOPF_TOKEN}@gitlab.eopf.copernicus.eu/refsystem/s1-ard@e06965b223ac270416f85c91650ab25be469a199 # rspy, November 23, 2026
