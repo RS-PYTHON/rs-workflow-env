@@ -13,6 +13,24 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/) 
 >- **Fixed** for any bug fixes.
 >- **Security** in case of vulnerabilities.
 
+## [1.0a16] - 2026-11-23
+
+### Added
+
+- [RSPY-1287](https://github.com/RS-PYTHON/rs-workflow-env/pull/197) : feat: update security policy to not run as root on prefect runner
+- [RSPY-1268](https://github.com/RS-PYTHON/rs-workflow-env/pull/196) : Route the dashboards of the named Dask clusters
+- [RSPY-1188](https://github.com/RS-PYTHON/rs-workflow-env/pull/191) : Support CPM "Fast_zarr" and obstore
+- [RSPY-1268](https://github.com/RS-PYTHON/rs-workflow-env/pull/193) : Name the Dask cluster pods after the cluster label
+- [PR#194⁠](https://github.com/RS-PYTHON/rs-workflow-env/pull/194) : Install scipy in the CPM v3 Dask image
+- [PR#189⁠](https://github.com/RS-PYTHON/rs-workflow-env/pull/196) : Add odfpy to Jupyter Dockerfile dependencies
+
+### Changed
+- [PR#187⁠](https://github.com/RS-PYTHON/rs-workflow-env/pull/187⁠) : Update Python version to 3.13.18
+- [RSPY-1262](https://github.com/RS-PYTHON/rs-workflow-env/pull/192) : : Update prefect from 3.8.7 to 3.9.1
+
+### Fixed
+- [PR#188](https://github.com/RS-PYTHON/rs-workflow-env/pull/188) : Fix cpm version
+
 ## [1.0a15] - 2026-10-23
 
 ### Added
