@@ -127,7 +127,7 @@ controller:
               operator: Exists
   resources:
     limits:
-      memory: 96Mi
+      memory: 256Mi
     requests:
       memory: 64Mi
   tolerations:
