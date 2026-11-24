@@ -89,7 +89,7 @@ def dashboard_path(namespace: str, label: str | None) -> str:
         "dask-s1ard.userA.latest",
         "dask-s3olci.suberti.latest",
         "dask-l0.user_B.1.2.3",
-        "dask-eopf-mockup.userC.v1.0a15",
+        "dask-eopf-mockup.userC.v1.0a16",
         "dask-cpm3.user-d." + "x" * 60,
         # Staging cluster of rs-server-deployment
         "dask-staging",
