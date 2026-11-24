@@ -66,7 +66,6 @@ RUN --mount=type=secret,id=GITLAB_EOPF_TOKEN,env=GITLAB_EOPF_TOKEN \
     --mount=type=secret,id=GMV_GITLAB_URL,env=GMV_GITLAB_URL \
     --mount=type=secret,id=GMV_GITLAB_TOKEN,env=GMV_GITLAB_TOKEN \
     --mount=type=secret,id=CRISTAL_L0_PROJECT_ID,env=CRISTAL_L0_PROJECT_ID \
-    --mount=type=secret,id=CRISTAL_COMMON_PROJECT_ID,env=CRISTAL_COMMON_PROJECT_ID \
     --mount=type=secret,id=GMV_GITLAB_IP,env=GMV_GITLAB_IP \
     git config --global url."https://__token__:${GITLAB_EOPF_TOKEN}@gitlab.eopf.copernicus.eu/".insteadOf "https://gitlab.eopf.copernicus.eu/" && \
     if [ -n "${GMV_GITLAB_URL:-}" ]; then \

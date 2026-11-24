@@ -22,6 +22,7 @@
 # - The images are pushed to the private Harbor project 'cristal' of the OVH registry, created if missing.
 # - Temporary: while the GMV GitLab domain name is not in the DNS, the GMV_GITLAB_IP secret gives its IP address.
 #   The host name is then added to /etc/hosts of the build containers and pip does not verify its certificate.
+# - Before the push, the image is checked by importing the CRISTAL L0 processor (e.g. no missing system library).
 # - The workflow has no 'packages: write' permission, so it cannot push anything to the GitHub registry.
 # - No Trivy SARIF upload to the GitHub Security tab: use the Harbor scanner of the OVH registry instead.
 # - The workflow is skipped for pull requests from forks and Dependabot, that have no access to the secrets.
@@ -104,7 +105,6 @@ jobs:
       GMV_GITLAB_URL: ${{ secrets.GMV_GITLAB_URL }}
       GMV_GITLAB_TOKEN: ${{ secrets.GMV_GITLAB_TOKEN }}
       CRISTAL_L0_PROJECT_ID: ${{ secrets.CRISTAL_L0_PROJECT_ID }}
-      CRISTAL_COMMON_PROJECT_ID: ${{ secrets.CRISTAL_COMMON_PROJECT_ID }}
       GMV_GITLAB_IP: ${{ secrets.GMV_GITLAB_IP }} # optional, see above
       OVH_REGISTRY_URL: ${{ secrets.OVH_REGISTRY_URL }}
       OVH_REGISTRY_USERNAME: ${{ secrets.OVH_REGISTRY_USERNAME }}
@@ -139,7 +139,7 @@ jobs:
         if: ${{ matrix.condition }}
         run: |
           set -eu
-          for var in GMV_GITLAB_URL GMV_GITLAB_TOKEN CRISTAL_L0_PROJECT_ID CRISTAL_COMMON_PROJECT_ID \
+          for var in GMV_GITLAB_URL GMV_GITLAB_TOKEN CRISTAL_L0_PROJECT_ID \
                      OVH_REGISTRY_URL OVH_REGISTRY_USERNAME OVH_REGISTRY_PASSWORD; do
             if [[ -z "${!var}" ]]; then
               echo "::error::Missing GitHub secret: $var"
@@ -221,6 +221,17 @@ jobs:
             --labels "${LABELS}" \
             ${{ matrix.option }} \
             "${PROC}"
+        shell: bash
+
+      # Smoke test before the push: the processor import fails if a system library is missing (e.g. libgomp1)
+      - name: Check the CRISTAL L0 processor can be imported
+        if: ${{ matrix.condition }}
+        run: |
+          set -eux
+          tags=(${DOCKER_TAGS//,/ })
+          tag="${tags[0]}"
+          docker run --rm --entrypoint python --workdir /tmp "${IMAGE}:${tag}" \
+            -c 'from cri_l0_dp.processors.l0_processor import L0Processor; print("OK:", L0Processor)'
         shell: bash
 
       - name: Push to the OVH registry

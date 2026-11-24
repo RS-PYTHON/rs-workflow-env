@@ -19,8 +19,7 @@
 
 # CRISTAL packages, from the package registries of the confidential GMV GitLab.
 # The GitLab host and project IDs are secrets, expanded by pip from the environment variables.
---extra-index-url https://__token__:${GMV_GITLAB_TOKEN}@${GMV_GITLAB_HOST}/api/v4/projects/${CRISTAL_COMMON_PROJECT_ID}/packages/pypi/simple # cadu_processor
---extra-index-url https://__token__:${GMV_GITLAB_TOKEN}@${GMV_GITLAB_HOST}/api/v4/projects/${CRISTAL_L0_PROJECT_ID}/packages/pypi/simple # cri-l0-dp
+--extra-index-url https://__token__:${GMV_GITLAB_TOKEN}@${GMV_GITLAB_HOST}/api/v4/projects/${CRISTAL_L0_PROJECT_ID}/packages/pypi/simple # cri-l0-dp, its cri_common dependency, cadu_processor
 
 cadu_processor
 cri-l0-dp==2.0.0a2

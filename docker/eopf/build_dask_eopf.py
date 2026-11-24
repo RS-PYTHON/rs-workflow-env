@@ -37,7 +37,7 @@ DEFAULT_REGISTRY = "ghcr.io/rs-python"
 
 # Environment variables that give access to the confidential GMV GitLab repositories.
 # They are passed to the docker build as secrets, never as build arguments, so they are not stored in the image.
-GMV_SECRETS = ["GMV_GITLAB_URL", "GMV_GITLAB_TOKEN", "CRISTAL_L0_PROJECT_ID", "CRISTAL_COMMON_PROJECT_ID"]
+GMV_SECRETS = ["GMV_GITLAB_URL", "GMV_GITLAB_TOKEN", "CRISTAL_L0_PROJECT_ID"]
 
 # Optional IP address of the GMV GitLab, while its domain name is not in the DNS. When it is set, the build resolves
 # the GitLab host name to this address and the GitLab certificate is not verified.
