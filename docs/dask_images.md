@@ -68,6 +68,19 @@ their dependencies are installed from the `requirements-dask-<processor>.txt` fi
 `system-requirements-*` and `post-install-*` files) of the
 [`docker/eopf/resources`](https://github.com/RS-PYTHON/rs-workflow-env/tree/develop/docker/eopf/resources) folder.
 
+The `cpm3` image, the CPM Jupyter image and the `dpr` Jupyter kernels contain CPM 3.1.0rc4 and eopf-safe 1.0.0rc1
+(the SAFE readers and the SAFE to Zarr conversion, moved out of CPM since 3.1). CPM 3.1.0rc4 is not published as a
+package (and its tag still declares version 3.1.0rc3), so it is installed from its git tag. The `l0`, `s1ard` and
+`s3olci` processors are installed from the `rspy` branches of their forks in the
+[refsystem](https://gitlab.eopf.copernicus.eu/refsystem) GitLab group, which run with the same versions.
+
+Before the push, the CI runs the
+[`docker/eopf/checks/check_imports.py`](https://github.com/RS-PYTHON/rs-workflow-env/blob/develop/docker/eopf/checks/check_imports.py)
+script in the image. It imports the processing units of the processor, the EOPF readers it declares and the
+OpenTelemetry instrumentation of eopf, to detect e.g. a missing dependency or system library, or an incompatible CPM
+version. To run it on a local image:
+`docker run --rm -i --entrypoint python --workdir /tmp <image> - <processor> < check_imports.py`.
+
 The image of the mockup processor (`ghcr.io/rs-python/dask/mockup/<target>`) is built by
 [rs-testmeans](https://github.com/RS-PYTHON/rs-testmeans).
 

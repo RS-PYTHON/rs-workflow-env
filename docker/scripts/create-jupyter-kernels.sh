@@ -35,7 +35,7 @@ echo "Read: '$deps_file'"
 cat "$deps_file"
 
 # Install dependencies
-apt update && apt install -y jq
+apt update && apt install -y jq git # git: to install eopf from its git tag
 
 # Install yq (https://github.com/mikefarah/yq#wget)
 wget --max-redirect=1 https://github.com/mikefarah/yq/releases/download/v4.54.1/yq_linux_amd64 -O /usr/local/bin/yq
@@ -69,9 +69,14 @@ for dep in $deps; do
     # used_by is an array. Check if it contains the value "dpr".
     if jq -e '.used_by | index("dpr")' <<< "${dep}" > /dev/null; then
         cpm_version=$(jq -r '."cpm_version"' <<< "${dep}")
-        # asciitree (pulled in by zarr, a eopf dependency) only ships a source distribution on
-        # PyPI, so it must be excluded from the --only-binary :all: constraint.
-        pip install --only-binary :all: --no-binary asciitree --no-compile eopf=="${cpm_version}"
+        eopf_safe_version=$(jq -r '."eopf_safe_version"' <<< "${dep}")
+        # These packages must be excluded from the --only-binary :all: constraint:
+        # - asciitree (pulled in by zarr, a eopf dependency) only ships a source distribution on PyPI
+        # - eopf is installed from its git tag: the CPM release candidates are not all published as packages
+        # - pims (dependency of dask-image, from eopf[parallel] required by eopf-safe) has no binary wheel
+        pip install --only-binary :all: --no-binary asciitree,eopf,pims --no-compile \
+            "eopf @ git+https://gitlab.eopf.copernicus.eu/cpm/eopf-cpm.git@${cpm_version}" \
+            eopf-safe=="${eopf_safe_version}"
     fi
 
     # Install the Jupyter kernel
@@ -82,5 +87,5 @@ for dep in $deps; do
 done
 
 # Remove dependencies
-apt autoremove -y jq
+apt autoremove -y jq git
 rm -f /usr/local/bin/yq
