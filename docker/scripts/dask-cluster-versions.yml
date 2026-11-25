@@ -24,5 +24,6 @@ deps:
 
   - python_version: "3.13.18"
     dask_version: "2026.7.1"
-    cpm_version: "3.0.0rc4"
+    cpm_version: "3.1.0rc4" # git tag of eopf-cpm
+    eopf_safe_version: "1.0.0rc1"
     used_by: [dpr, staging]

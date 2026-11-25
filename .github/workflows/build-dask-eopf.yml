@@ -115,6 +115,7 @@ jobs:
             common:
               - .github/workflows/build-dask-eopf.yml
               - docker/eopf/build_dask_eopf.py
+              - docker/eopf/checks/check_imports.py
               - docker/eopf/Dockerfile.dask-eopf
               - docker/eopf/Dockerfile.dask-eopf-localcluster
               - docker/eopf/resources/layer-cleanup.sh
@@ -408,6 +409,17 @@ jobs:
           echo "repository=$repository" >> $GITHUB_OUTPUT
           echo "repository_and_tag=$repository_and_tag" >> $GITHUB_OUTPUT
           echo "python_tag=${python_tag:-}" >> $GITHUB_OUTPUT
+        shell: bash
+
+      # Smoke test before the push: the processor import fails if a dependency or a system library is missing,
+      # or if the processor is not compatible with the installed CPM version
+      - name: Check the processor can be imported
+        if: ${{ matrix.proccondition && matrix.targetcondition }}
+        run: |
+          set -eux
+          docker run --rm -i --entrypoint python --workdir /tmp \
+            "${{ steps.build.outputs.repository_and_tag }}" - "${{ matrix.proc }}" \
+            < ./docker/eopf/checks/check_imports.py
         shell: bash
 
       - name: Restore the Trivy databases from the cache

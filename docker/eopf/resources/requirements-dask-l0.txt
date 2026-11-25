@@ -19,9 +19,9 @@
 --extra-index-url https://__token__:${GITLAB_EOPF_TOKEN}@gitlab.eopf.copernicus.eu/api/v4/projects/14/packages/pypi/simple # eopf cpm
 --extra-index-url https://__token__:${GITLAB_EOPF_TOKEN}@gitlab.eopf.copernicus.eu/api/v4/projects/102/packages/pypi/simple # l0
 
-l0==2.0.0rc1
-# Install from latest main commit of the git repository instead
-# l0 @ git+https://__token__:${GITLAB_EOPF_TOKEN}@gitlab.eopf.copernicus.eu/L0/l0@881b1c22c45ef8bf0c64ee4feff264ab22f3d399  # Oct 14, 2026
+# l0==2.0.0rc1
+# Install l0 from the "rspy" branch of the refsystem fork, migrated to CPM 3.1.0rc4 and eopf-safe 1.0.0rc1
+l0 @ git+https://__token__:${GITLAB_EOPF_TOKEN}@gitlab.eopf.copernicus.eu/refsystem/l0@9fc42b7a7b0be3d884d2e7caef60c0e12036d920 # rspy, November 25, 2026
 
 # other python dependencies
 graphviz

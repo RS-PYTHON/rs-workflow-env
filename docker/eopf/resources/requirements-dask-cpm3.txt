@@ -12,10 +12,12 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
---extra-index-url https://__token__:${GITLAB_EOPF_TOKEN}@gitlab.eopf.copernicus.eu/api/v4/projects/14/packages/pypi/simple # eopf cpm
-eopf>=3.0.0,<3.1
+# CPM 3.1.0rc4 is not published as a package and its tag still declares version 3.1.0rc3: install it from the tag.
+eopf @ git+https://gitlab.eopf.copernicus.eu/cpm/eopf-cpm.git@3.1.0rc4
+# SAFE readers and SAFE to Zarr conversion, moved out of CPM since 3.1
+eopf-safe==1.0.0rc1
 
 # other python dependencies
-# scipy: required by the EOPF SAFE reader of the S1 products (xarray interpolation of the burst polygons), but not
-# installed as an eopf dependency
+# scipy: required by the SAFE reader of the S1 products (xarray interpolation of the burst polygons), but not
+# installed as an eopf or eopf-safe dependency
 scipy

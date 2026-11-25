@@ -18,8 +18,8 @@
 --extra-index-url https://__token__:${GITLAB_EOPF_TOKEN}@gitlab.eopf.copernicus.eu/api/v4/projects/118/packages/pypi/simple # s3olci
 
 #s3olci==2.0.0rc1
-# Install from latest main commit of the git repository instead
-s3olci @ git+https://__token__:${GITLAB_EOPF_TOKEN}@gitlab.eopf.copernicus.eu/refsystem/s-3-olci-jgaucher@6c7d23cb661c12d8a297d1f820312364bde6ac41 # November 6, 2026
+# Install s3olci from the "rspy" branch of the refsystem fork, migrated to CPM 3.1.0rc4 and eopf-safe 1.0.0rc1
+s3olci @ git+https://__token__:${GITLAB_EOPF_TOKEN}@gitlab.eopf.copernicus.eu/refsystem/s3olci@0777d32cb4a0103276d2975edef10cbfcf3d6b14 # rspy, November 25, 2026
 
 # other python dependencies
 graphviz

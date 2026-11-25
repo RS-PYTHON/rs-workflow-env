@@ -16,7 +16,12 @@ boto3>=1.43.75
 dask==2026.8.0
 dask-gateway==2026.3.0
 distributed==2026.8.0
-eopf==3.0.0
+# CPM 3.1.0rc4 is not published as a package and its tag still declares version 3.1.0rc3: install it from the tag.
+# It is built from its sources, like pims (dependency of dask-image, from eopf[parallel]) that has no binary wheel.
+--no-binary eopf,pims
+eopf @ git+https://gitlab.eopf.copernicus.eu/cpm/eopf-cpm.git@3.1.0rc4
+# SAFE readers and SAFE to Zarr conversion, moved out of CPM since 3.1
+eopf-safe==1.0.0rc1
 ipywidgets==8.1.9
 jupyterhub==5.5.2
 jupyterlab==4.6.4

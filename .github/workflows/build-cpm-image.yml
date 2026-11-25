@@ -143,7 +143,7 @@ jobs:
       - name: Run verification test in CPM image
         run: |
           docker run --rm "${{ steps.image.outputs.image }}" python3 -c "\
-          import eopf; \
+          import eopf, eopf_safe; \
           from pathlib import Path; \
           assert Path('/mnt/test-data').exists(), '/mnt/test-data does not exist'; \
           print('CPM image validation successful: eopf', eopf.__version__)"
