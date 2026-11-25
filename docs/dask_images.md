@@ -49,6 +49,39 @@ The files to build them are in the [`docker/base`](https://github.com/RS-PYTHON/
 folder: Dockerfiles for the Dask (`Dockerfile.dask.k8s`, `Dockerfile.dask.local`), Jupyter and Python base images, and
 the `build-base-images.sh` script. They are built by the CI of rs-workflow-env.
 
+### Experimental EOPF driver runner
+
+Both Dask base images include `rs_dpr_service.runner.eopf_runner` and the shared settings, logging and
+OpenTelemetry helpers it imports. Only this subset of rs-dpr-service is copied into `/opt/eopf-runner`, made
+importable through a site-packages `.pth` file; the REST service and its database dependencies are not installed.
+The build resolves the upstream Gateway `.in` requirements, explicit Dask/Gateway versions, dashboard dependencies
+and the runner's `runner_requirements.txt` together with `pip-compile`, using the target Python image. It generates
+one lock file per target (`requirements-k8s.txt` or `requirements-local.txt`) in the Gateway build context.
+The Dockerfile installs only that lock file, retains it as `/opt/requirements-dask.txt` and runs `pip check`.
+The build checks that the runner can be imported without EOPF, which is installed later in the processor image.
+
+Do not merge independently generated lock files or edit their transitive pins with `sed`: packages such as
+`s3fs`/`fsspec` and `aiobotocore`/`botocore`/`python-dateutil` must be resolved together. Regenerate the whole image's
+lock when upgrading a component. Truly incompatible direct constraints still require a compatible component
+version; the build must fail rather than bypass dependency checks. Archive the generated locks for releases.
+Derived processor images add dependencies later and must also be validated with `pip check` and a processing test.
+
+By default the build fetches the `develop` branch of rs-dpr-service and logs its resolved commit. For a reproducible
+release, set `RSPY_RUNNER_REF` to a commit or immutable tag containing the runner. To test uncommitted changes,
+use a local checkout instead:
+
+```shell
+RSPY_RUNNER_SOURCE=/absolute/path/to/rs-dpr-service \
+    ./docker/base/build-base-images.sh --target dask
+
+RSPY_RUNNER_REF=<commit-or-tag> ./docker/base/build-base-images.sh --target dask
+```
+
+Changing the runner requires rebuilding the base images, then the derived processor images (including the mockup
+images built by rs-testmeans). A change in rs-dpr-service alone does not trigger those rebuilds automatically.
+In a rebuilt processor image, the driver Job can use `python -m rs_dpr_service.runner.eopf_runner`; see the
+[runner environment contract](https://github.com/RS-PYTHON/rs-dpr-service/blob/develop/docs/doc/index.md#experimental-standalone-driver).
+
 ## Processor images
 
 The images of the DPR processors are built from the base images by the
