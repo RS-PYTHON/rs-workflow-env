@@ -181,7 +181,6 @@ jobs:
       - name: Login to GHCR
         run: echo "${{ secrets.GITHUB_TOKEN }}" | docker login ghcr.io --username "${{ github.actor }}" --password-stdin
       - name: Select DPR runner branch
-        if: ${{ inputs.target_image == 'all' || inputs.target_image == 'dask' }}
         env:
           RUNNER_BRANCH: ${{ github.head_ref || github.ref_name }}
         shell: bash
