@@ -21,14 +21,11 @@
 ARG PYTHON_VERSION_BASE=xxx
 FROM python:${PYTHON_VERSION_BASE}-slim-bookworm
 
-ARG DASK_TAG=xxx
-ARG DASK_GATEWAY_TAG=xxx
-
 COPY ./layer-cleanup.sh /usr/local/bin/
 RUN chmod 755 /usr/local/bin/layer-cleanup.sh
 
-COPY ./dask-gateway /opt/dask-gateway
-COPY ./dask-gateway-server /opt/dask-gateway-server
+COPY ./requirements-local.txt /opt/requirements-dask.txt
+COPY ./eopf-runner /opt/eopf-runner
 
 # Do the same as in:
 # https://github.com/dask/dask-gateway/blob/main/dask-gateway/Dockerfile
@@ -42,23 +39,18 @@ RUN apt-get update \
         tini \
  && layer-cleanup.sh
 
-# Install the requirements.txt files and our custom dependencies.
-# Add bokeh and jupyter-server-proxy for the dask dashboard.
+# Install the complete dependency set resolved for this image.
 RUN \
     pip install --upgrade pip && \
-    pip install -r /opt/dask-gateway/Dockerfile.requirements.txt && \
-    pip install -r /opt/dask-gateway-server/Dockerfile.requirements.txt && \
-    pip install \
-        dask==${DASK_TAG} \
-        distributed==${DASK_TAG} \
-        dask-gateway==${DASK_GATEWAY_TAG} \
-        dask-gateway-server[local,kubernetes]==${DASK_GATEWAY_TAG} \
-        bokeh">=3.1.0" \
-        jupyter-server-proxy \
+    pip install -r /opt/requirements-dask.txt \
+    && pip check \
     && layer-cleanup.sh
 
+RUN python -c "import site, pathlib; pathlib.Path(site.getsitepackages()[0], 'eopf_runner.pth').write_text('/opt/eopf-runner\n')" \
+ && python -c "import rs_dpr_service.runner.eopf_runner"
+
 # Remove custom scripts
-RUN rm -rf /usr/local/bin/layer-cleanup.sh /opt/dask-gateway /opt/dask-gateway-server
+RUN rm -f /usr/local/bin/layer-cleanup.sh
 
 # Create a non-root user to run as
 RUN useradd --create-home --user-group --uid 1000 dask

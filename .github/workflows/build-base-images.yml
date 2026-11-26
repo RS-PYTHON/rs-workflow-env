@@ -86,6 +86,19 @@ jobs:
     steps:
       - name: Checkout repository
         uses: actions/checkout@v6
+      - name: Select DPR runner branch
+        if: ${{ inputs.target_image == 'all' || inputs.target_image == 'dask' }}
+        env:
+          RUNNER_BRANCH: ${{ github.head_ref || github.ref_name }}
+        shell: bash
+        run: |
+          if git ls-remote --exit-code --heads https://github.com/RS-PYTHON/rs-dpr-service.git "refs/heads/${RUNNER_BRANCH}" > /dev/null; then
+            runner_ref="$RUNNER_BRANCH"
+          else
+            runner_ref=develop
+          fi
+          echo "RSPY_RUNNER_REF=${runner_ref}" >> "$GITHUB_ENV"
+          echo "Building DPR runner from branch ${runner_ref}"
       - name: Login to GHCR
         run: echo "${{ secrets.GITHUB_TOKEN }}" | docker login ghcr.io --username "${{ github.actor }}" --password-stdin
       - name: Build and push base image
