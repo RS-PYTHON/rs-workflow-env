@@ -77,6 +77,9 @@ RSPY_RUNNER_SOURCE=/absolute/path/to/rs-dpr-service \
 RSPY_RUNNER_REF=<commit-or-tag> ./docker/base/build-base-images.sh --target dask
 ```
 
+For manual Dask builds (`dask` or `all`), `build-base-images.yml` selects the same branch name in rs-dpr-service
+as the workflow's source branch if it exists, otherwise `develop`. Automatic Python/Prefect-only builds do not need a runner reference.
+
 Changing the runner requires rebuilding the base images, then the derived processor images (including the mockup
 images built by rs-testmeans). A change in rs-dpr-service alone does not trigger those rebuilds automatically.
 In a rebuilt processor image, the driver Job can use `python -m rs_dpr_service.runner.eopf_runner`; see the
